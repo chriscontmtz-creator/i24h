@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>i24h - Internet 24 Horas</title>
+  <!-- Script que aplica el modo oscuro ANTES de que la página se pinte,
+       así no hay parpadeo al cargar si el usuario ya tenía dark mode activado -->
+  <script>if(localStorage.getItem('dark')==='1')document.documentElement.classList.add('dark');</script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+  <h2 class="sr-only">INTERNET 24 Horas</h2>
+  <div class="w" id="root">
+
+    <div class="nav">
+      <div class="logo">i24h 
+      <div> <img src="css/imagenes/estilos.png" alt="Logo i24h"></div>
+        <span>Internet 24 Horas · Nuevo Leon</span></div>
+      <div class="nav-links">
+        <a href="#">Inicio</a>
+        <a href="#">Servicios</a>
+        <a href="#">Productos</a>
+        <a href="#">Mi cuenta</a>
+        <a href="#">Sucursales</a>
+        <a href="#">Cotizaciones</a>
+        <span class="badge-24"><i class="ti ti-moon" aria-hidden="true"></i> Abierto 24/7</span>
+        <button class="toggle-btn" id="toggle-btn" aria-label="Cambiar modo de color">
+          <i class="ti ti-moon" id="tico" aria-hidden="true"></i>
+          <span id="tlbl">Modo oscuro</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-text">
+        <span class="pill">
+          <i class="ti ti-clock" aria-hidden="true"></i> Abierto las 24 horas, los 7 días de la semana
+        </span>
+        <h1>Hola, somos i24h — tu espacio de conectividad en Monterrey zona poniente</h1>
+        <p>Cibercafé, renta de equipos, impresiones y tienda. Un lugar seguro y cómodo disponible a cualquier hora del día — incluso de madrugada cuando más lo necesitas.</p>
+<button class="btn-p" id="crear-cuenta">Crear cuenta ↗</button>        <button class="btn-o" id="iniciar-sesion">Iniciar sesión</button>
+      </div>
+      <div class="qr-badge">
+        <div class="qr-box">
+          <i class="ti ti-qrcode" aria-hidden="true"></i>
+        </div>
+        <p class="qr-title">Tu código QR socio</p>
+        <p class="qr-desc">Escanea en sucursal, acumula compras y obtén descuentos</p>
+      </div>
+    </div>
+
+    <div class="sec alt">
+      <p class="sec-lbl">Nuestros servicios</p>
+      <div class="cards">
+        <div class="card">
+          <div class="card-ico"><i class="ti ti-device-desktop" aria-hidden="true"></i></div>
+          <h3>Renta de equipos</h3>
+          <p>Computadoras por tiempo. Para tareas, trámites o proyectos.</p>
+        </div>
+        <div class="card">
+          <div class="card-ico"><i class="ti ti-wifi" aria-hidden="true"></i></div>
+          <h3>Internet de alta velocidad</h3>
+          <p>Conexión rápida y estable en todas las estaciones.</p>
+        </div>
+        <div class="card">
+          <div class="card-ico"><i class="ti ti-printer" aria-hidden="true"></i></div>
+          <h3>Impresiones</h3>
+          <p>Imprime documentos, tareas y tabloides al instante.</p>
+        </div>
+        <div class="card">
+          <div class="card-ico"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>
+          <h3>Tienda en sucursal</h3>
+          <p>Papelería, snacks, refrescos, papas y novedades.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <p class="sec-lbl">Productos disponibles</p>
+      <div class="prod-grid">
+        <div class="prod-card">
+          <i class="ti ti-notebook" aria-hidden="true"></i>
+          <p class="prod-title">Papelería</p>
+          <p class="prod-desc">Tabloides, lápices, sacapuntas, calculadoras y más.</p>
+        </div>
+        <div class="prod-card">
+          <i class="ti ti-bottle" aria-hidden="true"></i>
+          <p class="prod-title">Snacks y bebidas</p>
+          <p class="prod-desc">Refrescos, papas y consumibles para quedarte cómodo.</p>
+        </div>
+        <div class="prod-card">
+          <i class="ti ti-bulb" aria-hidden="true"></i>
+          <p class="prod-title">Novedades</p>
+          <p class="prod-desc">Artículos prácticos, accesorios y consumibles tecnológicos.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec alt">
+      <p class="sec-lbl">¿Por qué ser socio i24h?</p>
+      <div class="benefit-grid">
+        <div class="benefit-row">
+          <div class="benefit-ico"><i class="ti ti-star" aria-hidden="true"></i></div>
+          <div>
+            <p class="benefit-title">Acumula puntos</p>
+            <p class="benefit-desc">Cada compra en caja suma a tu historial de socio.</p>
+          </div>
+        </div>
+        <div class="benefit-row">
+          <div class="benefit-ico"><i class="ti ti-ticket" aria-hidden="true"></i></div>
+          <div>
+            <p class="benefit-title">Descuentos exclusivos</p>
+            <p class="benefit-desc">Canjea tu historial por descuentos en servicios y productos.</p>
+          </div>
+        </div>
+        <div class="benefit-row">
+          <div class="benefit-ico"><i class="ti ti-qrcode" aria-hidden="true"></i></div>
+          <div>
+            <p class="benefit-title">QR en tu wallet</p>
+            <p class="benefit-desc">Guárdalo en Apple Wallet o Google Wallet. Sin contraseñas.</p>
+          </div>
+        </div>
+        <div class="benefit-row">
+          <div class="benefit-ico"><i class="ti ti-moon" aria-hidden="true"></i></div>
+          <div>
+            <p class="benefit-title">Siempre abiertos</p>
+            <p class="benefit-desc">Estamos aquí a las 3am, 5am — la hora que nos necesites.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="comment-header">
+        <p class="sec-lbl">Lo que dice la raza</p>
+        <span class="pill">
+          <i class="ti ti-eye-off" aria-hidden="true"></i> 100% anónimo
+        </span>
+      </div>
+
+      <div class="comments-list" id="comments-list">
+        <div class="comment-card">
+          <div class="comment-author-row">
+            <div class="avatar"><i class="ti ti-user" aria-hidden="true"></i></div>
+            <div>
+              <p class="comment-name">Anónimo</p>
+              <div class="stars">★★★★★</div>
+            </div>
+          </div>
+          <p class="comment-text">"Siempre que necesito imprimir algo de noche este lugar me salva. Rápido y económico."</p>
+          <p class="comment-time">hace 2 días</p>
+        </div>
+        
+        <div class="comment-card">
+          <div class="comment-author-row">
+            <div class="avatar"><i class="ti ti-user" aria-hidden="true"></i></div>
+            <div>
+              <p class="comment-name">Anónimo</p>
+              <div class="stars">★★★★☆</div>
+            </div>
+          </div>
+          <p class="comment-text">"Buen lugar para hacer tareas cuando el internet de la casa falla. Las computadoras están bien equipadas."</p>
+          <p class="comment-time">hace 5 días</p>
+        </div>
+        
+        <div class="comment-card">
+          <div class="comment-author-row">
+            <div class="avatar"><i class="ti ti-user" aria-hidden="true"></i></div>
+            <div>
+              <p class="comment-name">Anónimo</p>
+              <div class="stars">★★★★★</div>
+            </div>
+          </div>
+          <p class="comment-text">"Me late mucho que esté abierto toda la noche. Los snacks también están buenos, siempre hay papas."</p>
+          <p class="comment-time">hace 1 semana</p>
+        </div>
+      </div>
+
+      <div class="comment-form">
+        <p class="form-title">Deja tu comentario</p>
+        <p class="form-subtitle">No se guarda ningún dato tuyo. Es completamente anónimo.</p>
+
+        <div class="form-group">
+          <span class="lbl">¿Cómo calificarías tu experiencia?</span>
+          <div class="star-row" id="star-row">
+            <span class="star-btn" data-v="1">★</span>
+            <span class="star-btn" data-v="2">★</span>
+            <span class="star-btn" data-v="3">★</span>
+            <span class="star-btn" data-v="4">★</span>
+            <span class="star-btn" data-v="5">★</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <span class="lbl">Tu comentario *</span>
+          <textarea class="inp" id="comment-input" rows="3" placeholder="Cuéntanos tu experiencia en i24h..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <span class="privacy-note">
+            <i class="ti ti-eye-off" aria-hidden="true"></i> Tu comentario se publica sin nombre ni datos
+          </span>
+          <button class="btn-p" id="submit-comment-btn">Publicar ↗</button>
+        </div>
+        <p id="msg" class="error-msg" style="display:none;"></p>
+      </div>
+    </div>
+
+    <div class="sec alt">
+      <p class="sec-lbl">Acceso rápido</p>
+      <div class="access-grid">
+        <div class="login-box">
+          <p class="login-title">Iniciar sesión</p>
+          <span class="lbl">Correo electrónico</span>
+          <input class="inp" type="email" placeholder="tu@correo.com" />
+          <span class="lbl">Contraseña</span>
+          <input class="inp" type="password" placeholder="••••••••" />
+          <button class="btn-p" id="login-btn">Entrar ↗</button>
+        </div>
+        
+        <div class="qr-access-card">
+          <i class="ti ti-scan" aria-hidden="true"></i>
+          <p class="qr-title">Acceso por QR en sucursal</p>
+          <p class="qr-desc">Pasa tu código QR por el escáner fijo y tu sesión se abre automáticamente.</p>
+          <span class="pill">Solo en sucursal</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="privacy-bar">
+      <i class="ti ti-shield-check" aria-hidden="true"></i>
+      <p>Tu información está protegida. No compartimos tus datos con terceros. El registro es completamente gratuito.</p>
+    </div>
+
+    <div class="footer">
+      <span>© 2026 i24h – Internet 24 Horas</span>
+      <span class="footer-location"><i class="ti ti-map-pin" aria-hidden="true"></i> Monterrey, Nuevo León · Abierto 24/7</span>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+       MODALES DE REGISTRO
+       Ventanas emergentes que aparecen al presionar "Crear cuenta"
+       ============================================================ -->
+
+  <!-- MODAL 1: Elegir tipo de cuenta (Cliente o Empleado) -->
+  <div class="modal-fondo" id="modal-elegir" aria-hidden="true">
+    <div class="modal-caja" role="dialog" aria-labelledby="modal-elegir-titulo">
+
+      <!-- Botón para cerrar el modal -->
+      <button class="modal-cerrar" id="cerrar-modal-elegir" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+
+      <div class="modal-icono"><i class="ti ti-user-plus"></i></div>
+      <h2 class="modal-titulo" id="modal-elegir-titulo">¿Cómo quieres registrarte?</h2>
+      <p class="modal-desc">Elige el tipo de cuenta que quieres crear</p>
+
+      <!-- Dos opciones: cliente o empleado -->
+      <div class="modal-opciones">
+
+        <!-- Opción 1: Cliente -->
+        <button class="opcion-btn" id="btn-ir-cliente">
+          <div class="opcion-icono"><i class="ti ti-user"></i></div>
+          <div>
+            <p class="opcion-titulo">Soy cliente</p>
+            <p class="opcion-desc">Crea tu cuenta para acumular puntos y obtener descuentos</p>
+          </div>
+          <i class="ti ti-chevron-right opcion-flecha"></i>
+        </button>
+
+        <!-- Opción 2: Empleado (lleva al panel de administración) -->
+        <a class="opcion-btn" href="panel.html">
+          <div class="opcion-icono"><i class="ti ti-briefcase"></i></div>
+          <div>
+            <p class="opcion-titulo">Soy empleado</p>
+            <p class="opcion-desc">Accede al panel de administración de i24h</p>
+          </div>
+          <i class="ti ti-chevron-right opcion-flecha"></i>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Registro de cliente -->
+  <div class="modal-fondo" id="modal-cliente" aria-hidden="true">
+    <div class="modal-caja" role="dialog" aria-labelledby="modal-cliente-titulo">
+
+      <button class="modal-regresar" id="regresar-modal-cliente" aria-label="Regresar">
+        <i class="ti ti-arrow-left"></i> Regresar
+      </button>
+      <button class="modal-cerrar" id="cerrar-modal-cliente" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+
+      <div class="modal-icono"><i class="ti ti-user-check"></i></div>
+      <h2 class="modal-titulo" id="modal-cliente-titulo">Crear cuenta de cliente</h2>
+      <p class="modal-desc">Es gratis. Necesitas un código de acceso que te proporciona el personal de i24h en sucursal.</p>
+
+      <div class="modal-form">
+
+        <div class="form-group">
+          <span class="lbl">Correo electrónico *</span>
+          <input class="inp" type="email" id="reg-correo" placeholder="tu@correo.com" autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <span class="lbl">Contraseña *</span>
+          <input class="inp" type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+        </div>
+
+        <div class="form-group">
+          <span class="lbl">Confirmar contraseña *</span>
+          <input class="inp" type="password" id="reg-password2" placeholder="Repite tu contraseña" autocomplete="new-password" />
+        </div>
+
+        <!-- Código de un solo uso generado por el admin desde el panel -->
+        <div class="form-group">
+          <span class="lbl">Código de acceso *</span>
+          <input class="inp inp-codigo" type="text" id="reg-codigo"
+                 placeholder="Ej: AB12CD34" maxlength="8"
+                 autocomplete="off" style="text-transform:uppercase;" />
+          <p class="campo-nota">
+            <i class="ti ti-info-circle"></i>
+            Pide tu código en la sucursal. Cada código es de un solo uso y controla el acceso al registro.
+          </p>
+        </div>
+
+        <p id="reg-msg" class="error-msg" style="display:none;"></p>
+
+        <button class="btn-p btn-bloque" id="btn-registrar-cliente">
+          Crear mi cuenta ↗
+        </button>
+
+        <p class="privacy-note centrado">
+          <i class="ti ti-shield-check"></i>
+          Tu información está protegida. No compartimos tus datos.
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+<script src="JAVA.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "i24h",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Internet 24 Horas - Servidor local",
+  "main": "servidor.js",
+  "scripts": {
+    "start": "node servidor.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^17.4.2",
+    "express": "^4.18.2",
+    "express-handlebars": "^9.0.1",
+    "mongoose": "^9.7.2"
+  }
+}

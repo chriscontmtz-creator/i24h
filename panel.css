@@ -1,0 +1,524 @@
+/* =============================================================
+   PANEL.CSS — Estilos exclusivos del portal de empleados
+   Usa las mismas variables de color de estilos.css
+   (--fondo, --acento, --borde, etc.)
+   ============================================================= */
+
+
+/* =============================================================
+   UTILIDADES
+   ============================================================= */
+
+/* Oculta un elemento completamente */
+.oculto { display: none !important; }
+
+/* Botón pequeño (usado en el panel junto a tablas y encabezados) */
+.btn-chico {
+  padding: 7px 14px;
+  font-size: .82rem;
+}
+
+
+/* =============================================================
+   ESTRUCTURA DE PANTALLAS
+   El panel tiene dos "pantallas": login y panel principal.
+   Solo una se muestra a la vez.
+   ============================================================= */
+.pantalla {
+  min-height: 100vh;
+  display: flex;
+  background: var(--fondo);
+  transition: background .3s;
+}
+
+
+/* =============================================================
+   PANTALLA DE LOGIN DE EMPLEADO
+   Caja centrada con el formulario de acceso
+   ============================================================= */
+#pantalla-login {
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Caja del formulario de login */
+.login-panel-caja {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 44px 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Logo arriba del formulario */
+.login-panel-logo {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.login-panel-logo span {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--acento);
+  display: block;
+}
+
+.login-panel-logo p {
+  font-size: .85rem;
+  color: var(--texto-suave);
+  margin-top: 4px;
+}
+
+/* Link para regresar a la página principal */
+.link-volver {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: .85rem;
+  color: var(--texto-suave);
+  text-decoration: none;
+  padding: 6px;
+  transition: color .2s;
+}
+
+.link-volver:hover { color: var(--acento); }
+
+
+/* =============================================================
+   PANTALLA DEL PANEL PRINCIPAL
+   Se muestra después del login exitoso
+   ============================================================= */
+#pantalla-panel {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+
+/* =============================================================
+   BARRA SUPERIOR DEL PANEL (nav rojo)
+   ============================================================= */
+.panel-nav {
+  background: var(--acento);          /* Rojo de la marca */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+/* Logo en la barra superior */
+.panel-nav-logo {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.logo-texto {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.logo-sub {
+  font-size: .7rem;
+  color: rgba(255,255,255,.75);
+}
+
+/* Sección derecha: nombre del empleado + botón cerrar sesión */
+.panel-nav-usuario {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Badge con el nombre y cargo del empleado activo */
+.emp-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+}
+
+.emp-badge i    { font-size: 1.5rem; }
+.emp-nombre     { font-size: .88rem; font-weight: 600; color: #ffffff; margin: 0; }
+.emp-cargo      { font-size: .72rem; color: rgba(255,255,255,.75); margin: 0; }
+
+/* Botón cerrar sesión (blanco sobre rojo) */
+.panel-nav .btn-o {
+  background: rgba(255,255,255,.15);
+  border-color: rgba(255,255,255,.4);
+  color: #ffffff;
+}
+
+.panel-nav .btn-o:hover {
+  background: rgba(255,255,255,.25);
+}
+
+
+/* =============================================================
+   CUERPO DEL PANEL (sidebar + contenido)
+   ============================================================= */
+.panel-cuerpo {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - 60px);
+}
+
+
+/* =============================================================
+   SIDEBAR DE NAVEGACIÓN (tabs a la izquierda)
+   ============================================================= */
+.panel-tabs {
+  width: 220px;
+  background: var(--superficie);
+  border-right: 1px solid var(--borde);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  flex-shrink: 0;
+  transition: background .3s;
+}
+
+/* Cada botón del menú lateral */
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  font-size: .88rem;
+  color: var(--texto-suave);
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;  /* Indicador del tab activo */
+  cursor: pointer;
+  text-align: left;
+  transition: all .2s;
+  width: 100%;
+}
+
+.tab-btn i { font-size: 1.1rem; flex-shrink: 0; }
+
+.tab-btn:hover {
+  background: var(--fondo-alt);
+  color: var(--texto);
+}
+
+/* Tab seleccionado */
+.tab-btn.activo {
+  color: var(--acento);
+  background: var(--fondo-alt);
+  border-left-color: var(--acento);
+  font-weight: 600;
+}
+
+
+/* =============================================================
+   ÁREA DE CONTENIDO DE CADA TAB
+   ============================================================= */
+.panel-contenido {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  background: var(--fondo);
+  transition: background .3s;
+}
+
+/* Cada sección (tab) está oculta por defecto */
+.tab-seccion         { display: none; }
+.tab-seccion.activo  { display: block; }
+
+/* Título de cada sección */
+.panel-titulo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--texto);
+  margin-bottom: 24px;
+}
+
+/* Encabezado con título + botón de acción */
+.seccion-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.seccion-encabezado .panel-titulo { margin-bottom: 0; }
+
+
+/* =============================================================
+   TARJETAS DE RESUMEN (contadores de empleados, clientes, etc.)
+   ============================================================= */
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.resumen-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: var(--sombra);
+  transition: background .3s;
+}
+
+/* Ícono de cada tarjeta de resumen */
+.resumen-icono {
+  font-size: 1.8rem;
+  color: var(--acento);
+  margin-bottom: 10px;
+}
+
+/* Número grande (ej: "42 empleados") */
+.resumen-numero {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--texto);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.resumen-lbl {
+  font-size: .78rem;
+  color: var(--texto-suave);
+}
+
+
+/* =============================================================
+   FORMULARIO DENTRO DEL PANEL (crear empleado, etc.)
+   ============================================================= */
+.form-panel {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--sombra);
+  transition: background .3s;
+}
+
+.form-panel-titulo {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--texto);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--borde);
+}
+
+/* Formulario en dos columnas */
+.form-doble {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Botones al pie del formulario (Cancelar + Crear) */
+.form-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borde);
+}
+
+
+/* =============================================================
+   TABLAS (empleados, clientes, códigos)
+   ============================================================= */
+.tabla-contenedor {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+  box-shadow: var(--sombra);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .875rem;
+}
+
+/* Encabezado de la tabla */
+.tabla thead {
+  background: var(--fondo-alt);
+}
+
+.tabla th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--texto-suave);
+  border-bottom: 1px solid var(--borde);
+}
+
+/* Filas de datos */
+.tabla td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--borde);
+  color: var(--texto);
+  vertical-align: middle;
+}
+
+/* Última fila sin borde inferior */
+.tabla tbody tr:last-child td { border-bottom: none; }
+
+/* Resaltar fila al pasar el mouse */
+.tabla tbody tr:hover { background: var(--fondo-alt); }
+
+/* Mensaje cuando la tabla está vacía o cargando */
+.tabla-vacia td {
+  text-align: center;
+  color: var(--texto-suave);
+  padding: 40px 16px;
+  font-size: .9rem;
+}
+
+
+/* =============================================================
+   BADGES DE CARGO Y ESTADO
+   Etiquetas de color para identificar el cargo y estado de cada usuario
+   ============================================================= */
+.badge-cargo, .badge-estado {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+/* Colores por cargo */
+.badge-cargo.admin        { background: #fee2e2; color: #991b1b; }
+.badge-cargo.coordinador  { background: #fef3c7; color: #92400e; }
+.badge-cargo.lider        { background: #dbeafe; color: #1e40af; }
+.badge-cargo.encargado    { background: #d1fae5; color: #065f46; }
+.badge-cargo.colaborador  { background: var(--fondo-alt); color: var(--texto-suave); }
+
+/* Colores de estado */
+.badge-estado.activo   { background: #d1fae5; color: #065f46; }
+.badge-estado.inactivo { background: #fee2e2; color: #991b1b; }
+
+/* Versiones dark mode de los badges */
+body.dark .badge-cargo.admin        { background: #450a0a; color: #fca5a5; }
+body.dark .badge-cargo.coordinador  { background: #451a03; color: #fcd34d; }
+body.dark .badge-cargo.lider        { background: #1e3a5f; color: #93c5fd; }
+body.dark .badge-cargo.encargado    { background: #052e16; color: #6ee7b7; }
+body.dark .badge-cargo.colaborador  { background: var(--fondo-alt); color: var(--texto-suave); }
+body.dark .badge-estado.activo      { background: #052e16; color: #6ee7b7; }
+body.dark .badge-estado.inactivo    { background: #450a0a; color: #fca5a5; }
+
+
+/* =============================================================
+   CAJA DE INFORMACIÓN
+   Explica cómo funciona una sección (ej: los códigos de acceso)
+   ============================================================= */
+.info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--acento);   /* Línea roja a la izquierda */
+  border-radius: var(--radio);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.info-box > i    { color: var(--acento); font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+.info-titulo     { font-weight: 600; margin-bottom: 4px; font-size: .9rem; }
+.info-desc       { color: var(--texto-suave); line-height: 1.5; font-size: .85rem; }
+
+
+/* =============================================================
+   CÓDIGO COPIABLE (en la tabla de códigos)
+   ============================================================= */
+.codigo-texto {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--acento);
+  background: var(--fondo-alt);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+
+/* =============================================================
+   RESPONSIVE DEL PANEL
+   ============================================================= */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .panel-contenido { padding: 24px; }
+  .resumen-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Móvil — sidebar se convierte en barra horizontal arriba */
+@media (max-width: 768px) {
+
+  #pantalla-panel { flex-direction: column; }
+
+  .panel-cuerpo { flex-direction: column; }
+
+  /* Tabs horizontales en la parte superior */
+  .panel-tabs {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--borde);
+    padding: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-btn {
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .tab-btn.activo {
+    border-left-color: transparent;
+    border-bottom-color: var(--acento);
+  }
+
+  .panel-contenido  { padding: 20px; }
+  .form-doble       { grid-template-columns: 1fr; }
+  .panel-nav        { padding: 0 16px; }
+  .panel-nav .emp-badge { display: none; }  /* Oculta el nombre en móvil para ahorrar espacio */
+
+  .resumen-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Móvil pequeño */
+@media (max-width: 480px) {
+  .login-panel-caja { padding: 28px 20px; }
+  .resumen-grid     { grid-template-columns: 1fr; }
+  .tabla-contenedor { overflow-x: auto; }
+}

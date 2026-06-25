@@ -1,0 +1,893 @@
+/* =============================================================
+   ESTILOS DE i24h
+   Aquí se define cómo se ve toda la página:
+   colores, tamaños, posiciones y diseño responsive
+   ============================================================= */
+
+
+/* =============================================================
+   VARIABLES DE COLOR
+   Cambia un color aquí y se actualiza en toda la página
+   ============================================================= */
+:root {
+  /* Modo claro (por defecto) */
+  --fondo:          #fff8f8;   /* Fondo general de la página */
+  --fondo-alt:      #fef2f2;   /* Fondo de secciones alternadas */
+  --superficie:     #ffffff;   /* Fondo de tarjetas y cajas */
+  --borde:          #fecaca;   /* Color de los bordes */
+  --texto:          #1e0a0a;   /* Texto principal */
+  --texto-suave:    #78484a;   /* Texto secundario (descripciones) */
+  --acento:         #dc2626;   /* Color rojo principal (botones, íconos) */
+  --acento-oscuro:  #b91c1c;   /* Rojo más oscuro para hover */
+  --acento-texto:   #ffffff;   /* Texto encima del rojo */
+  --radio:          12px;       /* Redondez de las esquinas */
+  --sombra:         0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+}
+
+/* Modo oscuro — se activa cuando el body O el html tienen la clase "dark"
+   El html.dark permite que el color aplique ANTES de que cargue el JS (sin parpadeo) */
+body.dark, html.dark body, html.dark {
+  --fondo:         #1a0505;
+  --fondo-alt:     #2a0a0a;
+  --superficie:    #220808;
+  --borde:         #7f1d1d;
+  --texto:         #fee2e2;
+  --texto-suave:   #fca5a5;
+  --acento:        #ef4444;
+  --acento-oscuro: #dc2626;
+}
+
+
+/* =============================================================
+   RESET — Elimina márgenes y rellenos por defecto del navegador
+   ============================================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  line-height: 1.6;
+  transition: background .3s, color .3s; /* Animación suave al cambiar modo */
+}
+
+/* Oculta el h2 visualmente pero lo deja accesible para lectores de pantalla */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+
+/* =============================================================
+   CONTENEDOR PRINCIPAL
+   Limita el ancho y centra el contenido en pantalla
+   ============================================================= */
+.w {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+
+/* =============================================================
+   BARRA DE NAVEGACIÓN
+   La barra fija arriba con el logo y los links
+   ============================================================= */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--borde);
+  position: sticky;   /* Se queda pegada al hacer scroll */
+  top: 0;
+  background: var(--fondo);
+  z-index: 100;
+  transition: background .3s;
+}
+
+/* Logo de la empresa */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--acento);
+  background: none;
+  height: auto;
+  width: auto;
+}
+
+.logo img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.logo span {
+  font-size: .75rem;
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+/* Links del menú (Inicio, Servicios, etc.) */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.nav-links a {
+  color: var(--texto);
+  text-decoration: none;
+  font-size: .875rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background .2s;
+}
+
+.nav-links a:hover { background: var(--fondo-alt); }
+
+/* Badge verde "Abierto 24/7" */
+.badge-24 {
+  font-size: .75rem;
+  background: #dcfce7;
+  color: #166534;
+  padding: 4px 10px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body.dark .badge-24 {
+  background: #14532d;
+  color: #86efac;
+}
+
+/* Botón para cambiar entre modo claro y oscuro */
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .8rem;
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  color: var(--texto);
+  padding: 6px 12px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.toggle-btn:hover { background: var(--borde); }
+
+
+/* =============================================================
+   SECCIÓN HERO (parte principal al entrar)
+   Texto de bienvenida y el código QR de socio
+   ============================================================= */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 64px 0;
+}
+
+.hero-text { max-width: 560px; }
+
+/* Pastilla pequeña arriba del título */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .8rem;
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  color: var(--texto-suave);
+  padding: 5px 12px;
+  border-radius: 99px;
+  margin-bottom: 16px;
+}
+
+.hero-text h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 16px;
+}
+
+.hero-text p {
+  color: var(--texto-suave);
+  margin-bottom: 28px;
+  font-size: 1.05rem;
+}
+
+
+/* =============================================================
+   BOTONES
+   .btn-p = botón principal (rojo relleno)
+   .btn-o = botón secundario (borde, transparente)
+   ============================================================= */
+.btn-p, .btn-o {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .2s;
+}
+
+.btn-p {
+  background: var(--acento);
+  color: var(--acento-texto);
+}
+
+.btn-p:hover { background: var(--acento-oscuro); }
+
+.btn-o {
+  background: transparent;
+  border: 1.5px solid var(--borde);
+  color: var(--texto);
+  margin-left: 10px;
+}
+
+.btn-o:hover { background: var(--fondo-alt); }
+
+
+/* =============================================================
+   TARJETA QR DEL SOCIO (lado derecho del hero)
+   ============================================================= */
+.qr-badge {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 32px 28px;
+  text-align: center;
+  min-width: 200px;
+  box-shadow: var(--sombra);
+}
+
+.qr-box {
+  width: 80px;
+  height: 80px;
+  background: var(--fondo-alt);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 2.5rem;
+  color: var(--acento);
+}
+
+.qr-title { font-weight: 600; margin-bottom: 6px; }
+.qr-desc  { font-size: .8rem; color: var(--texto-suave); }
+
+
+/* =============================================================
+   SECCIONES GENERALES
+   .sec     = sección normal (fondo blanco)
+   .sec.alt = sección alternada (fondo ligeramente rojo)
+   ============================================================= */
+.sec {
+  padding: 56px 0;
+  border-top: 1px solid var(--borde);
+}
+
+.sec.alt {
+  background: var(--fondo-alt);
+  margin: 0 -20px;
+  padding: 56px 20px;
+  transition: background .3s;
+}
+
+/* Etiqueta pequeña encima del título de sección */
+.sec-lbl {
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--acento);
+  margin-bottom: 24px;
+}
+
+
+/* =============================================================
+   TARJETAS DE SERVICIOS
+   ============================================================= */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 24px;
+  box-shadow: var(--sombra);
+  transition: background .3s;
+}
+
+.card-ico {
+  font-size: 1.8rem;
+  color: var(--acento);
+  margin-bottom: 12px;
+}
+
+.card h3 { font-size: 1rem; margin-bottom: 6px; }
+.card p  { font-size: .85rem; color: var(--texto-suave); }
+
+
+/* =============================================================
+   TARJETAS DE PRODUCTOS
+   ============================================================= */
+.prod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.prod-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 24px;
+  text-align: center;
+  box-shadow: var(--sombra);
+  transition: background .3s;
+}
+
+.prod-card i {
+  font-size: 2rem;
+  color: var(--acento);
+  display: block;
+  margin-bottom: 12px;
+}
+
+.prod-title { font-weight: 600; margin-bottom: 6px; }
+.prod-desc  { font-size: .82rem; color: var(--texto-suave); }
+
+
+/* =============================================================
+   SECCIÓN DE BENEFICIOS DE SOCIO
+   ============================================================= */
+.benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.benefit-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 20px;
+  box-shadow: var(--sombra);
+  transition: background .3s;
+}
+
+.benefit-ico {
+  font-size: 1.4rem;
+  color: var(--acento);
+  flex-shrink: 0;
+}
+
+.benefit-title { font-weight: 600; margin-bottom: 4px; }
+.benefit-desc  { font-size: .82rem; color: var(--texto-suave); }
+
+
+/* =============================================================
+   SECCIÓN DE COMENTARIOS
+   ============================================================= */
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.comment-header .sec-lbl { margin-bottom: 0; }
+
+/* Lista de comentarios */
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+/* Tarjeta individual de comentario */
+.comment-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 20px;
+  box-shadow: var(--sombra);
+  transition: background .3s;
+}
+
+.comment-author-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+/* Círculo con el ícono de usuario */
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--fondo-alt);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--texto-suave);
+  flex-shrink: 0;
+}
+
+.comment-name  { font-weight: 600; font-size: .9rem; }
+.stars         { font-size: .85rem; color: #f59e0b; } /* Color dorado para las estrellas */
+.comment-text  { font-size: .9rem; color: var(--texto-suave); margin-bottom: 8px; }
+.comment-time  { font-size: .75rem; color: var(--texto-suave); }
+
+
+/* =============================================================
+   FORMULARIO PARA DEJAR COMENTARIO
+   ============================================================= */
+.comment-form {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 28px;
+  box-shadow: var(--sombra);
+  transition: background .3s;
+}
+
+.form-title    { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+.form-subtitle { font-size: .82rem; color: var(--texto-suave); margin-bottom: 20px; }
+.form-group    { margin-bottom: 16px; }
+
+/* Etiqueta encima de cada campo */
+.lbl {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+  margin-bottom: 6px;
+}
+
+/* Fila de estrellas para calificar */
+.star-row { display: flex; gap: 6px; }
+
+.star-btn {
+  font-size: 1.6rem;
+  color: var(--borde);
+  cursor: pointer;
+  transition: color .15s;
+  user-select: none;
+}
+
+.star-btn.active { color: #f59e0b; } /* Estrella seleccionada = dorada */
+
+/* Campo de texto e inputs */
+.inp {
+  width: 100%;
+  background: var(--fondo);
+  border: 1.5px solid var(--borde);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--texto);
+  font-size: .9rem;
+  font-family: inherit;
+  transition: border-color .2s, background .3s;
+  resize: vertical;
+}
+
+.inp:focus {
+  outline: none;
+  border-color: var(--acento); /* Borde rojo al hacer clic en el campo */
+}
+
+/* Fila inferior del formulario (nota de privacidad + botón publicar) */
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.privacy-note {
+  font-size: .78rem;
+  color: var(--texto-suave);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Mensajes de éxito o error */
+.error-msg {
+  margin-top: 12px;
+  font-size: .85rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.error-msg.error   { background: #fee2e2; color: #991b1b; }
+.error-msg.success { background: #dcfce7; color: #166534; }
+
+body.dark .error-msg.error   { background: #450a0a; color: #fca5a5; }
+body.dark .error-msg.success { background: #052e16; color: #86efac; }
+
+
+/* =============================================================
+   SECCIÓN DE ACCESO RÁPIDO (login y QR en sucursal)
+   ============================================================= */
+.access-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Caja del formulario de inicio de sesión */
+.login-box {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--sombra);
+  transition: background .3s;
+}
+
+.login-title { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+
+/* Tarjeta del acceso por QR */
+.qr-access-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 28px;
+  text-align: center;
+  box-shadow: var(--sombra);
+  transition: background .3s;
+}
+
+.qr-access-card i {
+  font-size: 2.5rem;
+  color: var(--acento);
+  display: block;
+  margin-bottom: 12px;
+}
+
+
+/* =============================================================
+   BARRA DE PRIVACIDAD
+   ============================================================= */
+.privacy-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px 20px;
+  margin: 32px 0;
+  font-size: .85rem;
+  color: var(--texto-suave);
+  transition: background .3s;
+}
+
+.privacy-bar i {
+  color: var(--acento);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+
+/* =============================================================
+   PIE DE PÁGINA
+   ============================================================= */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0;
+  border-top: 1px solid var(--borde);
+  font-size: .82rem;
+  color: var(--texto-suave);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.footer-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+
+/* =============================================================
+   DISEÑO RESPONSIVE
+   La página se adapta a distintos tamaños de pantalla
+   ============================================================= */
+
+/* Tablet (pantallas medianas hasta 1024px) */
+@media (max-width: 1024px) {
+  .hero-text h1 { font-size: 1.7rem; }
+  .cards        { grid-template-columns: repeat(2, 1fr); }
+  .benefit-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Móvil (pantallas pequeñas hasta 768px) */
+@media (max-width: 768px) {
+
+  /* Oculta los links del menú en móvil */
+  .nav-links a { display: none; }
+  .badge-24    { display: none; }
+  .nav         { flex-wrap: wrap; gap: 8px; }
+
+  /* Hero se apila verticalmente */
+  .hero {
+    flex-direction: column;
+    padding: 36px 0;
+    gap: 24px;
+  }
+
+  .hero-text h1 { font-size: 1.45rem; }
+  .hero-text p  { font-size: .95rem; }
+  .qr-badge     { width: 100%; }
+
+  /* Secciones con menos espacio */
+  .sec     { padding: 36px 0; }
+  .sec.alt { padding: 36px 20px; }
+
+  /* Todos los grids pasan a una sola columna */
+  .cards        { grid-template-columns: 1fr; }
+  .prod-grid    { grid-template-columns: 1fr; }
+  .benefit-grid { grid-template-columns: 1fr; }
+  .access-grid  { grid-template-columns: 1fr; }
+
+  /* Formulario y footer en columna */
+  .form-actions { flex-direction: column; align-items: flex-start; }
+  .footer       { flex-direction: column; align-items: flex-start; gap: 4px; }
+
+  /* Botones del hero uno debajo del otro */
+  .btn-o        { margin-left: 0; margin-top: 10px; }
+  .hero-text .btn-o { display: block; }
+}
+
+/* Móvil pequeño (hasta 480px) */
+@media (max-width: 480px) {
+  .w       { padding: 0 14px; }
+  .sec.alt { margin: 0 -14px; padding: 36px 14px; }
+  .hero-text h1 { font-size: 1.25rem; }
+  .comment-form, .login-box, .qr-access-card { padding: 18px; }
+}
+
+
+/* =============================================================
+   MODALES (ventanas emergentes)
+   Se usan para el registro de clientes y la selección de tipo de cuenta
+   ============================================================= */
+
+/* Fondo oscuro semitransparente detrás del modal */
+.modal-fondo {
+  position: fixed;
+  inset: 0;                          /* Cubre toda la pantalla */
+  background: rgba(0, 0, 0, .55);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;              /* No recibe clics cuando está oculto */
+  transition: opacity .25s;
+}
+
+/* Cuando el modal es visible */
+.modal-fondo.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Caja blanca (o de color según el modo) del modal */
+.modal-caja {
+  background: var(--superficie);
+  border-radius: var(--radio);
+  padding: 36px;
+  width: 100%;
+  max-width: 460px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+  transform: translateY(20px);       /* Empieza un poco abajo */
+  transition: transform .25s;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Cuando el modal es visible, la caja sube a su posición normal */
+.modal-fondo.visible .modal-caja {
+  transform: translateY(0);
+}
+
+/* Botón X para cerrar el modal (esquina superior derecha) */
+.modal-cerrar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  color: var(--texto-suave);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: .9rem;
+  transition: background .2s;
+}
+
+.modal-cerrar:hover { background: var(--borde); }
+
+/* Botón "← Regresar" para volver al modal anterior */
+.modal-regresar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--texto-suave);
+  font-size: .85rem;
+  cursor: pointer;
+  margin-bottom: 16px;
+  padding: 0;
+  transition: color .2s;
+}
+
+.modal-regresar:hover { color: var(--acento); }
+
+/* Ícono grande arriba del título del modal */
+.modal-icono {
+  width: 52px;
+  height: 52px;
+  background: var(--fondo-alt);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: var(--acento);
+  margin-bottom: 16px;
+}
+
+.modal-titulo {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--texto);
+}
+
+.modal-desc {
+  font-size: .875rem;
+  color: var(--texto-suave);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+/* Contenedor de las dos opciones (cliente / empleado) */
+.modal-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Cada opción de tipo de cuenta */
+.opcion-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--fondo-alt);
+  border: 1.5px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  color: var(--texto);
+  transition: all .2s;
+  width: 100%;
+}
+
+.opcion-btn:hover {
+  border-color: var(--acento);
+  background: var(--superficie);
+}
+
+/* Ícono dentro de cada opción */
+.opcion-icono {
+  width: 40px;
+  height: 40px;
+  background: var(--superficie);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--acento);
+  flex-shrink: 0;
+}
+
+.opcion-titulo  { font-weight: 600; font-size: .9rem; margin-bottom: 2px; }
+.opcion-desc    { font-size: .8rem; color: var(--texto-suave); }
+.opcion-flecha  { margin-left: auto; color: var(--texto-suave); flex-shrink: 0; }
+
+/* Formulario dentro del modal */
+.modal-form { display: flex; flex-direction: column; gap: 4px; }
+
+/* Nota pequeña debajo de un campo */
+.campo-nota {
+  font-size: .78rem;
+  color: var(--texto-suave);
+  margin-top: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  line-height: 1.4;
+}
+
+/* Botón que ocupa todo el ancho */
+.btn-bloque {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* Clase para centrar el texto de la nota de privacidad */
+.centrado { justify-content: center; }
+
+/* Campo de código grande y centrado (para el código de 6 dígitos) */
+.inp-codigo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: .3em;
+}
+
+/* Botón de reenviar código (sin relleno, discreto) */
+.btn-reenviar {
+  background: none;
+  border: none;
+  color: var(--acento);
+  font-size: .82rem;
+  cursor: pointer;
+  text-align: center;
+  padding: 8px;
+  margin-top: 4px;
+  transition: opacity .2s;
+}
+
+.btn-reenviar:hover { opacity: .75; }

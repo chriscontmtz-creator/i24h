@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{titulo}} — i24h</title>
+
+  <!-- Aplica dark mode antes de pintar la página (evita parpadeo) -->
+  <script>if(localStorage.getItem('dark')==='1')document.documentElement.classList.add('dark');</script>
+
+  <!-- Íconos de Tabler -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+  <!-- Estilos del proyecto -->
+  <link rel="stylesheet" href="/estilos.css">
+
+  {{!-- Bloque para hojas de estilo extra por página (opcional) --}}
+  {{#if estiloExtra}}
+    <link rel="stylesheet" href="/{{estiloExtra}}">
+  {{/if}}
+</head>
+<body>
+
+  {{!-- Aquí se inyecta el contenido de cada vista (index.hbs, panel.hbs, etc.) --}}
+  {{{body}}}
+
+  <!-- Script principal -->
+  <script src="/{{scriptPrincipal}}"></script>
+
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de empleados — i24h</title>
+  <!-- Mismo script que index.html: aplica dark mode antes de pintar la página -->
+  <script>if(localStorage.getItem('dark')==='1')document.documentElement.classList.add('dark');</script>
+
+  <!-- Íconos -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- Estilos generales compartidos con index.html -->
+  <link rel="stylesheet" href="estilos.css">
+  <!-- Estilos exclusivos del panel -->
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       PANTALLA DE LOGIN DE EMPLEADO
+       Se muestra al entrar al panel si no hay sesión activa
+       ============================================================ -->
+  <div class="pantalla" id="pantalla-login">
+    <div class="login-panel-caja">
+
+      <!-- Logo -->
+      <div class="login-panel-logo">
+        <span>i24h</span>
+        <p>Panel de empleados</p>
+      </div>
+
+      <!-- Formulario de acceso -->
+      <div class="form-group">
+        <span class="lbl">Correo electrónico</span>
+        <input class="inp" type="email" id="emp-correo" placeholder="tu@i24h.com" autocomplete="email" />
+      </div>
+
+      <div class="form-group">
+        <span class="lbl">Contraseña</span>
+        <input class="inp" type="password" id="emp-password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <!-- Mensaje de error si el login falla -->
+      <p id="login-msg" class="error-msg" style="display:none;"></p>
+
+      <button class="btn-p btn-bloque" id="btn-login-empleado">
+        Entrar al panel ↗
+      </button>
+
+      <!-- Link para volver a la página principal -->
+      <a class="link-volver" href="index.html">
+        <i class="ti ti-arrow-left"></i> Volver a i24h
+      </a>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       PANEL PRINCIPAL
+       Solo se muestra después de iniciar sesión correctamente
+       ============================================================ -->
+  <div class="pantalla oculto" id="pantalla-panel">
+
+    <!-- BARRA SUPERIOR DEL PANEL -->
+    <div class="panel-nav">
+
+      <!-- Logo y nombre del sistema -->
+      <div class="panel-nav-logo">
+        <span class="logo-texto">i24h</span>
+        <span class="logo-sub">Panel de administración</span>
+      </div>
+
+      <!-- Información del empleado activo y botón de cerrar sesión -->
+      <div class="panel-nav-usuario">
+        <div class="emp-badge">
+          <i class="ti ti-user-circle"></i>
+          <div>
+            <p class="emp-nombre" id="emp-nombre-activo">Cargando...</p>
+            <!-- El cargo se muestra aquí (Admin, Coordinador, etc.) -->
+            <p class="emp-cargo" id="emp-cargo-activo">—</p>
+          </div>
+        </div>
+        <button class="btn-o btn-chico" id="btn-cerrar-sesion">
+          <i class="ti ti-logout"></i> Cerrar sesión
+        </button>
+      </div>
+
+    </div>
+
+    <!-- CONTENIDO DEL PANEL (tabs + secciones) -->
+    <div class="panel-cuerpo">
+
+      <!-- MENÚ DE TABS (navegación lateral) -->
+      <nav class="panel-tabs" aria-label="Secciones del panel">
+
+        <!-- Tab: Resumen general -->
+        <button class="tab-btn activo" data-tab="resumen">
+          <i class="ti ti-layout-dashboard"></i> Resumen
+        </button>
+
+        <!-- Tab: Gestión de empleados (solo Admin y Coordinador) -->
+        <button class="tab-btn" data-tab="empleados">
+          <i class="ti ti-users"></i> Empleados
+        </button>
+
+        <!-- Tab: Gestión de clientes -->
+        <button class="tab-btn" data-tab="clientes">
+          <i class="ti ti-user-heart"></i> Clientes
+        </button>
+
+        <!-- Tab: Códigos de verificación (para controlar registro de clientes) -->
+        <button class="tab-btn" data-tab="codigos">
+          <i class="ti ti-key"></i> Códigos de acceso
+        </button>
+
+      </nav>
+
+      <!-- ÁREA DE CONTENIDO DE CADA TAB -->
+      <main class="panel-contenido">
+
+
+        <!-- ======================================================
+             TAB: RESUMEN
+             Vista rápida con contadores y actividad reciente
+             ====================================================== -->
+        <section class="tab-seccion activo" id="tab-resumen">
+
+          <h1 class="panel-titulo">Resumen</h1>
+
+          <!-- Tarjetas de contadores -->
+          <div class="resumen-grid">
+
+            <div class="resumen-card">
+              <div class="resumen-icono"><i class="ti ti-users"></i></div>
+              <p class="resumen-numero" id="total-empleados">—</p>
+              <p class="resumen-lbl">Empleados activos</p>
+            </div>
+
+            <div class="resumen-card">
+              <div class="resumen-icono"><i class="ti ti-user-heart"></i></div>
+              <p class="resumen-numero" id="total-clientes">—</p>
+              <p class="resumen-lbl">Clientes registrados</p>
+            </div>
+
+            <div class="resumen-card">
+              <div class="resumen-icono"><i class="ti ti-key"></i></div>
+              <p class="resumen-numero" id="total-codigos">—</p>
+              <p class="resumen-lbl">Códigos disponibles</p>
+            </div>
+
+            <div class="resumen-card">
+              <div class="resumen-icono"><i class="ti ti-message"></i></div>
+              <p class="resumen-numero" id="total-comentarios">—</p>
+              <p class="resumen-lbl">Comentarios recibidos</p>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ======================================================
+             TAB: EMPLEADOS
+             Crear, ver y dar de baja cuentas de empleados
+             Solo visible para Admin y Coordinador
+             ====================================================== -->
+        <section class="tab-seccion oculto" id="tab-empleados">
+
+          <div class="seccion-encabezado">
+            <h1 class="panel-titulo">Empleados</h1>
+            <!-- Botón para abrir el formulario de nuevo empleado -->
+            <button class="btn-p btn-chico" id="btn-abrir-form-empleado">
+              <i class="ti ti-user-plus"></i> Agregar empleado
+            </button>
+          </div>
+
+          <!-- FORMULARIO: Crear nuevo empleado (oculto por defecto) -->
+          <div class="form-panel oculto" id="form-nuevo-empleado">
+            <h2 class="form-panel-titulo">Nuevo empleado</h2>
+
+            <div class="form-doble">
+
+              <div class="form-group">
+                <span class="lbl">Nombre completo *</span>
+                <input class="inp" type="text" id="nemp-nombre" placeholder="Nombre y apellido" />
+              </div>
+
+              <div class="form-group">
+                <span class="lbl">Correo electrónico *</span>
+                <input class="inp" type="email" id="nemp-correo" placeholder="empleado@i24h.com" />
+              </div>
+
+              <div class="form-group">
+                <span class="lbl">Contraseña temporal *</span>
+                <input class="inp" type="password" id="nemp-password" placeholder="El empleado la cambiará al entrar" />
+              </div>
+
+              <!-- Selector de cargo -->
+              <div class="form-group">
+                <span class="lbl">Cargo *</span>
+                <select class="inp" id="nemp-cargo">
+                  <option value="">Selecciona un cargo...</option>
+                  <!-- Los cargos que puede asignar el admin logueado
+                       se filtran desde JavaScript según su propio cargo -->
+                  <option value="admin">Admin</option>
+                  <option value="coordinador">Coordinador</option>
+                  <option value="lider">Líder</option>
+                  <option value="encargado">Encargado</option>
+                  <option value="colaborador">Colaborador</option>
+                </select>
+              </div>
+
+            </div>
+
+            <!-- Mensaje de error o éxito del formulario -->
+            <p id="nemp-msg" class="error-msg" style="display:none;"></p>
+
+            <div class="form-acciones">
+              <button class="btn-o btn-chico" id="btn-cancelar-form-empleado">Cancelar</button>
+              <button class="btn-p btn-chico" id="btn-guardar-empleado">
+                <i class="ti ti-check"></i> Crear cuenta
+              </button>
+            </div>
+          </div>
+
+          <!-- TABLA: Lista de empleados -->
+          <div class="tabla-contenedor">
+            <table class="tabla" id="tabla-empleados">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Cargo</th>
+                  <th>Fecha de registro</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-empleados-cuerpo">
+                <!-- Las filas se insertan desde JavaScript -->
+                <tr class="tabla-vacia">
+                  <td colspan="6">Cargando empleados...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+
+        <!-- ======================================================
+             TAB: CLIENTES
+             Ver lista de clientes registrados y su información
+             ====================================================== -->
+        <section class="tab-seccion oculto" id="tab-clientes">
+
+          <div class="seccion-encabezado">
+            <h1 class="panel-titulo">Clientes</h1>
+          </div>
+
+          <!-- TABLA: Lista de clientes -->
+          <div class="tabla-contenedor">
+            <table class="tabla" id="tabla-clientes">
+              <thead>
+                <tr>
+                  <th>Correo</th>
+                  <th>Puntos</th>
+                  <th>Fecha de registro</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-clientes-cuerpo">
+                <!-- Las filas se insertan desde JavaScript -->
+                <tr class="tabla-vacia">
+                  <td colspan="5">Cargando clientes...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+
+        <!-- ======================================================
+             TAB: CÓDIGOS DE ACCESO
+             Generar y administrar los códigos que se le dan
+             a los clientes para poder registrarse
+             ====================================================== -->
+        <section class="tab-seccion oculto" id="tab-codigos">
+
+          <div class="seccion-encabezado">
+            <h1 class="panel-titulo">Códigos de acceso</h1>
+            <!-- Botón para generar un código nuevo -->
+            <button class="btn-p btn-chico" id="btn-generar-codigo">
+              <i class="ti ti-plus"></i> Generar código
+            </button>
+          </div>
+
+          <!-- Explicación de cómo funciona el sistema -->
+          <div class="info-box">
+            <i class="ti ti-info-circle"></i>
+            <div>
+              <p class="info-titulo">¿Para qué sirven los códigos?</p>
+              <p class="info-desc">
+                Cada cliente necesita un código para poder crear su cuenta.
+                Tú generas los códigos aquí y se los das en sucursal.
+                Así controlas cuántas cuentas se crean y evitas registros falsos.
+                Cada código solo se puede usar una vez.
+              </p>
+            </div>
+          </div>
+
+          <!-- TABLA: Lista de códigos generados -->
+          <div class="tabla-contenedor">
+            <table class="tabla" id="tabla-codigos">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Generado por</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-codigos-cuerpo">
+                <!-- Las filas se insertan desde JavaScript -->
+                <tr class="tabla-vacia">
+                  <td colspan="5">No hay códigos generados todavía.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+
+      </main>
+    </div>
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html>
