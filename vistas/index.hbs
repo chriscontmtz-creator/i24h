@@ -11,14 +11,75 @@
         <a href="#">Inicio</a>
         <a href="#">Servicios</a>
         <a href="#">Productos</a>
-        <a href="#">Mi cuenta</a>
         <a href="#">Sucursales</a>
         <a href="#">Cotizaciones</a>
         <span class="badge-24"><i class="ti ti-moon" aria-hidden="true"></i> Abierto 24/7</span>
+
+        <!-- Botón modo oscuro -->
         <button class="toggle-btn" id="toggle-btn" aria-label="Cambiar modo de color">
           <i class="ti ti-moon" id="tico" aria-hidden="true"></i>
           <span id="tlbl">Modo oscuro</span>
         </button>
+
+        <!-- ESTADO: Sin sesión — visible por defecto, JS lo oculta si hay sesión -->
+        <div class="nav-auth" id="nav-auth">
+          <button class="btn-o btn-sm" id="btn-login-nav">Iniciar sesión</button>
+          <button class="btn-p btn-sm" id="btn-registro-nav">Crear cuenta ↗</button>
+        </div>
+
+        <!-- ESTADO: Con sesión — oculto por defecto, JS lo muestra y llena los datos -->
+        <div class="nav-usuario" id="nav-usuario" style="display:none">
+          <button class="nav-usuario-btn" id="nav-usuario-btn" aria-haspopup="true" aria-expanded="false">
+            <span class="avatar-ico" id="nav-avatar">?</span>
+            <span class="nav-usuario-nombre" id="nav-nombre">Usuario</span>
+            <span class="nav-usuario-rol" id="nav-rol">cliente</span>
+            <i class="ti ti-chevron-down chevron" aria-hidden="true"></i>
+          </button>
+
+          <div class="nav-dropdown" id="nav-dropdown" role="menu">
+
+            <!-- Encabezado: nombre, correo y puntos -->
+            <div class="nav-dropdown-header">
+              <p class="dd-nombre" id="dd-nombre">—</p>
+              <p class="dd-correo" id="dd-correo">—</p>
+              <span class="dd-puntos" id="dd-puntos">
+                <i class="ti ti-star-filled" aria-hidden="true"></i> 0 puntos
+              </span>
+            </div>
+
+            <ul class="nav-dropdown-lista">
+              <!-- Disponible para todos -->
+              <li role="menuitem">
+                <a href="#qr">
+                  <i class="ti ti-qrcode" aria-hidden="true"></i> Mi código QR
+                </a>
+              </li>
+              <li role="menuitem">
+                <a href="#puntos">
+                  <i class="ti ti-star" aria-hidden="true"></i> Mis puntos
+                </a>
+              </li>
+
+              <!-- Solo visible para encargado, lider, coordinador, admin — JS lo muestra -->
+              <li class="item-panel" role="menuitem" style="display:none">
+                <a href="/panel">
+                  <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Panel de administración
+                </a>
+              </li>
+
+              <li class="nav-dropdown-sep" role="separator"></li>
+
+              <!-- Cerrar sesión — siempre visible -->
+              <li class="item-peligro" role="menuitem">
+                <button id="btn-cerrar-sesion-nav">
+                  <i class="ti ti-logout" aria-hidden="true"></i> Cerrar sesión
+                </button>
+              </li>
+            </ul>
+
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -30,8 +91,20 @@
         </span>
         <h1>Hola, somos i24h — tu espacio de conectividad en Monterrey zona poniente</h1>
         <p>Cibercafé, renta de equipos, impresiones y tienda. Un lugar seguro y cómodo disponible a cualquier hora del día — incluso de madrugada cuando más lo necesitas.</p>
-        <button class="btn-p" id="crear-cuenta">Crear cuenta ↗</button>
-        <button class="btn-o" id="iniciar-sesion">Iniciar sesión</button>
+        {{#if logueado}}
+          {{!-- Usuario con sesión activa: saludo y acceso directo según rol --}}
+          <p class="hero-bienvenida">Bienvenido, <strong>{{usuario.nombre}}</strong> 👋</p>
+          {{#if esEmpleado}}
+            <a href="/panel" class="btn-p">Ir al panel ↗</a>
+          {{else}}
+            <a href="#puntos" class="btn-p">Ver mis puntos ↗</a>
+          {{/if}}
+          <button class="btn-o" id="btn-ver-qr">Mi código QR</button>
+        {{else}}
+          {{!-- Sin sesión: botones de registro y login --}}
+          <button class="btn-p" id="crear-cuenta">Crear cuenta ↗</button>
+          <button class="btn-o" id="iniciar-sesion">Iniciar sesión</button>
+        {{/if}}
       </div>
       <div class="qr-badge">
         <div class="qr-box">
@@ -169,10 +242,48 @@
       </div>
     </div>
 
+    {{!-- Acceso rápido para empleados — solo visible si hay sesión con cargo distinto a cliente --}}
+    {{#if esEmpleado}}
+    <div class="sec alt">
+      <p class="sec-lbl">Acceso rápido — Empleados</p>
+      <div class="quickbar">
+
+        <a href="/panel" class="quickbar-item">
+          <i class="ti ti-layout-dashboard" aria-hidden="true"></i>
+          <span>Panel de administración</span>
+        </a>
+
+        {{#if esEncargado}}
+        <a href="/panel#clientes" class="quickbar-item">
+          <i class="ti ti-users" aria-hidden="true"></i>
+          <span>Ver clientes</span>
+        </a>
+        {{/if}}
+
+        {{#if esLider}}
+        <a href="/panel#empleados" class="quickbar-item">
+          <i class="ti ti-id-badge" aria-hidden="true"></i>
+          <span>Gestionar empleados</span>
+        </a>
+        {{/if}}
+
+        {{#if esAdmin}}
+        <a href="/panel#codigos" class="quickbar-item quickbar-item--admin">
+          <i class="ti ti-key" aria-hidden="true"></i>
+          <span>Generar códigos</span>
+        </a>
+        {{/if}}
+
+      </div>
+    </div>
+    {{/if}}
+
+    {{!-- Sección de login — solo visible si no hay sesión activa --}}
+    {{#unless logueado}}
     <!-- LOGIN RÁPIDO -->
     <div class="sec alt">
       <p class="sec-lbl">Acceso rápido</p>
-      <forrm method="POST" action="/api/login">
+      <form onsubmit="return false">
         <div class="access-grid">
         <div class="login-box">
           <p class="login-title">Iniciar sesión</p>
@@ -180,7 +291,7 @@
           <input class="inp" type="email" placeholder="tu@correo.com" />
           <span class="lbl">Contraseña</span>
           <input class="inp" type="password" placeholder="••••••••" />
-          <button class="btn-p" id="login-btn">Entrar ↗</button>
+          <button class="btn-p" id="login-btn" type="button">Entrar ↗</button>
         </div>
         <div class="qr-access-card">
           <i class="ti ti-scan" aria-hidden="true"></i>
@@ -189,9 +300,10 @@
           <span class="pill">Solo en sucursal</span>
         </div>
       </div>
-      </forrm>
+      </form>
 
     </div>
+    {{/unless}}
 
     <!-- BARRA PRIVACIDAD -->
     <div class="privacy-bar">
@@ -207,6 +319,8 @@
 
   </div>
 
+  {{!-- Modales de registro — solo se renderizan si no hay sesión activa --}}
+  {{#unless logueado}}
   <!-- MODAL: Elegir tipo de cuenta -->
   <div class="modal-fondo" id="modal-elegir" aria-hidden="true">
     <div class="modal-caja" role="dialog" aria-labelledby="modal-elegir-titulo">
@@ -281,3 +395,4 @@
       </div>
     </div>
   </div>
+  {{/unless}}

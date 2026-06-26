@@ -16,16 +16,17 @@ const textoTema = document.getElementById('tlbl');
 
 function activarModoOscuro(activar) {
   document.body.classList.toggle('dark', activar);
-  iconoTema.className   = activar ? 'ti ti-sun' : 'ti ti-moon';
-  textoTema.textContent = activar ? 'Modo claro' : 'Modo oscuro';
-  localStorage.setItem('dark', activar ? '1' : '0'); // Recuerda la preferencia aunque cierres el navegador
+  document.documentElement.classList.toggle('dark', activar);
+  if (iconoTema) iconoTema.className   = activar ? 'ti ti-sun' : 'ti ti-moon';
+  if (textoTema) textoTema.textContent = activar ? 'Modo claro' : 'Modo oscuro';
+  localStorage.setItem('dark', activar ? '1' : '0');
 }
 
-// Al cargar la página, revisa si el usuario ya tenía el modo oscuro activado
 activarModoOscuro(localStorage.getItem('dark') === '1');
 
-botonTema.addEventListener('click', () => {
-  activarModoOscuro(!document.body.classList.contains('dark'));
+botonTema?.addEventListener('click', () => {
+  const oscuro = document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+  activarModoOscuro(!oscuro);
 });
 
 
@@ -155,24 +156,22 @@ function cerrarModal(id) {
 }
 
 // Clic en el fondo oscuro cierra el modal
+// Los modales solo existen en el DOM cuando no hay sesión (Handlebars los omite si logueado)
 ['modal-elegir', 'modal-cliente'].forEach(id => {
-  document.getElementById(id).addEventListener('click', e => {
+  document.getElementById(id)?.addEventListener('click', e => {
     if (e.target === e.currentTarget) cerrarModal(id);
   });
 });
 
-// Botones de cerrar (X)
-document.getElementById('cerrar-modal-elegir').addEventListener('click',  () => cerrarModal('modal-elegir'));
-document.getElementById('cerrar-modal-cliente').addEventListener('click', () => cerrarModal('modal-cliente'));
+document.getElementById('cerrar-modal-elegir')?.addEventListener('click',  () => cerrarModal('modal-elegir'));
+document.getElementById('cerrar-modal-cliente')?.addEventListener('click', () => cerrarModal('modal-cliente'));
 
-// "← Regresar" en el modal de cliente vuelve al selector
-document.getElementById('regresar-modal-cliente').addEventListener('click', () => {
+document.getElementById('regresar-modal-cliente')?.addEventListener('click', () => {
   cerrarModal('modal-cliente');
   abrirModal('modal-elegir');
 });
 
-// Botón "Soy cliente" → va al modal de registro
-document.getElementById('btn-ir-cliente').addEventListener('click', () => {
+document.getElementById('btn-ir-cliente')?.addEventListener('click', () => {
   cerrarModal('modal-elegir');
   abrirModal('modal-cliente');
 });
@@ -180,17 +179,16 @@ document.getElementById('btn-ir-cliente').addEventListener('click', () => {
 
 // =============================================================
 //  BOTONES DEL HERO (parte superior de la página)
+//  Solo existen en el DOM cuando NO hay sesión activa
 // =============================================================
 
-// Botón "Crear cuenta" → abre el modal selector
-document.getElementById('crear-cuenta').addEventListener('click', () => {
+document.getElementById('crear-cuenta')?.addEventListener('click', () => {
   abrirModal('modal-elegir');
 });
 
-// Botón "Iniciar sesión" — hace scroll hasta el formulario de login
-document.getElementById('iniciar-sesion').addEventListener('click', () => {
-  document.querySelector('.access-grid').scrollIntoView({ behavior: 'smooth' });
-  setTimeout(() => document.querySelector('.login-box .inp').focus(), 400);
+document.getElementById('iniciar-sesion')?.addEventListener('click', () => {
+  document.querySelector('.access-grid')?.scrollIntoView({ behavior: 'smooth' });
+  setTimeout(() => document.querySelector('.login-box .inp')?.focus(), 400);
 });
 
 
@@ -199,7 +197,7 @@ document.getElementById('iniciar-sesion').addEventListener('click', () => {
 //  Envía correo y contraseña al servidor para verificar
 // =============================================================
 
-document.getElementById('login-btn').addEventListener('click', async () => {
+document.getElementById('login-btn')?.addEventListener('click', async () => {
   const correo   = document.querySelectorAll('.login-box .inp')[0].value.trim();
   const password = document.querySelectorAll('.login-box .inp')[1].value.trim();
   if (!correo || !password) { alert('Completa correo y contraseña.'); return; }
@@ -212,8 +210,244 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     });
     const datos = await respuesta.json();
     if (!respuesta.ok) { alert(datos.error); return; }
-    alert('¡Bienvenido, ' + datos.correo + '!');
-  } catch {
+
+    // Guarda la sesión — el nav se actualiza al recargar vía /api/sesion
+    localStorage.setItem('sesion', JSON.stringify(datos));
+    // Recarga para que el servidor renderice la vista con la sesión activa
+    window.location.reload();
+  } catch (err) {
+    console.error('Error en login:', err);
     alert('No se pudo conectar al servidor.');
   }
 });
+
+
+// =============================================================
+//  DROPDOWN DE USUARIO EN EL NAV
+//  Muestra nombre y rol del usuario logueado.
+//  Abre/cierra al hacer clic en el botón.
+//  Cierra solo al hacer clic fuera.
+// =============================================================
+
+const elNavAuth    = document.getElementById('nav-auth');
+const elNavUsuario = document.getElementById('nav-usuario');
+const elNavBtn     = document.getElementById('nav-usuario-btn');
+const elDropdown   = document.getElementById('nav-dropdown');
+
+// Roles que tienen acceso al panel de administración
+const ROLES_CON_PANEL = new Set(['admin', 'coordinador', 'lider', 'encargado']);
+
+// Llena el dropdown con los datos del usuario y alterna los bloques del nav
+function aplicarSesion(usuario) {
+  if (!usuario) return;
+
+  // Iniciales para el avatar (primera letra del nombre o del correo)
+  const fuente  = usuario.nombre || usuario.correo || '?';
+  const inicial = fuente.trim()[0].toUpperCase();
+
+  // Llenar elementos del botón principal
+  document.getElementById('nav-avatar').textContent  = inicial;
+  document.getElementById('nav-nombre').textContent  = usuario.nombre || usuario.correo;
+  document.getElementById('nav-rol').textContent     = usuario.cargo  || 'cliente';
+
+  // Llenar encabezado del dropdown
+  document.getElementById('dd-nombre').textContent  = usuario.nombre  || '—';
+  document.getElementById('dd-correo').textContent  = usuario.correo  || '—';
+  document.getElementById('dd-puntos').innerHTML    =
+    `<i class="ti ti-star-filled" aria-hidden="true"></i> ${usuario.puntos ?? 0} puntos`;
+
+  // Mostrar "Panel de administración" solo si el cargo lo permite
+  document.querySelector('.item-panel').style.display =
+    ROLES_CON_PANEL.has(usuario.cargo) ? '' : 'none';
+
+  // Cambiar bloques del nav: ocultar auth, mostrar usuario
+  elNavAuth.style.display    = 'none';
+  elNavUsuario.style.display = '';
+}
+
+// Abre o cierra el dropdown al hacer clic en el botón del usuario
+elNavBtn.addEventListener('click', () => {
+  const abierto = elDropdown.classList.toggle('visible');
+  elNavBtn.classList.toggle('abierto', abierto);
+  elNavBtn.setAttribute('aria-expanded', abierto);
+});
+
+// Cierra el dropdown al hacer clic en cualquier parte fuera de él
+document.addEventListener('click', (e) => {
+  if (!elNavUsuario.contains(e.target)) {
+    elDropdown.classList.remove('visible');
+    elNavBtn.classList.remove('abierto');
+    elNavBtn.setAttribute('aria-expanded', 'false');
+  }
+});
+
+// Cierra el dropdown al presionar Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    elDropdown.classList.remove('visible');
+    elNavBtn.classList.remove('abierto');
+    elNavBtn.setAttribute('aria-expanded', 'false');
+    elNavBtn.focus();
+  }
+});
+
+// Cerrar sesión — destruye sesión en servidor y redirige al inicio
+document.getElementById('btn-cerrar-sesion-nav')?.addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  localStorage.removeItem('sesion');
+  window.location.href = '/';
+});
+
+// Botones del nav sin sesión abren el modal o hacen scroll al login
+document.getElementById('btn-login-nav')?.addEventListener('click', () => {
+  document.querySelector('.access-grid').scrollIntoView({ behavior: 'smooth' });
+  setTimeout(() => document.querySelector('.login-box .inp').focus(), 400);
+});
+
+document.getElementById('btn-registro-nav')?.addEventListener('click', () => {
+  abrirModal('modal-elegir');
+});
+
+
+// =============================================================
+//  PANEL DEL CLIENTE — Canje de recompensas
+//  Solo aplica en /cliente, donde existen los elementos de canje
+// =============================================================
+
+let canjeActual = null; // Guarda la recompensa seleccionada antes de confirmar
+
+// Abre el modal de confirmación al hacer clic en cualquier botón "Canjear"
+document.querySelectorAll('.btn-canjear').forEach(btn => {
+  btn.addEventListener('click', () => {
+    canjeActual = {
+      id:     btn.dataset.id,
+      nombre: btn.dataset.nombre,
+      puntos: parseInt(btn.dataset.puntos, 10),
+    };
+    document.getElementById('canje-nombre-reward').textContent = canjeActual.nombre;
+    document.getElementById('canje-puntos-costo').textContent  = canjeActual.puntos;
+    abrirModal('modal-canje');
+  });
+});
+
+// Cierra el modal de canje sin hacer nada
+document.getElementById('cerrar-modal-canje')?.addEventListener('click',   () => cerrarModal('modal-canje'));
+document.getElementById('btn-cancelar-canje')?.addEventListener('click',   () => cerrarModal('modal-canje'));
+document.getElementById('modal-canje')?.addEventListener('click', e => {
+  if (e.target === e.currentTarget) cerrarModal('modal-canje');
+});
+
+// Confirma el canje: llama al servidor y actualiza puntos en pantalla sin recargar
+document.getElementById('btn-confirmar-canje')?.addEventListener('click', async () => {
+  if (!canjeActual) return;
+
+  const btn     = document.getElementById('btn-confirmar-canje');
+  const msgEl   = document.getElementById('canje-msg');
+  btn.disabled  = true;
+  btn.textContent = 'Canjeando…';
+
+  try {
+    const respuesta = await fetch('/api/canjear', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ recompensaId: canjeActual.id }),
+    });
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+      msgEl.textContent   = datos.error;
+      msgEl.style.display = 'block';
+      btn.disabled        = false;
+      btn.textContent     = 'Sí, canjear ↗';
+      return;
+    }
+
+    // Actualiza los contadores de puntos en pantalla sin recargar la página
+    const nuevoPuntaje = datos.puntosRestantes;
+    document.getElementById('puntos-display')?.textContent      && (document.getElementById('puntos-display').textContent = nuevoPuntaje);
+    document.getElementById('puntos-recompensas')?.textContent  && (document.getElementById('puntos-recompensas').textContent = nuevoPuntaje);
+    document.getElementById('dd-puntos') && (document.getElementById('dd-puntos').innerHTML =
+      `<i class="ti ti-star-filled" aria-hidden="true"></i> ${nuevoPuntaje} puntos`);
+
+    // Bloquea las tarjetas de recompensas que ya no se pueden canjear
+    document.querySelectorAll('.recompensa-card').forEach(card => {
+      const costoPts = parseInt(card.querySelector('.recompensa-puntos')?.textContent, 10);
+      if (costoPts > nuevoPuntaje) card.classList.add('recompensa-bloqueada');
+    });
+
+    cerrarModal('modal-canje');
+    canjeActual = null;
+    alert(`✓ ¡Canje exitoso! Recompensa: ${datos.recompensa}`);
+  } catch {
+    msgEl.textContent   = 'No se pudo conectar al servidor.';
+    msgEl.style.display = 'block';
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Sí, canjear ↗';
+  }
+});
+
+// Enviar calificación de empleado (usa el mismo endpoint de comentarios)
+document.getElementById('btn-calificar-emp')?.addEventListener('click', async () => {
+  const texto    = document.getElementById('emp-comment')?.value.trim();
+  const msgEl    = document.getElementById('emp-msg');
+  const estrellas = document.querySelectorAll('#star-row-emp .star-btn.active').length;
+
+  if (!texto)     { msgEl.textContent = 'Escribe un comentario.'; msgEl.style.display = 'block'; return; }
+  if (!estrellas) { msgEl.textContent = 'Selecciona una calificación.'; msgEl.style.display = 'block'; return; }
+
+  try {
+    const resp = await fetch('/api/comentarios', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ texto, estrellas }),
+    });
+    if (resp.ok) {
+      document.getElementById('emp-comment').value = '';
+      msgEl.textContent   = '¡Gracias por tu calificación!';
+      msgEl.className     = 'error-msg success';
+      msgEl.style.display = 'block';
+      setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+    }
+  } catch { /* silent */ }
+});
+
+// Estrellas del formulario de empleado (reutiliza la lógica de pintarEstrellas si existe)
+document.querySelectorAll('#star-row-emp .star-btn').forEach(btn => {
+  let selEmp = 0;
+  btn.addEventListener('click',      () => { selEmp = parseInt(btn.dataset.v); pintarEstrellasSel('#star-row-emp', selEmp); });
+  btn.addEventListener('mouseenter', () => pintarEstrellasSel('#star-row-emp', parseInt(btn.dataset.v)));
+  btn.addEventListener('mouseleave', () => pintarEstrellasSel('#star-row-emp', selEmp));
+});
+
+function pintarEstrellasSel(selector, n) {
+  document.querySelectorAll(`${selector} .star-btn`).forEach(b =>
+    b.classList.toggle('active', parseInt(b.dataset.v) <= n)
+  );
+}
+
+// Botón de Google Wallet — muestra las instrucciones (requiere servicio de cuenta en producción)
+document.getElementById('btn-wallet')?.addEventListener('click', () => {
+  const btn  = document.getElementById('btn-wallet');
+  const qrId = btn.dataset.qrid;
+  alert(`Tu ID de socio es: ${qrId}\n\nPara agregar tu tarjeta a Google Wallet en producción, el equipo de i24h activará esta función próximamente.`);
+});
+
+// Al cargar la página consulta el servidor para saber si hay sesión activa.
+// Si la hay, aplica el dropdown sin pedirle al usuario que vuelva a loguearse.
+(async () => {
+  try {
+    const res  = await fetch('/api/sesion');
+    const user = await res.json();
+    if (user) {
+      localStorage.setItem('sesion', JSON.stringify(user));
+      aplicarSesion(user);
+    } else {
+      localStorage.removeItem('sesion');
+    }
+  } catch {
+    // Sin servidor: intenta con lo que hay en localStorage como respaldo
+    const guardado = localStorage.getItem('sesion');
+    if (guardado) { try { aplicarSesion(JSON.parse(guardado)); } catch { localStorage.removeItem('sesion'); } }
+  }
+})();

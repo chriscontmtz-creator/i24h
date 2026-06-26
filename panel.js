@@ -10,19 +10,23 @@
 // =============================================================
 
 const botonTema = document.getElementById('toggle-btn-panel');
+const icoPanel  = document.getElementById('tico-panel');
+const lblPanel  = document.getElementById('tlbl-panel');
 
 function aplicarModoOscuro(activar) {
   document.body.classList.toggle('dark', activar);
   document.documentElement.classList.toggle('dark', activar);
   localStorage.setItem('dark', activar ? '1' : '0');
+  if (icoPanel) icoPanel.className = activar ? 'ti ti-sun' : 'ti ti-moon';
+  if (lblPanel) lblPanel.textContent = activar ? 'Modo claro' : 'Modo oscuro';
 }
 
-// Aplica el tema guardado al cargar
 aplicarModoOscuro(localStorage.getItem('dark') === '1');
 
 if (botonTema) {
   botonTema.addEventListener('click', () => {
-    aplicarModoOscuro(!document.body.classList.contains('dark'));
+    const oscuro = document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+    aplicarModoOscuro(!oscuro);
   });
 }
 

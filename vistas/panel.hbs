@@ -1,0 +1,1037 @@
+<script>document.body.style.overflow='hidden';</script>
+
+<div class="panel-root">
+
+  <!-- ============================================================
+       SIDEBAR
+       ============================================================ -->
+  <aside class="panel-sidebar">
+
+    <!-- Logo -->
+    <div class="panel-sidebar-logo">
+      <span class="panel-logo-text">i24h</span>
+      <span class="panel-logo-suc">Sucursal: Todas</span>
+    </div>
+
+    <!-- Menú de navegación -->
+    <nav class="panel-nav-menu">
+
+      <!-- PRINCIPAL -->
+      <div class="panel-nav-grupo">
+        <span class="panel-nav-label">Principal</span>
+        <button class="panel-nav-item active" data-seccion="dashboard" data-titulo="Dashboard">
+          <i class="ti ti-layout-dashboard"></i><span>Dashboard</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="sucursales" data-titulo="Sucursales">
+          <i class="ti ti-building-store"></i><span>Sucursales</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="ventas" data-titulo="Ventas">
+          <i class="ti ti-cash-register"></i><span>Ventas</span>
+        </button>
+      </div>
+
+      <!-- OPERACIONES -->
+      <div class="panel-nav-grupo">
+        <span class="panel-nav-label">Operaciones</span>
+        <button class="panel-nav-item" data-seccion="bitacoras" data-titulo="Bitácoras">
+          <i class="ti ti-notebook"></i><span>Bitácoras</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="inventario" data-titulo="Inventario / Stock">
+          <i class="ti ti-package"></i><span>Inventario / Stock</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="limpieza" data-titulo="Limpieza">
+          <i class="ti ti-brush"></i><span>Limpieza</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="reportes" data-titulo="Reportes depto.">
+          <i class="ti ti-clipboard-list"></i><span>Reportes depto.</span>
+          <span class="panel-badge">0</span>
+        </button>
+      </div>
+
+      <!-- EQUIPO -->
+      <div class="panel-nav-grupo">
+        <span class="panel-nav-label">Equipo</span>
+        <button class="panel-nav-item" data-seccion="empleados" data-titulo="Empleados">
+          <i class="ti ti-users"></i><span>Empleados</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="horarios" data-titulo="Horarios">
+          <i class="ti ti-calendar-time"></i><span>Horarios</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="nominas" data-titulo="Nóminas">
+          <i class="ti ti-receipt"></i><span>Nóminas</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="desempeno" data-titulo="Desempeño">
+          <i class="ti ti-chart-bar"></i><span>Desempeño</span>
+        </button>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="panel-nav-grupo">
+        <span class="panel-nav-label">Clientes</span>
+        <button class="panel-nav-item" data-seccion="clientes" data-titulo="Clientes / Puntos">
+          <i class="ti ti-id-badge"></i><span>Clientes / puntos</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="mapa" data-titulo="Mapa / Cotización">
+          <i class="ti ti-map-pin"></i><span>Mapa / cotización</span>
+        </button>
+      </div>
+
+      <!-- SISTEMA (solo admins) -->
+      {{#if esAdmin}}
+      <div class="panel-nav-grupo">
+        <span class="panel-nav-label">Sistema</span>
+        <button class="panel-nav-item" data-seccion="usuarios" data-titulo="Usuarios">
+          <i class="ti ti-user-cog"></i><span>Usuarios</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="auditoria" data-titulo="Auditoría">
+          <i class="ti ti-shield-check"></i><span>Auditoría</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="comunicados" data-titulo="Comunicados">
+          <i class="ti ti-speakerphone"></i><span>Comunicados</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="capacitacion" data-titulo="Capacitación">
+          <i class="ti ti-school"></i><span>Capacitación</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="configuracion" data-titulo="Configuración">
+          <i class="ti ti-settings"></i><span>Configuración</span>
+        </button>
+      </div>
+      {{/if}}
+
+    </nav>
+
+    <!-- Botón regresar al inicio -->
+    <div class="panel-sidebar-inicio">
+      <a href="/" class="panel-nav-inicio">
+        <i class="ti ti-home"></i><span>Página principal</span>
+      </a>
+    </div>
+
+    <!-- Tarjeta del usuario -->
+    <div class="panel-sidebar-usuario">
+      <div class="panel-sidebar-avatar">{{usuario.nombre.[0]}}</div>
+      <div class="panel-sidebar-info">
+        <p class="panel-sidebar-nombre">{{usuario.nombre}}</p>
+        <p class="panel-sidebar-cargo">{{usuario.cargo}} · Todas</p>
+      </div>
+    </div>
+
+  </aside>
+
+
+  <!-- ============================================================
+       ÁREA PRINCIPAL
+       ============================================================ -->
+  <div class="panel-main">
+
+    <!-- Topbar -->
+    <div class="panel-topbar">
+      <h1 class="panel-topbar-titulo" id="panel-titulo">Dashboard</h1>
+
+      <div class="panel-topbar-centro">
+        <span class="panel-suc-pill">
+          <i class="ti ti-building-store"></i> Todas las sucursales
+        </span>
+      </div>
+
+      <div class="panel-topbar-acciones">
+        <button class="toggle-btn" id="toggle-btn-panel" aria-label="Cambiar modo">
+          <i class="ti ti-moon" id="tico-panel"></i>
+          <span id="tlbl-panel">Modo oscuro</span>
+        </button>
+        <button class="panel-notif-btn" aria-label="Notificaciones">
+          <i class="ti ti-bell"></i>
+          <span class="panel-notif-dot"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Zona de contenido con scroll -->
+    <div class="panel-content">
+
+
+      <!-- ======================================================
+           DASHBOARD (por defecto)
+           ====================================================== -->
+      <div class="panel-seccion" id="sec-dashboard">
+
+        <!-- 4 Metric cards -->
+        <div class="panel-metrics">
+          <div class="panel-metric-card">
+            <span class="panel-metric-label">Recaudación hoy</span>
+            <span class="panel-metric-valor">$0.00</span>
+            <span class="panel-metric-sub">Sin registros aún</span>
+          </div>
+          <div class="panel-metric-card">
+            <span class="panel-metric-label">Tickets totales</span>
+            <span class="panel-metric-valor">0</span>
+            <span class="panel-metric-sub">Hoy</span>
+          </div>
+          <div class="panel-metric-card">
+            <span class="panel-metric-label">Impresiones</span>
+            <span class="panel-metric-valor">0</span>
+            <span class="panel-metric-sub">Desde CyberPlanet</span>
+          </div>
+          <div class="panel-metric-card">
+            <span class="panel-metric-label">Sucursales activas</span>
+            <span class="panel-metric-valor">0 / 0</span>
+            <span class="panel-metric-sub">En línea ahora</span>
+          </div>
+        </div>
+
+        <!-- Grid de 2 columnas -->
+        <div class="panel-dash-grid">
+
+          <!-- Bitácora turno actual -->
+          <div class="panel-card">
+            <p class="panel-card-titulo">Bitácora turno actual</p>
+            <div class="tabla-contenedor">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Esperado</th>
+                    <th>Conteo</th>
+                    <th>Diferencia</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Computadoras</td><td>0</td><td>0</td><td>0</td>
+                    <td><span class="panel-badge-ok">OK</span></td>
+                  </tr>
+                  <tr>
+                    <td>Impresiones</td><td>0</td><td>0</td><td>0</td>
+                    <td><span class="panel-badge-ok">OK</span></td>
+                  </tr>
+                  <tr>
+                    <td>Escáner</td><td>0</td><td>0</td><td>0</td>
+                    <td><span class="panel-badge-ok">OK</span></td>
+                  </tr>
+                  <tr>
+                    <td>Audífonos</td><td>0</td><td>0</td><td>0</td>
+                    <td><span class="panel-badge-ok">OK</span></td>
+                  </tr>
+                  <tr>
+                    <td>Sillas</td><td>0</td><td>0</td><td>0</td>
+                    <td><span class="panel-badge-ok">OK</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="panel-card-footer">0 diferencias detectadas</p>
+          </div>
+
+          <!-- Reportes recientes -->
+          <div class="panel-card">
+            <p class="panel-card-titulo">Reportes recientes</p>
+            <div class="panel-reportes-vacio">
+              <i class="ti ti-report-off"></i>
+              <p>Sin reportes recientes</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- ======================================================
+           SECCIONES EN CONSTRUCCIÓN
+           ====================================================== -->
+
+      <div class="panel-seccion oculta" id="sec-sucursales">
+
+        <!-- Resumen zona -->
+        <div class="panel-metrics">
+          <div class="panel-metric-card">
+            <span class="panel-metric-label">Sucursales activas</span>
+            <span class="panel-metric-valor">0 / 9</span>
+            <span class="panel-metric-sub">En línea ahora</span>
+          </div>
+          <div class="panel-metric-card">
+            <span class="panel-metric-label">Recaudación zona hoy</span>
+            <span class="panel-metric-valor">$0.00</span>
+            <span class="panel-metric-sub">Suma de todas las sucursales</span>
+          </div>
+          <div class="panel-metric-card">
+            <span class="panel-metric-label">Diferencias pendientes</span>
+            <span class="panel-metric-valor">0</span>
+            <span class="panel-metric-sub">Sin alertas</span>
+          </div>
+        </div>
+
+        <!-- Grid de sucursales -->
+        <div class="panel-suc-grid">
+
+          <!-- Simón Bolívar -->
+          <div class="panel-suc-card">
+            <div class="panel-suc-header">
+              <div class="panel-suc-nombre">Simón Bolívar</div>
+              <span class="panel-suc-status abierta">● Abierta</span>
+            </div>
+            <div class="panel-suc-metrics">
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Recaudación hoy</span>
+                <span class="panel-suc-metric-val">$0.00</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Tickets</span>
+                <span class="panel-suc-metric-val">0</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Turno activo</span>
+                <span class="panel-suc-metric-val">—</span>
+              </div>
+            </div>
+            <div class="panel-suc-footer">
+              <span class="panel-suc-diferencias">0 diferencias</span>
+              <div class="panel-suc-acciones">
+                <button class="panel-suc-btn" onclick="irSeccion('bitacoras', 'Simón Bolívar')"><i class="ti ti-book"></i> Bitácora</button>
+                <a class="panel-suc-btn panel-suc-btn-maps" href="https://maps.app.goo.gl/zqpsVX136fyqmqkG8" target="_blank" rel="noopener"><i class="ti ti-map-pin"></i> Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Insurgentes -->
+          <div class="panel-suc-card">
+            <div class="panel-suc-header">
+              <div class="panel-suc-nombre">Insurgentes</div>
+              <span class="panel-suc-status abierta">● Abierta</span>
+            </div>
+            <div class="panel-suc-metrics">
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Recaudación hoy</span>
+                <span class="panel-suc-metric-val">$0.00</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Tickets</span>
+                <span class="panel-suc-metric-val">0</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Turno activo</span>
+                <span class="panel-suc-metric-val">—</span>
+              </div>
+            </div>
+            <div class="panel-suc-footer">
+              <span class="panel-suc-diferencias">0 diferencias</span>
+              <div class="panel-suc-acciones">
+                <button class="panel-suc-btn" onclick="irSeccion('bitacoras', 'Insurgentes')"><i class="ti ti-book"></i> Bitácora</button>
+                <a class="panel-suc-btn panel-suc-btn-maps" href="https://maps.app.goo.gl/GSPKwUJgPahKyPW9A" target="_blank" rel="noopener"><i class="ti ti-map-pin"></i> Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Antígona -->
+          <div class="panel-suc-card">
+            <div class="panel-suc-header">
+              <div class="panel-suc-nombre">Antígona</div>
+              <span class="panel-suc-status abierta">● Abierta</span>
+            </div>
+            <div class="panel-suc-metrics">
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Recaudación hoy</span>
+                <span class="panel-suc-metric-val">$0.00</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Tickets</span>
+                <span class="panel-suc-metric-val">0</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Turno activo</span>
+                <span class="panel-suc-metric-val">—</span>
+              </div>
+            </div>
+            <div class="panel-suc-footer">
+              <span class="panel-suc-diferencias">0 diferencias</span>
+              <div class="panel-suc-acciones">
+                <button class="panel-suc-btn" onclick="irSeccion('bitacoras', 'Antígona')"><i class="ti ti-book"></i> Bitácora</button>
+                <a class="panel-suc-btn panel-suc-btn-maps" href="https://maps.app.goo.gl/R8qZ6KZ2js2Pb1xUA" target="_blank" rel="noopener"><i class="ti ti-map-pin"></i> Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lincoln Oxxo -->
+          <div class="panel-suc-card">
+            <div class="panel-suc-header">
+              <div class="panel-suc-nombre">Lincoln Oxxo</div>
+              <span class="panel-suc-status abierta">● Abierta</span>
+            </div>
+            <div class="panel-suc-metrics">
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Recaudación hoy</span>
+                <span class="panel-suc-metric-val">$0.00</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Tickets</span>
+                <span class="panel-suc-metric-val">0</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Turno activo</span>
+                <span class="panel-suc-metric-val">—</span>
+              </div>
+            </div>
+            <div class="panel-suc-footer">
+              <span class="panel-suc-diferencias">0 diferencias</span>
+              <div class="panel-suc-acciones">
+                <button class="panel-suc-btn" onclick="irSeccion('bitacoras', 'Lincoln Oxxo')"><i class="ti ti-book"></i> Bitácora</button>
+                <a class="panel-suc-btn panel-suc-btn-maps" href="https://maps.app.goo.gl/9gPGhyMEp1RpGzWt6" target="_blank" rel="noopener"><i class="ti ti-map-pin"></i> Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lincoln 2 -->
+          <div class="panel-suc-card">
+            <div class="panel-suc-header">
+              <div class="panel-suc-nombre">Lincoln 2</div>
+              <span class="panel-suc-status abierta">● Abierta</span>
+            </div>
+            <div class="panel-suc-metrics">
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Recaudación hoy</span>
+                <span class="panel-suc-metric-val">$0.00</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Tickets</span>
+                <span class="panel-suc-metric-val">0</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Turno activo</span>
+                <span class="panel-suc-metric-val">—</span>
+              </div>
+            </div>
+            <div class="panel-suc-footer">
+              <span class="panel-suc-diferencias">0 diferencias</span>
+              <div class="panel-suc-acciones">
+                <button class="panel-suc-btn" onclick="irSeccion('bitacoras', 'Lincoln 2')"><i class="ti ti-book"></i> Bitácora</button>
+                <a class="panel-suc-btn panel-suc-btn-maps" href="https://maps.app.goo.gl/WPCfnAbZuDD89FGj7" target="_blank" rel="noopener"><i class="ti ti-map-pin"></i> Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ruiz Cortines -->
+          <div class="panel-suc-card">
+            <div class="panel-suc-header">
+              <div class="panel-suc-nombre">Ruiz Cortines</div>
+              <span class="panel-suc-status abierta">● Abierta</span>
+            </div>
+            <div class="panel-suc-metrics">
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Recaudación hoy</span>
+                <span class="panel-suc-metric-val">$0.00</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Tickets</span>
+                <span class="panel-suc-metric-val">0</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Turno activo</span>
+                <span class="panel-suc-metric-val">—</span>
+              </div>
+            </div>
+            <div class="panel-suc-footer">
+              <span class="panel-suc-diferencias">0 diferencias</span>
+              <div class="panel-suc-acciones">
+                <button class="panel-suc-btn" onclick="irSeccion('bitacoras', 'Ruiz Cortines')"><i class="ti ti-book"></i> Bitácora</button>
+                <a class="panel-suc-btn panel-suc-btn-maps" href="https://maps.app.goo.gl/eNMiGW2jknn2u4od9" target="_blank" rel="noopener"><i class="ti ti-map-pin"></i> Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rodas -->
+          <div class="panel-suc-card">
+            <div class="panel-suc-header">
+              <div class="panel-suc-nombre">Rodas</div>
+              <span class="panel-suc-status abierta">● Abierta</span>
+            </div>
+            <div class="panel-suc-metrics">
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Recaudación hoy</span>
+                <span class="panel-suc-metric-val">$0.00</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Tickets</span>
+                <span class="panel-suc-metric-val">0</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Turno activo</span>
+                <span class="panel-suc-metric-val">—</span>
+              </div>
+            </div>
+            <div class="panel-suc-footer">
+              <span class="panel-suc-diferencias">0 diferencias</span>
+              <div class="panel-suc-acciones">
+                <button class="panel-suc-btn" onclick="irSeccion('bitacoras', 'Rodas')"><i class="ti ti-book"></i> Bitácora</button>
+                <a class="panel-suc-btn panel-suc-btn-maps" href="https://maps.app.goo.gl/E6hLAogohojkHoUr6" target="_blank" rel="noopener"><i class="ti ti-map-pin"></i> Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cuauhtémoc -->
+          <div class="panel-suc-card">
+            <div class="panel-suc-header">
+              <div class="panel-suc-nombre">Cuauhtémoc</div>
+              <span class="panel-suc-status abierta">● Abierta</span>
+            </div>
+            <div class="panel-suc-metrics">
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Recaudación hoy</span>
+                <span class="panel-suc-metric-val">$0.00</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Tickets</span>
+                <span class="panel-suc-metric-val">0</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Turno activo</span>
+                <span class="panel-suc-metric-val">—</span>
+              </div>
+            </div>
+            <div class="panel-suc-footer">
+              <span class="panel-suc-diferencias">0 diferencias</span>
+              <div class="panel-suc-acciones">
+                <button class="panel-suc-btn" onclick="irSeccion('bitacoras', 'Cuauhtémoc')"><i class="ti ti-book"></i> Bitácora</button>
+                <a class="panel-suc-btn panel-suc-btn-maps" href="https://maps.app.goo.gl/3oqQ2KTQf1RaDkha9" target="_blank" rel="noopener"><i class="ti ti-map-pin"></i> Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ordóñez -->
+          <div class="panel-suc-card">
+            <div class="panel-suc-header">
+              <div class="panel-suc-nombre">Ordóñez</div>
+              <span class="panel-suc-status abierta">● Abierta</span>
+            </div>
+            <div class="panel-suc-metrics">
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Recaudación hoy</span>
+                <span class="panel-suc-metric-val">$0.00</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Tickets</span>
+                <span class="panel-suc-metric-val">0</span>
+              </div>
+              <div class="panel-suc-metric">
+                <span class="panel-suc-metric-label">Turno activo</span>
+                <span class="panel-suc-metric-val">—</span>
+              </div>
+            </div>
+            <div class="panel-suc-footer">
+              <span class="panel-suc-diferencias">0 diferencias</span>
+              <div class="panel-suc-acciones">
+                <button class="panel-suc-btn" onclick="irSeccion('bitacoras', 'Ordóñez')"><i class="ti ti-book"></i> Bitácora</button>
+                <a class="panel-suc-btn panel-suc-btn-maps" href="https://maps.app.goo.gl/SCGwCcPtiRnGuV63A" target="_blank" rel="noopener"><i class="ti ti-map-pin"></i> Maps</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-ventas">
+        <div class="panel-en-construccion">
+          <i class="ti ti-cash-register"></i>
+          <h2>Ventas</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-bitacoras">
+
+        <div class="bit-header-bar">
+          <div class="bit-meta">
+            <select class="bit-select" id="bit-sucursal">
+              <option>Simón Bolívar</option>
+              <option>Insurgentes</option>
+              <option>Antígona</option>
+              <option>Lincoln Oxxo</option>
+              <option>Lincoln 2</option>
+              <option>Ruiz Cortines</option>
+              <option>Rodas</option>
+              <option>Cuauhtémoc</option>
+              <option>Ordóñez</option>
+            </select>
+            <select class="bit-select" id="bit-turno">
+              <option>Turno 1 — 07:00 a 15:00</option>
+              <option>Turno 2 — 15:00 a 23:00</option>
+              <option>Turno 3 — 23:00 a 07:00</option>
+            </select>
+            <input type="date" class="bit-select" id="bit-fecha">
+          </div>
+          <div class="bit-meta-right">
+            <span class="bit-sync-note">
+              <i class="ti ti-clock"></i> Conteo individual · modo colaborativo próximamente
+            </span>
+            <button class="bit-btn-iniciar" id="btn-iniciar-conteo">
+              <i class="ti ti-clipboard-check"></i> Iniciar conteo
+            </button>
+          </div>
+        </div>
+
+        <div class="bit-resumen-bar" id="bit-resumen">
+          <div class="bit-res-item">
+            <span class="bit-res-dot dot-ok"></span>
+            <span class="bit-res-label">OK:</span>
+            <span class="bit-res-val" id="res-ok">0</span>
+          </div>
+          <div class="bit-res-item">
+            <span class="bit-res-dot dot-falta"></span>
+            <span class="bit-res-label">Falta:</span>
+            <span class="bit-res-val" id="res-falta">0</span>
+          </div>
+          <div class="bit-res-item">
+            <span class="bit-res-dot dot-sobra"></span>
+            <span class="bit-res-label">Sobra:</span>
+            <span class="bit-res-val" id="res-sobra">0</span>
+          </div>
+          <div class="bit-res-item">
+            <span class="bit-res-dot dot-pendiente"></span>
+            <span class="bit-res-label">Sin contar:</span>
+            <span class="bit-res-val" id="res-pendiente">0</span>
+          </div>
+          <div class="bit-prog-wrap">
+            <div class="bit-prog-bar">
+              <div class="bit-prog-fill" id="bit-prog-fill" style="width:0%"></div>
+            </div>
+            <span class="bit-prog-txt" id="bit-prog-txt">0 / 0 productos</span>
+          </div>
+        </div>
+
+        <div class="bit-categorias" id="bit-categorias"></div>
+
+        <div class="bit-footer-bar" id="bit-footer">
+          <span class="bit-footer-nota">
+            <i class="ti ti-info-circle"></i>
+            Los datos de stock se extraerán de CyberPlanet automáticamente. Por ahora se muestran los valores de referencia.
+          </span>
+          <button class="bit-btn-cerrar" id="btn-cerrar-bitacora">
+            <i class="ti ti-lock"></i> Cerrar bitácora del turno
+          </button>
+        </div>
+
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-inventario">
+        <div class="panel-en-construccion">
+          <i class="ti ti-package"></i>
+          <h2>Inventario / Stock</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-limpieza">
+        <div class="panel-en-construccion">
+          <i class="ti ti-brush"></i>
+          <h2>Limpieza</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-reportes">
+        <div class="panel-en-construccion">
+          <i class="ti ti-clipboard-list"></i>
+          <h2>Reportes depto.</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-empleados">
+        <div class="panel-en-construccion">
+          <i class="ti ti-users"></i>
+          <h2>Empleados</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-horarios">
+        <div class="panel-en-construccion">
+          <i class="ti ti-calendar-time"></i>
+          <h2>Horarios</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-nominas">
+        <div class="panel-en-construccion">
+          <i class="ti ti-receipt"></i>
+          <h2>Nóminas</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-desempeno">
+        <div class="panel-en-construccion">
+          <i class="ti ti-chart-bar"></i>
+          <h2>Desempeño</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-clientes">
+        <div class="panel-en-construccion">
+          <i class="ti ti-id-badge"></i>
+          <h2>Clientes / Puntos</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-mapa">
+        <div class="panel-en-construccion">
+          <i class="ti ti-map-pin"></i>
+          <h2>Mapa / Cotización</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-usuarios">
+        <div class="panel-en-construccion">
+          <i class="ti ti-user-cog"></i>
+          <h2>Usuarios</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-auditoria">
+        <div class="panel-en-construccion">
+          <i class="ti ti-shield-check"></i>
+          <h2>Auditoría</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-comunicados">
+        <div class="panel-en-construccion">
+          <i class="ti ti-speakerphone"></i>
+          <h2>Comunicados</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-capacitacion">
+        <div class="panel-en-construccion">
+          <i class="ti ti-school"></i>
+          <h2>Capacitación</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-configuracion">
+        <div class="panel-en-construccion">
+          <i class="ti ti-settings"></i>
+          <h2>Configuración</h2>
+          <p>Esta sección está en construcción</p>
+        </div>
+      </div>
+
+
+    </div><!-- /panel-content -->
+  </div><!-- /panel-main -->
+</div><!-- /panel-root -->
+
+
+<!-- ============================================================
+     NAVEGACIÓN DEL SIDEBAR
+     ============================================================ -->
+<script>
+(function () {
+  var sucursalActiva = null;
+
+  const items     = document.querySelectorAll('.panel-nav-item');
+  const secciones = document.querySelectorAll('.panel-seccion');
+  const titulo    = document.getElementById('panel-titulo');
+  const sucPill   = document.querySelector('.panel-suc-pill');
+
+  function activarSeccion(id, nombre) {
+    items.forEach(function (i) { i.classList.remove('active'); });
+    var item = document.querySelector('[data-seccion="' + id + '"]');
+    if (item) item.classList.add('active');
+
+    secciones.forEach(function (s) { s.classList.add('oculta'); });
+    var target = document.getElementById('sec-' + id);
+    if (target) target.classList.remove('oculta');
+
+    titulo.textContent = nombre || (item ? item.dataset.titulo : id);
+  }
+
+  // Función global — la usan los botones onclick en las tarjetas de sucursales
+  window.irSeccion = function (id, sucursal) {
+    sucursalActiva = sucursal || null;
+    var nombre = document.querySelector('[data-seccion="' + id + '"]')?.dataset.titulo || id;
+    activarSeccion(id, nombre);
+    if (sucPill && sucursalActiva) {
+      sucPill.innerHTML = '<i class="ti ti-building-store"></i> ' + sucursalActiva;
+    }
+  };
+
+  items.forEach(function (item) {
+    item.addEventListener('click', function () {
+      sucursalActiva = null;
+      if (sucPill) sucPill.innerHTML = '<i class="ti ti-building-store"></i> Todas las sucursales';
+      activarSeccion(item.dataset.seccion, item.dataset.titulo);
+    });
+  });
+})();
+
+
+// ============================================================
+//  BITÁCORA DIGITAL
+//  Claves numéricas "catIdx_itemIdx" — evita caracteres especiales
+//  Event delegation — evita conflictos con CSP y onclick inline
+// ============================================================
+
+const PRODUCTOS_BITACORA = [
+  { cat: 'Papelería', icono: 'ti-notebook', items: [
+    { nombre: 'Tabloide adhesivo suelto', esperado: 152 },
+    { nombre: 'Tabloide couche suelto', esperado: 133 },
+    { nombre: 'Tabloide opalina suelto', esperado: 69 },
+    { nombre: 'Hoja adhesiva', esperado: 91 },
+    { nombre: 'Hoja couche', esperado: 72 },
+    { nombre: 'Hoja doble carta', esperado: 961 },
+    { nombre: 'Hoja opalina', esperado: 927 },
+    { nombre: 'Pluma negra', esperado: 41 },
+    { nombre: 'Pluma azul', esperado: 27 },
+    { nombre: 'Pluma roja', esperado: 39 },
+    { nombre: 'Sobre carta', esperado: 27 },
+    { nombre: 'Solicitud de empleo', esperado: 48 },
+    { nombre: 'CD', esperado: 10 },
+    { nombre: 'DVD', esperado: 20 },
+    { nombre: 'Arillo 1', esperado: 23 },
+    { nombre: 'Arillo 2', esperado: 45 },
+    { nombre: 'Arillo 3', esperado: 24 },
+    { nombre: 'Arillo 4', esperado: 26 },
+    { nombre: 'Arillo 5', esperado: 38 },
+    { nombre: 'Pasta negra', esperado: 63 },
+    { nombre: 'Pasta transparente', esperado: 89 },
+    { nombre: 'Pasta multicolor', esperado: 74 },
+  ]},
+  { cat: 'Material', icono: 'ti-folder', items: [
+    { nombre: 'Cartulina', esperado: 12 },
+    { nombre: 'Legajo carta', esperado: 107 },
+    { nombre: 'Legajo carta color', esperado: 130 },
+    { nombre: 'Legajo costilla', esperado: 19 },
+    { nombre: 'Legajo oficio', esperado: 51 },
+    { nombre: 'Memoria USB 32gb', esperado: 9 },
+  ]},
+  { cat: 'Enmicados', icono: 'ti-id-badge', items: [
+    { nombre: 'Enmicado credencial', esperado: 21 },
+    { nombre: 'Enmicado carta', esperado: 112 },
+    { nombre: 'Enmicado oficio', esperado: 54 },
+  ]},
+  { cat: 'Novedades', icono: 'ti-gift', items: [
+    { nombre: 'Llavero Funko', esperado: 13 },
+    { nombre: 'Novedad rojo $20', esperado: 50 },
+    { nombre: 'Novedad azul $30', esperado: 79 },
+    { nombre: 'Novedad verde $40', esperado: 60 },
+    { nombre: 'Novedad morado $50', esperado: 3 },
+    { nombre: 'Novedad plateada $100', esperado: 5 },
+    { nombre: 'Novedad rosa $80', esperado: 9 },
+    { nombre: 'Novedad blanco $160', esperado: 0 },
+    { nombre: 'Novedad dorada $150', esperado: 0 },
+    { nombre: 'Novedad negra $350', esperado: 0 },
+    { nombre: 'Plumas figuras', esperado: 0 },
+  ]},
+  { cat: 'Snack', icono: 'ti-candy', items: [
+    { nombre: 'Agua 500ml', esperado: 24 },
+    { nombre: 'Chocolates varios', esperado: 26 },
+    { nombre: 'Coca Cola', esperado: 19 },
+    { nombre: 'Dulces varios', esperado: 16 },
+    { nombre: 'Duvalín', esperado: 25 },
+    { nombre: 'Frutsi / Pau Pau', esperado: 2 },
+    { nombre: 'Galleta varios', esperado: 33 },
+    { nombre: 'Gomitas varios', esperado: 5 },
+    { nombre: 'Mazapán Azteca', esperado: 9 },
+    { nombre: 'Paleta Payaso', esperado: 11 },
+    { nombre: 'Sabritas varios', esperado: 34 },
+    { nombre: 'Skwinkles varios', esperado: 5 },
+    { nombre: 'Trident varios', esperado: 10 },
+  ]},
+  { cat: 'Rollos y consumibles', icono: 'ti-printer', items: [
+    { nombre: 'Rollos térmicos', esperado: 30 },
+    { nombre: 'Rollos de terminal', esperado: 48 },
+    { nombre: 'Plumón de billetes falsos', esperado: 1 },
+  ]},
+];
+
+const CAUSAS_FALTA = ['Selecciona causa…','Merma / daño','Venta no registrada','Error conteo turno anterior','Robo o extravío','Surtido no aplicado','Otro'];
+const CAUSAS_SOBRA = ['Selecciona causa…','Error conteo turno anterior','Devolución no registrada','Material Encontrado','Otro'];
+
+var conteosBitacora = {};
+var bitacoraIniciada = false;
+
+// ── funciones globales (las llaman los onclick inline) ──────────────────
+
+window.bitDelta = function(key, esp, delta) {
+  if (!bitacoraIniciada) return;
+  var act = conteosBitacora[key].valor !== null ? conteosBitacora[key].valor : esp;
+  conteosBitacora[key].valor = Math.max(0, act + delta);
+  if (conteosBitacora[key].valor === esp) conteosBitacora[key].justif = '';
+  renderBitacora();
+};
+
+window.bitOK = function(key, esp) {
+  if (!bitacoraIniciada) return;
+  conteosBitacora[key].valor = esp;
+  conteosBitacora[key].justif = '';
+  renderBitacora();
+};
+
+window.bitInput = function(el, key, esp) {
+  if (!bitacoraIniciada) return;
+  var n = parseInt(el.value);
+  if (!isNaN(n) && n >= 0) {
+    conteosBitacora[key].valor = n;
+    if (n === esp) conteosBitacora[key].justif = '';
+    var fila  = el.closest('.bit-prod-fila');
+    var badge = fila ? fila.querySelector('.bit-badge') : null;
+    if (badge) {
+      var diff = n - esp;
+      badge.className   = 'bit-badge ' + (diff === 0 ? 'bit-badge-ok' : diff < 0 ? 'bit-badge-falta' : 'bit-badge-sobra');
+      badge.textContent = diff === 0 ? '✓ OK' : diff < 0 ? ('−' + Math.abs(diff)) : ('+' + diff);
+    }
+    actualizarResumen();
+  }
+};
+
+window.bitChange = function() { renderBitacora(); };
+
+window.bitJustif = function(el, key) {
+  conteosBitacora[key].justif = el.value;
+};
+
+// ── render ──────────────────────────────────────────────────────────────
+
+function renderBitacora() {
+  var cont = document.getElementById('bit-categorias');
+  if (!cont) return;
+  var html = '';
+
+  PRODUCTOS_BITACORA.forEach(function(cat, ci) {
+    var contados = cat.items.filter(function(_, ii) {
+      return conteosBitacora[ci + '_' + ii] && conteosBitacora[ci + '_' + ii].valor !== null;
+    }).length;
+
+    html += '<div class="bit-cat-bloque">' +
+      '<div class="bit-cat-head">' +
+        '<i class="ti ' + cat.icono + '" style="font-size:16px;color:var(--acento)"></i>' +
+        '<span class="bit-cat-titulo">' + cat.cat + '</span>' +
+        '<span class="bit-cat-contador">' + contados + ' / ' + cat.items.length + '</span>' +
+      '</div>' +
+      '<div class="bit-col-headers">' +
+        '<span class="bit-col-h">Producto</span>' +
+        '<span class="bit-col-h">Esperado</span>' +
+        '<span class="bit-col-h">Conteo</span>' +
+        '<span class="bit-col-h">Diferencia</span>' +
+      '</div>';
+
+    cat.items.forEach(function(item, ii) {
+      var key    = ci + '_' + ii;
+      var estado = conteosBitacora[key];
+      var val    = estado ? estado.valor : null;
+      var diff   = val !== null ? val - item.esperado : null;
+      var bClass = val === null ? 'bit-badge-vacio'
+                 : diff === 0  ? 'bit-badge-ok'
+                 : diff < 0    ? 'bit-badge-falta'
+                               : 'bit-badge-sobra';
+      var bText  = val === null ? '—'
+                 : diff === 0  ? '✓ OK'
+                 : diff < 0    ? (item.esperado + ' − ' + val + ' = −' + Math.abs(diff))
+                               : (val + ' − ' + item.esperado + ' = +' + diff);
+      var dis    = bitacoraIniciada ? '' : ' disabled';
+
+      html += '<div class="bit-prod-fila">' +
+        '<span class="bit-prod-nombre">' + item.nombre + '</span>' +
+        '<span class="bit-prod-esperado">' + item.esperado + '</span>' +
+        '<div class="bit-conteo-wrap">' +
+          '<button class="bit-cbtn" onclick="bitDelta(\'' + key + '\',' + item.esperado + ',-1)"' + dis + '>−</button>' +
+          '<input class="bit-cinp" type="number" min="0"' +
+            ' value="' + (val !== null ? val : '') + '"' +
+            ' placeholder="—"' +
+            ' oninput="bitInput(this,\'' + key + '\',' + item.esperado + ')"' +
+            ' onchange="bitChange()"' + dis + '>' +
+          '<button class="bit-cbtn" onclick="bitDelta(\'' + key + '\',' + item.esperado + ',1)"' + dis + '>+</button>' +
+          '<button class="bit-cbtn bit-cbtn-ok" onclick="bitOK(\'' + key + '\',' + item.esperado + ')"' + dis + ' title="Sin diferencia">✓</button>' +
+        '</div>' +
+        '<span class="bit-badge ' + bClass + '">' + bText + '</span>' +
+      '</div>';
+
+      if (val !== null && diff !== 0) {
+        var causas = diff < 0 ? CAUSAS_FALTA : CAUSAS_SOBRA;
+        html += '<div class="bit-justif-fila">' +
+          '<span class="bit-justif-label"><i class="ti ti-alert-circle"></i> Justificación</span>' +
+          '<select class="bit-justif-select" onchange="bitJustif(this,\'' + key + '\')">' +
+            causas.map(function(c) {
+              return '<option value="' + c + '"' + (estado.justif === c ? ' selected' : '') + '>' + c + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>';
+      }
+    });
+    html += '</div>';
+  });
+
+  cont.innerHTML = html;
+  actualizarResumen();
+}
+
+// ── resumen de la barra superior ─────────────────────────────────────────
+
+function actualizarResumen() {
+  var ok = 0, falta = 0, sobra = 0, pendiente = 0;
+  var total = Object.keys(conteosBitacora).length;
+
+  Object.keys(conteosBitacora).forEach(function(key) {
+    var estado = conteosBitacora[key];
+    if (estado.valor === null) { pendiente++; return; }
+    var partes = key.split('_');
+    var ii = parseInt(partes[1]);
+    var ci = parseInt(partes[0]);
+    var cat  = PRODUCTOS_BITACORA[ci];
+    var item = cat ? cat.items[ii] : null;
+    if (!item) return;
+    var diff = estado.valor - item.esperado;
+    if (diff === 0) ok++; else if (diff < 0) falta++; else sobra++;
+  });
+
+  var contados = ok + falta + sobra;
+  document.getElementById('res-ok').textContent        = ok;
+  document.getElementById('res-falta').textContent     = falta;
+  document.getElementById('res-sobra').textContent     = sobra;
+  document.getElementById('res-pendiente').textContent = pendiente;
+  var pct = total > 0 ? Math.round(contados / total * 100) : 0;
+  document.getElementById('bit-prog-fill').style.width = pct + '%';
+  document.getElementById('bit-prog-txt').textContent  = contados + ' / ' + total + ' productos';
+}
+
+// ── iniciar / cerrar bitácora ─────────────────────────────────────────────
+
+document.getElementById('btn-iniciar-conteo')?.addEventListener('click', function() {
+  bitacoraIniciada = true;
+  this.innerHTML = '<i class="ti ti-check"></i> Conteo activo';
+  this.style.background = '#16a34a';
+  this.disabled = true;
+  renderBitacora();
+});
+
+document.getElementById('btn-cerrar-bitacora')?.addEventListener('click', function() {
+  var pendiente = parseInt(document.getElementById('res-pendiente').textContent);
+  if (pendiente > 0) {
+    alert('Aún tienes ' + pendiente + ' productos sin contar. Completa el conteo antes de cerrar.');
+    return;
+  }
+  if (confirm('¿Confirmas que quieres cerrar la bitácora de este turno? No podrás modificarla después.')) {
+    alert('Bitácora cerrada. Los datos se guardarán cuando el sistema esté conectado a la base de datos.');
+  }
+});
+
+// ── arranque ──────────────────────────────────────────────────────────────
+
+(function inicializarConteos() {
+  PRODUCTOS_BITACORA.forEach(function(cat, ci) {
+    cat.items.forEach(function(item, ii) {
+      conteosBitacora[ci + '_' + ii] = { valor: null, justif: '' };
+    });
+  });
+})();
+
+renderBitacora();
+</script>

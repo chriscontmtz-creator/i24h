@@ -4,14 +4,18 @@
 //  Luego abre el navegador en: http://localhost:3000
 // =============================================================
 
-import express    from 'express';
-import mongoose   from 'mongoose';
-import dotenv     from 'dotenv';
-import fs         from 'fs';
-import path       from 'path';
+import express        from 'express';
+import session        from 'express-session';
+import helmet         from 'helmet';
+import rateLimit      from 'express-rate-limit';
+import mongoose       from 'mongoose';
+import dotenv         from 'dotenv';
+import fs             from 'fs';
+import path           from 'path';
 import { fileURLToPath } from 'url';
-import { engine } from 'express-handlebars';
-import Usuario    from './models/Usuario.js';
+import { engine }     from 'express-handlebars';
+import QRCode         from 'qrcode';
+import Usuario        from './models/Usuario.js';
 
 // Carga las variables del archivo .env (MONGO_URI, Puerto, etc.)
 dotenv.config();
@@ -25,7 +29,10 @@ const __dirname  = path.dirname(__filename);
 // =============================================================
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✓ Conectado a MongoDB Atlas'))
-  .catch(err => { console.error('✗ Error al conectar a MongoDB:', err.message); process.exit(1); });
+  .catch(err => {
+    console.error('✗ Error MongoDB:', err.message);
+    console.error('  → El servidor sigue activo pero las funciones de cuenta no funcionarán hasta reconectar.');
+  });
 
 const app = express();
 
@@ -45,20 +52,246 @@ app.engine('hbs', engine({
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'vistas'));
 
+// =============================================================
+//  SEGURIDAD — helmet + rate limiting
+// =============================================================
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc:  ["'self'", "'unsafe-inline'"],
+      styleSrc:   ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      fontSrc:    ["'self'", 'https://cdn.jsdelivr.net'],
+      imgSrc:     ["'self'", 'data:'],  // data: para los QR generados como dataURL
+      connectSrc: ["'self'"],
+    },
+  },
+}));
+
+// Límite de 100 peticiones cada 15 min por IP en todas las rutas /api/
+app.use('/api/', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas peticiones. Intenta más tarde.' },
+}));
+
+// =============================================================
+//  SESIONES — express-session
+//  Guarda quién está logueado entre peticiones HTTP.
+//  La cookie "i24h.sid" identifica al usuario en su navegador.
+// =============================================================
+app.use(session({
+  name:   'i24h.sid',
+  secret: process.env.SESSION_SECRET || 'i24h-secreto-local',
+  resave:            false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,   // La cookie no es accesible desde JS del navegador (más seguro)
+    maxAge:   1000 * 60 * 60 * 8,  // 8 horas
+  },
+}));
+
 // Le dice al servidor que entiende JSON y que sirve archivos estáticos (CSS, JS, imágenes)
 app.use(express.json());
-app.use(express.static(__dirname));
+// index: false evita que Express sirva index.html para "/",
+// dejando que la ruta GET / de Handlebars tome el control
+app.use(express.static(__dirname, { index: false }));
+
+// =============================================================
+//  MIDDLEWARES DE AUTORIZACIÓN
+// =============================================================
+
+// Verifica que haya una sesión activa — devuelve 401 si no
+function requireAuth(req, res, next) {
+  if (!req.session.usuario) return res.status(401).json({ error: 'No autorizado. Inicia sesión.' });
+  next();
+}
+
+// Verifica que el cargo sea admin o coordinador — devuelve 403 si no
+function requireAdmin(req, res, next) {
+  const cargo = req.session.usuario?.cargo;
+  if (!['admin', 'coordinador'].includes(cargo))
+    return res.status(403).json({ error: 'Acceso restringido al personal autorizado.' });
+  next();
+}
+
+// Bloquea clientes y no autenticados del panel de empleados
+function requireEmpleado(req, res, next) {
+  const u = req.session.usuario;
+  if (!u || u.cargo === 'cliente') return res.redirect('/');
+  next();
+}
+
+// Catálogo de recompensas canjeables por puntos
+const RECOMPENSAS = [
+  { id: 'internet-30',  nombre: '30 min de internet gratis',      puntos: 50,  icono: 'ti-wifi' },
+  { id: 'internet-60',  nombre: '1 hora de internet gratis',       puntos: 100, icono: 'ti-clock' },
+  { id: 'impresion',    nombre: '10% descuento en impresiones',    puntos: 150, icono: 'ti-printer' },
+  { id: 'refresco',     nombre: 'Refresco gratis en sucursal',     puntos: 200, icono: 'ti-bottle' },
+  { id: 'internet-180', nombre: '3 horas de internet gratis',      puntos: 300, icono: 'ti-device-desktop' },
+  { id: 'kit-papeleria',nombre: 'Kit de papelería gratis',         puntos: 500, icono: 'ti-notebook' },
+];
+
+// Sucursales con coordenadas para enlaces directos a Google Maps
+const SUCURSALES = [
+  { nombre: 'Sucursal Mitras',        dir: 'Av. Venustiano Carranza 1232, Mitras Centro',       lat: 25.6790, lng: -100.3735 },
+  { nombre: 'Sucursal Santa Catarina', dir: 'Blvd. Díaz Ordaz 450, Santa Catarina',             lat: 25.6743, lng: -100.4593 },
+  { nombre: 'Sucursal Cumbres',       dir: 'Av. Paseo de los Leones 2901, Cumbres 4to Sector',  lat: 25.7291, lng: -100.3891 },
+];
+
+// =============================================================
+//  MIDDLEWARE: sesionActual
+//  En cada petición pasa el usuario de la sesión a res.locals
+//  para que Handlebars pueda usarlo en las vistas con {{usuario}}
+// =============================================================
+function sesionActual(req, res, next) {
+  res.locals.usuario = req.session.usuario || null;
+  next();
+}
 
 // =============================================================
 //  RUTAS DE VISTAS (páginas renderizadas con Handlebars)
 // =============================================================
 
-// Página principal → renderiza vistas/index.hbs dentro de vistas/layouts/main.hbs
-app.get('/', (req, res) => {
+// Panel de administración → renderiza vistas/panel.hbs
+app.get('/panel', sesionActual, requireEmpleado, (req, res) => {
+  const u = req.session.usuario;
+  res.render('panel', {
+    titulo:          'Panel i24h',
+    scriptPrincipal: 'panel.js',
+    usuario:         u,
+    esAdmin:         ['admin', 'coordinador'].includes(u.cargo),
+  });
+});
+
+// Página principal → renderiza vistas/index.hbs
+// sesionActual inyecta res.locals.usuario para que Handlebars lo use con {{usuario}}
+app.get('/', sesionActual, (req, res) => {
+  const u = req.session.usuario || null;
   res.render('index', {
     titulo:          'Internet 24 Horas',
     scriptPrincipal: 'JAVA.js',
     anio:            new Date().getFullYear(),
+    usuario:         u,
+    logueado:        !!u,
+    // Booleanos de rol — true si el cargo tiene ese nivel o superior
+    esAdmin:       u?.cargo === 'admin',
+    esCoordinador: ['admin','coordinador'].includes(u?.cargo),
+    esLider:       ['admin','coordinador','lider'].includes(u?.cargo),
+    esEncargado:   ['admin','coordinador','lider','encargado'].includes(u?.cargo),
+    esEmpleado:    !!u && u.cargo !== 'cliente',
+  });
+});
+
+// Devuelve el usuario de la sesión actual (o null si no hay sesión)
+app.get('/api/sesion', (req, res) => {
+  res.json(req.session.usuario || null);
+});
+
+// =============================================================
+//  PANEL DEL CLIENTE — solo accesible con sesión de cargo cliente
+// =============================================================
+app.get('/cliente', sesionActual, async (req, res) => {
+  const u = req.session.usuario;
+  if (!u)                  return res.redirect('/');
+  if (u.cargo !== 'cliente') return res.redirect(u.cargo !== 'cliente' ? '/panel' : '/');
+
+  try {
+    // Trae los datos completos del cliente desde MongoDB
+    const usuario = await Usuario.findById(u.id);
+    if (!usuario) return res.redirect('/');
+
+    // Si por alguna razón no tiene qrId aún, lo genera y guarda
+    if (!usuario.qrId) await usuario.save();
+
+    // Genera la imagen QR como data URL para incrustarla directamente en el HTML
+    const qrDataUrl = await QRCode.toDataURL(`i24h:${usuario.qrId}`, {
+      width:  250,
+      margin: 2,
+      color: { dark: '#1e0a0a', light: '#ffffff' },
+    });
+
+    // Marca qué recompensas puede canjear según sus puntos actuales
+    const recompensas = RECOMPENSAS.map(r => ({
+      ...r,
+      disponible: usuario.puntos >= r.puntos,
+    }));
+
+    // Historial ordenado del más reciente al más antiguo
+    const historial = [...(usuario.historial || [])].reverse().slice(0, 10);
+
+    // Sucursales con URL de Maps lista para usar
+    const sucursales = SUCURSALES.map(s => ({
+      ...s,
+      mapsUrl: `https://maps.google.com/?q=${s.lat},${s.lng}`,
+    }));
+
+    res.render('cliente', {
+      titulo:          'Mi cuenta — i24h',
+      scriptPrincipal: 'JAVA.js',
+      estiloExtra:     'cliente.css',
+      anio:            new Date().getFullYear(),
+      usuario: {
+        id:      usuario._id.toString(),
+        correo:  usuario.correo,
+        nombre:  usuario.nombre,
+        puntos:  usuario.puntos,
+        qrId:    usuario.qrId,
+        canjes:  usuario.canjes || [],
+      },
+      qrDataUrl,
+      recompensas,
+      historial,
+      sucursales,
+      hayHistorial: historial.length > 0,
+      hayCanjes:    (usuario.canjes || []).length > 0,
+    });
+  } catch (err) {
+    console.error('Error en /cliente:', err);
+    res.redirect('/');
+  }
+});
+
+// =============================================================
+//  CANJE DE RECOMPENSAS
+//  POST /api/canjear — descuenta puntos y registra el canje
+// =============================================================
+app.post('/api/canjear', requireAuth, async (req, res) => {
+  const { recompensaId } = req.body;
+  const u = req.session.usuario;
+  if (u.cargo !== 'cliente') return res.status(403).json({ error: 'Solo clientes pueden canjear.' });
+
+  const recompensa = RECOMPENSAS.find(r => r.id === recompensaId);
+  if (!recompensa) return res.status(400).json({ error: 'Recompensa no válida.' });
+
+  try {
+    const usuario = await Usuario.findById(u.id);
+    if (usuario.puntos < recompensa.puntos)
+      return res.status(400).json({ error: 'No tienes suficientes puntos.' });
+
+    usuario.puntos -= recompensa.puntos;
+    usuario.canjes.push({
+      recompensa:   recompensa.nombre,
+      puntosUsados: recompensa.puntos,
+    });
+    await usuario.save();
+
+    // Actualiza puntos en la sesión
+    req.session.usuario.puntos = usuario.puntos;
+
+    res.json({ ok: true, puntosRestantes: usuario.puntos, recompensa: recompensa.nombre });
+  } catch {
+    res.status(500).json({ error: 'Error al procesar el canje.' });
+  }
+});
+
+// Destruye la sesión del servidor al cerrar sesión
+app.post('/api/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('i24h.sid');
+    res.json({ ok: true });
   });
 });
 
@@ -161,13 +394,16 @@ app.post('/api/login', async (req, res) => {
     const passwordCorrecta = await usuario.verificarPassword(password);
     if (!passwordCorrecta) return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
 
-    res.json({
+    // Guarda el usuario en la sesión del servidor
+    req.session.usuario = {
       id:     usuario._id,
       correo: usuario.correo,
       nombre: usuario.nombre,
       cargo:  usuario.cargo,
       puntos: usuario.puntos,
-    });
+    };
+
+    res.json(req.session.usuario);
   } catch (err) {
     res.status(500).json({ error: 'Error al iniciar sesión' });
   }
@@ -179,12 +415,12 @@ app.post('/api/login', async (req, res) => {
 //  POST /api/codigos       → genera un código nuevo
 // =============================================================
 
-app.get('/api/codigos', (req, res) => {
+app.get('/api/codigos', requireAuth, (req, res) => {
   const codigos = leer('codigos.json');
   res.json(codigos.slice().reverse());
 });
 
-app.post('/api/codigos', (req, res) => {
+app.post('/api/codigos', requireAuth, requireAdmin, (req, res) => {
   const { creadoPor } = req.body;
 
   // Genera un código aleatorio de 8 caracteres (sin letras confusas como O, I, 0, 1)
@@ -210,7 +446,7 @@ app.post('/api/codigos', (req, res) => {
 });
 
 // Elimina (revoca) un código que aún no fue usado
-app.delete('/api/codigos/:id', (req, res) => {
+app.delete('/api/codigos/:id', requireAuth, requireAdmin, (req, res) => {
   const id      = parseInt(req.params.id);
   const codigos = leer('codigos.json');
   const idx     = codigos.findIndex(c => c.id === id);
@@ -229,7 +465,7 @@ app.delete('/api/codigos/:id', (req, res) => {
 //  POST /api/empleados  → crea cuenta de empleado
 // =============================================================
 
-app.get('/api/empleados', async (req, res) => {
+app.get('/api/empleados', requireAuth, async (req, res) => {
   try {
     const empleados = await Usuario.find({ cargo: { $ne: 'cliente' } }).sort({ fechaCreacion: -1 });
     res.json(empleados);
@@ -238,7 +474,7 @@ app.get('/api/empleados', async (req, res) => {
   }
 });
 
-app.post('/api/empleados', async (req, res) => {
+app.post('/api/empleados', requireAuth, requireAdmin, async (req, res) => {
   const { correo, password, nombre, cargo } = req.body;
 
   if (!correo || !password || !cargo) return res.status(400).json({ error: 'Faltan datos' });
@@ -261,7 +497,7 @@ app.post('/api/empleados', async (req, res) => {
 //  GET /api/clientes  → lista todos los clientes registrados
 // =============================================================
 
-app.get('/api/clientes', async (req, res) => {
+app.get('/api/clientes', requireAuth, async (req, res) => {
   try {
     const clientes = await Usuario.find({ cargo: 'cliente' }).sort({ fechaCreacion: -1 });
     res.json(clientes);
@@ -275,7 +511,7 @@ app.get('/api/clientes', async (req, res) => {
 //  PATCH /api/usuarios/:id/estado
 // =============================================================
 
-app.patch('/api/usuarios/:id/estado', async (req, res) => {
+app.patch('/api/usuarios/:id/estado', requireAuth, requireAdmin, async (req, res) => {
   try {
     const usuario = await Usuario.findById(req.params.id);
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -293,7 +529,7 @@ app.patch('/api/usuarios/:id/estado', async (req, res) => {
 //  GET /api/resumen  → contadores para las tarjetas del panel
 // =============================================================
 
-app.get('/api/resumen', async (req, res) => {
+app.get('/api/resumen', requireAuth, async (req, res) => {
   try {
     const codigos     = leer('codigos.json');
     const comentarios = leer('comentarios.json');

@@ -1,0 +1,423 @@
+/* =============================================================
+   PANEL DEL CLIENTE — i24h
+   Usa las mismas variables que estilos.css para respetar
+   el modo oscuro automáticamente.
+   ============================================================= */
+
+
+/* =============================================================
+   ENCABEZADO DE BIENVENIDA
+   ============================================================= */
+.cliente-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 28px 0 20px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.cliente-header-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cliente-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--acento);
+  color: var(--acento-texto);
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.cliente-nombre {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--texto);
+  margin: 0 0 4px;
+}
+
+.cliente-correo {
+  font-size: .85rem;
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+/* Badge de puntos en rojo */
+.cliente-puntos-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--acento);
+  color: var(--acento-texto);
+  padding: 12px 20px;
+  border-radius: var(--radio);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.cliente-puntos-badge i {
+  font-size: 1.2rem;
+}
+
+
+/* =============================================================
+   TARJETA DEL CÓDIGO QR
+   ============================================================= */
+.qr-panel-card {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 28px;
+  flex-wrap: wrap;
+}
+
+/* El QR va centrado en una tarjeta blanca con sombra */
+.qr-panel-img {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  flex-shrink: 0;
+}
+
+.qr-panel-img img {
+  display: block;
+}
+
+.qr-panel-info {
+  flex: 1;
+  min-width: 220px;
+}
+
+.qr-panel-titulo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--texto);
+  margin: 0 0 8px;
+}
+
+.qr-panel-desc {
+  font-size: .9rem;
+  color: var(--texto-suave);
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.qr-panel-id {
+  font-size: .75rem;
+  color: var(--texto-suave);
+  margin: 0 0 20px;
+}
+
+.qr-panel-id code {
+  background: var(--fondo-alt);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: .75rem;
+  color: var(--texto);
+  word-break: break-all;
+}
+
+/* Botón de Google Wallet */
+.btn-wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.btn-wallet:hover { background: #1557b0; }
+
+
+/* =============================================================
+   RECOMPENSAS — grid de 2 columnas
+   ============================================================= */
+.sec-sub {
+  color: var(--texto-suave);
+  font-size: .9rem;
+  margin: -8px 0 20px;
+}
+
+.recompensas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.recompensa-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .2s;
+}
+
+.recompensa-card:not(.recompensa-bloqueada):hover {
+  border-color: var(--acento);
+}
+
+.recompensa-bloqueada {
+  opacity: .55;
+}
+
+.recompensa-ico {
+  width: 40px;
+  height: 40px;
+  background: var(--fondo-alt);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--acento);
+  font-size: 1.2rem;
+}
+
+.recompensa-nombre {
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--texto);
+  margin: 0;
+}
+
+.recompensa-puntos {
+  font-size: .82rem;
+  color: var(--acento);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+.btn-canjear {
+  margin-top: auto;
+  width: 100%;
+  font-size: .85rem;
+  padding: 8px 0;
+}
+
+.recompensa-falta {
+  margin-top: auto;
+  font-size: .8rem;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+
+/* =============================================================
+   HISTORIAL
+   ============================================================= */
+.estado-vacio {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--texto-suave);
+}
+
+.estado-vacio i {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  display: block;
+  color: var(--borde);
+}
+
+.estado-vacio p { margin: 0 0 6px; }
+.estado-vacio-sub { font-size: .85rem; }
+
+
+/* =============================================================
+   SUCURSALES
+   ============================================================= */
+.sucursales-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sucursal-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px 20px;
+  text-decoration: none;
+  color: var(--texto);
+  transition: border-color .2s, background .2s;
+}
+
+.sucursal-card:hover {
+  border-color: var(--acento);
+  background: var(--fondo-alt);
+}
+
+.sucursal-ico {
+  width: 38px;
+  height: 38px;
+  background: var(--fondo-alt);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--acento);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.sucursal-nombre {
+  font-weight: 600;
+  font-size: .9rem;
+  margin: 0 0 3px;
+  color: var(--texto);
+}
+
+.sucursal-dir {
+  font-size: .8rem;
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+.sucursal-ext {
+  margin-left: auto;
+  color: var(--texto-suave);
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+
+
+/* =============================================================
+   CALIFICAR EMPLEADO
+   ============================================================= */
+.calificar-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 28px;
+}
+
+.calificar-scan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding-right: 24px;
+  border-right: 1px solid var(--borde);
+}
+
+.scan-box {
+  width: 72px;
+  height: 72px;
+  border: 2px dashed var(--borde);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--texto-suave);
+}
+
+.scan-desc {
+  font-size: .85rem;
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+.calificar-stars-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calificar-stars-form .form-title {
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--texto);
+  margin: 0;
+}
+
+
+/* =============================================================
+   MODAL DE CANJE
+   ============================================================= */
+.canje-resumen {
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px;
+  text-align: center;
+  margin: 8px 0 16px;
+}
+
+.canje-nombre-reward {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--texto);
+  margin: 0 0 8px;
+}
+
+.canje-costo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--acento);
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.modal-acciones {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-acciones .btn-o,
+.modal-acciones .btn-p {
+  flex: 1;
+}
+
+
+/* =============================================================
+   RESPONSIVE
+   ============================================================= */
+@media (max-width: 768px) {
+  .recompensas-grid   { grid-template-columns: 1fr; }
+  .calificar-card     { grid-template-columns: 1fr; }
+  .calificar-scan     { border-right: none; border-bottom: 1px solid var(--borde); padding-right: 0; padding-bottom: 20px; }
+  .qr-panel-card      { flex-direction: column; align-items: center; text-align: center; }
+  .cliente-header     { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .cliente-puntos-badge { width: 100%; justify-content: center; }
+}

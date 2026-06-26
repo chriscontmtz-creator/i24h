@@ -4,8 +4,9 @@
 //  Cubre tanto empleados (admin, coordinador, etc.) como clientes.
 // =============================================================
 
-import mongoose from 'mongoose';
-import bcrypt   from 'bcryptjs';
+import mongoose      from 'mongoose';
+import bcrypt        from 'bcryptjs';
+import { randomUUID } from 'crypto';
 
 // -------------------------------------------------------------
 //  ESQUEMA — define los campos y reglas de cada usuario
@@ -69,9 +70,35 @@ const UsuarioEsquema = new mongoose.Schema(
     // Empleado que creó esta cuenta (referencia a otro Usuario)
     creadoPor: {
       type:    mongoose.Schema.Types.ObjectId,
-      ref:     'Usuario',  // Apunta al mismo modelo
+      ref:     'Usuario',
       default: null,
     },
+
+    // ID único para el código QR del cliente — se genera una sola vez y nunca cambia
+    qrId: {
+      type:   String,
+      unique: true,
+      sparse: true,  // Permite null en cuentas antiguas sin romper el índice único
+    },
+
+    // Historial de visitas y compras del cliente
+    historial: [
+      {
+        fecha:    { type: Date,   default: Date.now },
+        monto:    { type: Number, required: true },
+        concepto: { type: String, default: 'Uso de internet' },
+        sucursal: { type: String, default: 'Sucursal Principal' },
+      },
+    ],
+
+    // Registro de recompensas canjeadas
+    canjes: [
+      {
+        fecha:        { type: Date,   default: Date.now },
+        recompensa:   { type: String, required: true },
+        puntosUsados: { type: Number, required: true },
+      },
+    ],
   },
   {
     // Agrega automáticamente los campos "createdAt" y "updatedAt"
@@ -83,13 +110,13 @@ const UsuarioEsquema = new mongoose.Schema(
 //  MIDDLEWARE — se ejecuta antes de guardar en la base de datos
 // -------------------------------------------------------------
 
-// Encripta la contraseña automáticamente cuando se crea o modifica
-UsuarioEsquema.pre('save', async function (siguiente) {
-  // Solo encripta si la contraseña fue modificada (evita re-encriptar en otros cambios)
-  if (!this.isModified('password')) return siguiente();
+UsuarioEsquema.pre('save', async function () {
+  // Genera el qrId una sola vez si todavía no tiene uno
+  if (!this.qrId) this.qrId = randomUUID();
 
+  // Solo encripta si la contraseña fue modificada
+  if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 10);
-  siguiente();
 });
 
 // -------------------------------------------------------------

@@ -1,0 +1,219 @@
+  <div class="w" id="root">
+
+    <!-- NAV -->
+    <div class="nav">
+      <div class="logo">i24h
+        <div><img src="/CSS/IMAGENES/estilos.png" alt="Logo i24h"></div>
+        <span>Internet 24 Horas · Nuevo Leon</span>
+      </div>
+      <div class="nav-links">
+        <a href="/">Inicio</a>
+        <button class="toggle-btn" id="toggle-btn" aria-label="Cambiar modo de color">
+          <i class="ti ti-moon" id="tico" aria-hidden="true"></i>
+          <span id="tlbl">Modo oscuro</span>
+        </button>
+        <div class="nav-usuario" id="nav-usuario">
+          <button class="nav-usuario-btn" id="nav-usuario-btn" aria-haspopup="true" aria-expanded="false">
+            <span class="avatar-ico" id="nav-avatar">{{usuario.nombre.[0]}}</span>
+            <span class="nav-usuario-nombre" id="nav-nombre">{{usuario.nombre}}</span>
+            <span class="nav-usuario-rol" id="nav-rol">cliente</span>
+            <i class="ti ti-chevron-down chevron" aria-hidden="true"></i>
+          </button>
+          <div class="nav-dropdown" id="nav-dropdown" role="menu">
+            <div class="nav-dropdown-header">
+              <p class="dd-nombre" id="dd-nombre">{{usuario.nombre}}</p>
+              <p class="dd-correo" id="dd-correo">{{usuario.correo}}</p>
+              <span class="dd-puntos" id="dd-puntos">
+                <i class="ti ti-star-filled" aria-hidden="true"></i> {{usuario.puntos}} puntos
+              </span>
+            </div>
+            <ul class="nav-dropdown-lista">
+              <li role="menuitem"><a href="#qr"><i class="ti ti-qrcode"></i> Mi código QR</a></li>
+              <li role="menuitem"><a href="#recompensas"><i class="ti ti-star"></i> Mis puntos</a></li>
+              <li class="nav-dropdown-sep" role="separator"></li>
+              <li class="item-peligro" role="menuitem">
+                <button id="btn-cerrar-sesion-nav"><i class="ti ti-logout"></i> Cerrar sesión</button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENCABEZADO DE BIENVENIDA -->
+    <div class="cliente-header">
+      <div class="cliente-header-info">
+        <div class="cliente-avatar">{{usuario.nombre.[0]}}</div>
+        <div>
+          <h1 class="cliente-nombre">{{usuario.nombre}}</h1>
+          <p class="cliente-correo">{{usuario.correo}}</p>
+        </div>
+      </div>
+      <div class="cliente-puntos-badge">
+        <i class="ti ti-star-filled" aria-hidden="true"></i>
+        <span id="puntos-display">{{usuario.puntos}}</span>
+        <span>puntos</span>
+      </div>
+    </div>
+
+    <!-- QR DEL SOCIO -->
+    <div class="sec" id="qr">
+      <p class="sec-lbl">Tu código QR de socio</p>
+      <div class="qr-panel-card">
+        <div class="qr-panel-img">
+          <img src="{{qrDataUrl}}" alt="Código QR de {{usuario.nombre}}" width="220" height="220">
+        </div>
+        <div class="qr-panel-info">
+          <p class="qr-panel-titulo">Muestra este QR en caja</p>
+          <p class="qr-panel-desc">Escanea al realizar cualquier compra o servicio para acumular puntos automáticamente.</p>
+          <p class="qr-panel-id">ID: <code>{{usuario.qrId}}</code></p>
+
+          <!-- Botón Google Wallet -->
+          <button class="btn-wallet" id="btn-wallet" data-nombre="{{usuario.nombre}}" data-correo="{{usuario.correo}}" data-puntos="{{usuario.puntos}}" data-qrid="{{usuario.qrId}}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 10H22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Agregar a Google Wallet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECOMPENSAS -->
+    <div class="sec alt" id="recompensas">
+      <p class="sec-lbl">Recompensas disponibles</p>
+      <p class="sec-sub">Tienes <strong id="puntos-recompensas">{{usuario.puntos}}</strong> puntos acumulados</p>
+
+      <div class="recompensas-grid">
+        {{#each recompensas}}
+        <div class="recompensa-card {{#unless disponible}}recompensa-bloqueada{{/unless}}">
+          <div class="recompensa-ico">
+            <i class="ti {{icono}}" aria-hidden="true"></i>
+          </div>
+          <p class="recompensa-nombre">{{nombre}}</p>
+          <p class="recompensa-puntos">
+            <i class="ti ti-star-filled" aria-hidden="true"></i> {{puntos}} pts
+          </p>
+          {{#if disponible}}
+            <button class="btn-canjear btn-p" data-id="{{id}}" data-nombre="{{nombre}}" data-puntos="{{puntos}}">
+              Canjear ↗
+            </button>
+          {{else}}
+            <span class="recompensa-falta">Faltan {{puntos}} pts</span>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="sec" id="historial">
+      <p class="sec-lbl">Historial de visitas</p>
+      {{#if hayHistorial}}
+        <div class="tabla-contenedor">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Concepto</th>
+                <th>Sucursal</th>
+                <th>Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each historial}}
+              <tr>
+                <td>{{this.fecha}}</td>
+                <td>{{this.concepto}}</td>
+                <td>{{this.sucursal}}</td>
+                <td>${{this.monto}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      {{else}}
+        <div class="estado-vacio">
+          <i class="ti ti-receipt-off" aria-hidden="true"></i>
+          <p>Aún no tienes visitas registradas.</p>
+          <p class="estado-vacio-sub">Tus compras aparecerán aquí después de tu primera visita.</p>
+        </div>
+      {{/if}}
+    </div>
+
+    <!-- SUCURSALES -->
+    <div class="sec alt" id="sucursales">
+      <p class="sec-lbl">Sucursales más cercanas</p>
+      <div class="sucursales-grid">
+        {{#each sucursales}}
+        <a class="sucursal-card" href="{{mapsUrl}}" target="_blank" rel="noopener">
+          <div class="sucursal-ico"><i class="ti ti-map-pin" aria-hidden="true"></i></div>
+          <div>
+            <p class="sucursal-nombre">{{nombre}}</p>
+            <p class="sucursal-dir">{{dir}}</p>
+          </div>
+          <i class="ti ti-external-link sucursal-ext" aria-hidden="true"></i>
+        </a>
+        {{/each}}
+      </div>
+    </div>
+
+    <!-- CALIFICAR EMPLEADO -->
+    <div class="sec" id="calificar">
+      <p class="sec-lbl">Califica al empleado que te atendió</p>
+      <div class="calificar-card">
+        <div class="calificar-scan">
+          <div class="scan-box">
+            <i class="ti ti-scan" aria-hidden="true"></i>
+          </div>
+          <p class="scan-desc">Escanea el QR de la estación de trabajo o del empleado para dejar tu calificación.</p>
+          <a href="/" class="btn-o">Dejar comentario general ↗</a>
+        </div>
+        <div class="calificar-stars-form">
+          <p class="form-title">O califica directamente aquí</p>
+          <div class="star-row" id="star-row-emp">
+            <span class="star-btn" data-v="1">★</span>
+            <span class="star-btn" data-v="2">★</span>
+            <span class="star-btn" data-v="3">★</span>
+            <span class="star-btn" data-v="4">★</span>
+            <span class="star-btn" data-v="5">★</span>
+          </div>
+          <textarea class="inp" id="emp-comment" rows="3" placeholder="¿Cómo fue tu experiencia hoy?"></textarea>
+          <button class="btn-p" id="btn-calificar-emp">Enviar calificación ↗</button>
+          <p id="emp-msg" class="error-msg" style="display:none;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <span>© {{anio}} i24h – Internet 24 Horas</span>
+      <span class="footer-location"><i class="ti ti-map-pin" aria-hidden="true"></i> Monterrey, Nuevo León · Abierto 24/7</span>
+    </div>
+
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN DE CANJE -->
+  <div class="modal-fondo" id="modal-canje" aria-hidden="true">
+    <div class="modal-caja" role="dialog" aria-labelledby="modal-canje-titulo">
+      <button class="modal-cerrar" id="cerrar-modal-canje" aria-label="Cerrar">
+        <i class="ti ti-x"></i>
+      </button>
+      <div class="modal-icono"><i class="ti ti-star"></i></div>
+      <h2 class="modal-titulo" id="modal-canje-titulo">Confirmar canje</h2>
+      <p class="modal-desc" id="canje-desc">¿Deseas canjear esta recompensa?</p>
+      <div class="canje-resumen">
+        <p class="canje-nombre-reward" id="canje-nombre-reward">—</p>
+        <p class="canje-costo">
+          <i class="ti ti-star-filled"></i>
+          <span id="canje-puntos-costo">0</span> puntos
+        </p>
+      </div>
+      <div class="modal-acciones">
+        <button class="btn-o" id="btn-cancelar-canje">Cancelar</button>
+        <button class="btn-p" id="btn-confirmar-canje">Sí, canjear ↗</button>
+      </div>
+      <p id="canje-msg" class="error-msg" style="display:none;"></p>
+    </div>
+  </div>
