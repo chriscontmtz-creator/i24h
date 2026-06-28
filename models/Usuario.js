@@ -47,6 +47,18 @@ const UsuarioEsquema = new mongoose.Schema(
       default: 'cliente',
     },
 
+    // Sucursales donde trabaja el empleado (puede manejar varias)
+    sucursales: {
+      type:    [String],
+      default: [],
+    },
+
+    // Fecha y hora del último inicio de sesión
+    ultimaConexion: {
+      type:    Date,
+      default: null,
+    },
+
     // Puntos acumulados (aplica principalmente a clientes)
     puntos: {
       type:    Number,

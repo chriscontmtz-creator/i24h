@@ -77,7 +77,8 @@ function cerrarSesion() {
 
 function mostrarPantalla(id) {
   document.querySelectorAll('.pantalla').forEach(p => p.classList.add('oculto'));
-  document.getElementById(id).classList.remove('oculto');
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('oculto');
 }
 
 // Al cargar la página verifica si ya hay sesión activa
@@ -96,7 +97,7 @@ if (sesionActual) {
 const btnLoginEmpleado = document.getElementById('btn-login-empleado');
 const loginMsg         = document.getElementById('login-msg');
 
-btnLoginEmpleado.addEventListener('click', async () => {
+btnLoginEmpleado?.addEventListener('click', async () => {
   const correo   = document.getElementById('emp-correo').value.trim();
   const password = document.getElementById('emp-password').value.trim();
 
@@ -121,7 +122,7 @@ btnLoginEmpleado.addEventListener('click', async () => {
 });
 
 // Permite presionar Enter en el campo de contraseña para hacer login
-document.getElementById('emp-password').addEventListener('keydown', e => {
+document.getElementById('emp-password')?.addEventListener('keydown', e => {
   if (e.key === 'Enter') btnLoginEmpleado.click();
 });
 
@@ -133,14 +134,12 @@ document.getElementById('emp-password').addEventListener('keydown', e => {
 function iniciarPanel(usuario) {
   mostrarPantalla('pantalla-panel');
 
-  // Muestra el nombre y cargo del empleado en la barra superior
-  document.getElementById('emp-nombre-activo').textContent = usuario.nombre || usuario.correo;
-  document.getElementById('emp-cargo-activo').textContent  = NOMBRE_CARGO[usuario.cargo] || usuario.cargo;
+  const elNombre = document.getElementById('emp-nombre-activo');
+  const elCargo  = document.getElementById('emp-cargo-activo');
+  if (elNombre) elNombre.textContent = usuario.nombre || usuario.correo;
+  if (elCargo)  elCargo.textContent  = NOMBRE_CARGO[usuario.cargo] || usuario.cargo;
 
-  // Oculta tabs según el cargo
   ajustarTabsVisibles(usuario.cargo);
-
-  // Carga el resumen por defecto
   cargarResumen();
 }
 
@@ -162,7 +161,7 @@ function ajustarTabsVisibles(cargo) {
 }
 
 // Botón cerrar sesión
-document.getElementById('btn-cerrar-sesion').addEventListener('click', cerrarSesion);
+document.getElementById('btn-cerrar-sesion')?.addEventListener('click', cerrarSesion);
 
 
 // =============================================================
@@ -246,7 +245,7 @@ async function cargarEmpleados() {
 }
 
 // Mostrar / ocultar el formulario de nuevo empleado
-document.getElementById('btn-abrir-form-empleado').addEventListener('click', () => {
+document.getElementById('btn-abrir-form-empleado')?.addEventListener('click', () => {
   const form    = document.getElementById('form-nuevo-empleado');
   const visible = !form.classList.contains('oculto');
   form.classList.toggle('oculto', visible);
@@ -262,13 +261,13 @@ document.getElementById('btn-abrir-form-empleado').addEventListener('click', () 
   }
 });
 
-document.getElementById('btn-cancelar-form-empleado').addEventListener('click', () => {
+document.getElementById('btn-cancelar-form-empleado')?.addEventListener('click', () => {
   document.getElementById('form-nuevo-empleado').classList.add('oculto');
   limpiarFormEmpleado();
 });
 
 // Guardar nuevo empleado
-document.getElementById('btn-guardar-empleado').addEventListener('click', async () => {
+document.getElementById('btn-guardar-empleado')?.addEventListener('click', async () => {
   const correo   = document.getElementById('nemp-correo').value.trim();
   const password = document.getElementById('nemp-password').value.trim();
   const nombre   = document.getElementById('nemp-nombre').value.trim();
@@ -385,7 +384,7 @@ async function cargarCodigos() {
 }
 
 // Generar un código nuevo
-document.getElementById('btn-generar-codigo').addEventListener('click', async () => {
+document.getElementById('btn-generar-codigo')?.addEventListener('click', async () => {
   const usuario = obtenerSesion();
 
   try {

@@ -51,9 +51,9 @@
       <!-- EQUIPO -->
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Equipo</span>
-        <button class="panel-nav-item" data-seccion="empleados" data-titulo="Empleados">
+        <a href="/empleados.html" class="panel-nav-item" style="text-decoration:none">
           <i class="ti ti-users"></i><span>Empleados</span>
-        </button>
+        </a>
         <button class="panel-nav-item" data-seccion="horarios" data-titulo="Horarios">
           <i class="ti ti-calendar-time"></i><span>Horarios</span>
         </button>
@@ -529,10 +529,110 @@
       </div>
 
       <div class="panel-seccion oculta" id="sec-ventas">
-        <div class="panel-en-construccion">
-          <i class="ti ti-cash-register"></i>
-          <h2>Ventas</h2>
-          <p>Esta sección está en construcción</p>
+
+        <!-- BARRA SUPERIOR -->
+        <div class="vnt-top-bar">
+          <div class="vnt-pills" id="vnt-pills">
+            <button class="vnt-pill active" data-periodo="hoy">Hoy</button>
+            <button class="vnt-pill" data-periodo="7">7 días</button>
+            <button class="vnt-pill" data-periodo="15">15 días</button>
+            <button class="vnt-pill" data-periodo="30">30 días</button>
+          </div>
+          <select class="vnt-select" id="vnt-suc-filter">
+            <option value="todas">Todas las sucursales</option>
+            <option value="simon-bolivar">Simón Bolívar</option>
+            <option value="insurgentes">Insurgentes</option>
+            <option value="antigona">Antígona</option>
+            <option value="lincoln-oxxo">Lincoln Oxxo</option>
+            <option value="lincoln-2">Lincoln 2</option>
+            <option value="ruiz-cortines">Ruiz Cortines</option>
+            <option value="rodas">Rodas</option>
+            <option value="cuauhtemoc">Cuauhtémoc</option>
+            <option value="ordonez">Ordóñez</option>
+          </select>
+          <button class="vnt-export-btn" id="vnt-export-btn">
+            <i class="ti ti-file-spreadsheet"></i> Exportar Excel
+          </button>
+        </div>
+
+        <!-- KPIs -->
+        <div class="vnt-kpis">
+          <div class="vnt-kpi-card">
+            <span class="vnt-kpi-label">Total ventas período</span>
+            <span class="vnt-kpi-valor" id="vnt-k-total">—</span>
+            <span class="vnt-kpi-delta" id="vnt-k-delta">—</span>
+          </div>
+          <div class="vnt-kpi-card">
+            <span class="vnt-kpi-label">Sucursal líder</span>
+            <span class="vnt-kpi-valor" id="vnt-k-top-suc" style="font-size:1.1rem">—</span>
+            <span class="vnt-kpi-delta" id="vnt-k-top-suc-val">—</span>
+          </div>
+          <div class="vnt-kpi-card">
+            <span class="vnt-kpi-label">Categoría líder</span>
+            <span class="vnt-kpi-valor" id="vnt-k-top-cat">—</span>
+            <span class="vnt-kpi-delta" id="vnt-k-top-cat-val">—</span>
+          </div>
+          <div class="vnt-kpi-card">
+            <span class="vnt-kpi-label">Sucursales activas</span>
+            <span class="vnt-kpi-valor" id="vnt-k-activas">— / 9</span>
+            <span class="vnt-kpi-delta" style="color:var(--texto-suave)">Con ventas registradas</span>
+          </div>
+        </div>
+
+        <!-- DESGLOSE POR SUCURSAL -->
+        <p class="vnt-section-title">Desglose por sucursal</p>
+        <div class="vnt-suc-grid" id="vnt-suc-grid">
+          <!-- generado por JS -->
+        </div>
+
+        <!-- TABLA COMPARATIVA -->
+        <p class="vnt-section-title">Comparativa por categoría</p>
+        <div class="vnt-tabla-outer">
+          <table class="vnt-tabla" id="vnt-tabla">
+            <!-- generada por JS -->
+          </table>
+        </div>
+
+        <!-- PANEL INFERIOR: top productos + alertas -->
+        <div class="vnt-bottom-grid">
+
+          <div class="vnt-card">
+            <div class="vnt-card-head">
+              <p class="vnt-card-titulo"><i class="ti ti-trophy"></i> Top productos vendidos</p>
+              <select class="vnt-select vnt-select-sm" id="vnt-top-cat-filter">
+                <option value="todas">Todas las categorías</option>
+                <option value="Novedades">Novedades</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Snack">Snack</option>
+              </select>
+            </div>
+            <div class="vnt-tabla-outer" style="margin-top:8px">
+              <table class="vnt-tabla vnt-tabla-top" id="vnt-top-tabla">
+                <thead>
+                  <tr>
+                    <th style="width:28px">#</th>
+                    <th>Producto</th>
+                    <th>Sucursal</th>
+                    <th style="text-align:right">Uds.</th>
+                    <th style="text-align:right">Venta $</th>
+                  </tr>
+                </thead>
+                <tbody id="vnt-top-body">
+                  <tr><td colspan="5" class="vnt-empty">Cargando…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="vnt-card">
+            <div class="vnt-card-head">
+              <p class="vnt-card-titulo"><i class="ti ti-alert-triangle"></i> Alertas de rotación</p>
+            </div>
+            <div class="vnt-alertas-list" id="vnt-alertas-list">
+              <div class="vnt-empty">Cargando…</div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -612,11 +712,134 @@
       </div>
 
       <div class="panel-seccion oculta" id="sec-inventario">
-        <div class="panel-en-construccion">
-          <i class="ti ti-package"></i>
-          <h2>Inventario / Stock</h2>
-          <p>Esta sección está en construcción</p>
+
+        <!-- Encabezado -->
+        <div class="inv-top-bar">
+          <h1 class="inv-titulo">Inventario y Stock</h1>
+          <button class="inv-btn-salir" onclick="irSeccion('dashboard','Dashboard')">
+            <i class="ti ti-layout-dashboard"></i> Dashboard
+          </button>
         </div>
+
+        <!-- Selectores de sucursal y fecha -->
+        <div class="inv-header-grid">
+          <div>
+            <label class="inv-field-lbl">Seleccionar sucursal</label>
+            <select class="inv-select">
+              <option>Simón Bolívar</option>
+              <option>Insurgentes</option>
+              <option>Antígona</option>
+              <option>Lincoln Oxxo</option>
+              <option>Lincoln 2</option>
+              <option>Ruiz Cortines</option>
+              <option>Rodas</option>
+              <option>Cuauhtémoc</option>
+              <option>Ordóñez</option>
+              <option>Todas las sucursales</option>
+            </select>
+          </div>
+          <div>
+            <label class="inv-field-lbl">Fecha del inventario</label>
+            <input type="date" class="inv-date" id="inv-fecha">
+          </div>
+        </div>
+
+        <!-- Cards de resumen por categoría -->
+        <p class="inv-section-title">Resumen por categoría</p>
+        <div class="inv-cat-grid">
+          <div class="inv-cat-card" style="border-left:3px solid #3B6D11;">
+            <p class="inv-cat-label">Limpieza</p>
+            <p class="inv-cat-count">23</p>
+            <p class="inv-cat-unit">artículos</p>
+          </div>
+          <div class="inv-cat-card" style="border-left:3px solid #378ADD;">
+            <p class="inv-cat-label">Novedades</p>
+            <p class="inv-cat-count">129</p>
+            <p class="inv-cat-unit">artículos</p>
+          </div>
+          <div class="inv-cat-card" style="border-left:3px solid #D4537E;">
+            <p class="inv-cat-label">Papelería</p>
+            <p class="inv-cat-count">813</p>
+            <p class="inv-cat-unit">artículos</p>
+          </div>
+          <div class="inv-cat-card" style="border-left:3px solid #BA7517;">
+            <p class="inv-cat-label">Snack</p>
+            <p class="inv-cat-count">56</p>
+            <p class="inv-cat-unit">artículos</p>
+          </div>
+        </div>
+
+        <!-- Vista previa de stock -->
+        <div class="inv-table-header">
+          <p class="inv-section-title" style="margin:0;">Vista previa de stock</p>
+          <button class="inv-filter-btn"><i class="ti ti-filter"></i> Filtrar</button>
+        </div>
+
+        <div class="inv-table-wrap">
+          <table class="inv-table">
+            <thead>
+              <tr>
+                <th>Artículo</th>
+                <th>Cantidad</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cloro</td>
+                <td>0</td>
+                <td><span class="inv-badge-bajo">Bajo</span></td>
+              </tr>
+              <tr>
+                <td>Bolsa Grande</td>
+                <td>20</td>
+                <td><span class="inv-badge-ok">Disponible</span></td>
+              </tr>
+              <tr>
+                <td>Tabloide Couche</td>
+                <td>190</td>
+                <td><span class="inv-badge-ok">Disponible</span></td>
+              </tr>
+              <tr>
+                <td>Agua 500ml</td>
+                <td>0</td>
+                <td><span class="inv-badge-bajo">Bajo</span></td>
+              </tr>
+              <tr>
+                <td>Novedad Rojo 20</td>
+                <td>31</td>
+                <td><span class="inv-badge-ok">Disponible</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="inv-table-footer">Mostrando 5 de 1,021 artículos</div>
+        </div>
+
+        <!-- Descargar plantillas Excel -->
+        <p class="inv-section-title">Descargar plantillas Excel</p>
+        <div class="inv-download-grid">
+          <div class="inv-download-card">
+            <i class="ti ti-file-spreadsheet" style="font-size:28px;color:#3B6D11;"></i>
+            <p>Limpieza</p>
+            <button class="inv-download-btn"><i class="ti ti-download"></i> Descargar</button>
+          </div>
+          <div class="inv-download-card">
+            <i class="ti ti-file-spreadsheet" style="font-size:28px;color:#378ADD;"></i>
+            <p>Novedades</p>
+            <button class="inv-download-btn"><i class="ti ti-download"></i> Descargar</button>
+          </div>
+          <div class="inv-download-card">
+            <i class="ti ti-file-spreadsheet" style="font-size:28px;color:#D4537E;"></i>
+            <p>Papelería</p>
+            <button class="inv-download-btn"><i class="ti ti-download"></i> Descargar</button>
+          </div>
+          <div class="inv-download-card">
+            <i class="ti ti-file-spreadsheet" style="font-size:28px;color:#BA7517;"></i>
+            <p>Snack</p>
+            <button class="inv-download-btn"><i class="ti ti-download"></i> Descargar</button>
+          </div>
+        </div>
+
       </div>
 
       <div class="panel-seccion oculta" id="sec-limpieza">
@@ -628,18 +851,229 @@
       </div>
 
       <div class="panel-seccion oculta" id="sec-reportes">
-        <div class="panel-en-construccion">
-          <i class="ti ti-clipboard-list"></i>
-          <h2>Reportes depto.</h2>
-          <p>Esta sección está en construcción</p>
-        </div>
+        <div class="rpt-wrap">
+
+          <!-- LEFT: formulario -->
+          <div class="rpt-left">
+            <div class="rpt-left-header">
+              <h2>Nuevo reporte</h2>
+              <p id="rpt-livetime"></p>
+            </div>
+            <div class="rpt-form-body">
+              <div class="rpt-field-group">
+                <span class="rpt-field-label">Sucursal</span>
+                <select id="rpt-sel-suc">
+                  <option>Simón Bolívar</option>
+                  <option>Insurgentes</option>
+                  <option>Antígona</option>
+                  <option>Lincoln Oxxo</option>
+                  <option>Lincoln 2</option>
+                  <option>Ruiz Cortines</option>
+                  <option>Rodas</option>
+                  <option>Cuauhtémoc</option>
+                  <option>Ordóñez</option>
+                </select>
+              </div>
+              <div class="rpt-field-group">
+                <span class="rpt-field-label">Departamento</span>
+                <div class="rpt-dept-grid">
+                  <button class="rpt-dept-btn active-imp" id="rpt-d-imp" onclick="rptSelectDept('imp')"><span class="rpt-dot rpt-dot-imp"></span>Impresoras</button>
+                  <button class="rpt-dept-btn" id="rpt-d-mant" onclick="rptSelectDept('mant')"><span class="rpt-dot rpt-dot-mant"></span>Mantenimiento</button>
+                  <button class="rpt-dept-btn" id="rpt-d-sis" onclick="rptSelectDept('sis')"><span class="rpt-dot rpt-dot-sis"></span>Sistemas</button>
+                  <button class="rpt-dept-btn" id="rpt-d-bodega" onclick="rptSelectDept('bodega')"><span class="rpt-dot rpt-dot-bodega"></span>Bodega</button>
+                </div>
+              </div>
+              <div class="rpt-extra-fields" id="rpt-extraFields">
+                <span class="rpt-field-label">Datos de equipo</span>
+                <div class="rpt-inline-fields">
+                  <div class="rpt-field-group">
+                    <span class="rpt-field-label">No. impresora</span>
+                    <input id="rpt-inp-num" type="text" placeholder="A79M011034413" style="font-family:monospace">
+                  </div>
+                  <div class="rpt-field-group">
+                    <span class="rpt-field-label">Marca</span>
+                    <input id="rpt-inp-marca" type="text" placeholder="Marcopy">
+                  </div>
+                </div>
+              </div>
+              <div class="rpt-field-group">
+                <span class="rpt-field-label">Descripción del problema</span>
+                <textarea id="rpt-inp-desc" placeholder="Describe el fallo o la necesidad del reporte..."></textarea>
+              </div>
+              <div class="rpt-datetime-row">
+                <i class="ti ti-clock" style="font-size:14px;color:var(--texto-suave)" aria-hidden="true"></i>
+                <span>Fecha y hora</span>
+                <strong id="rpt-cardtime"></strong>
+              </div>
+            </div>
+            <div class="rpt-form-footer">
+              <button class="rpt-create-btn" onclick="rptCrearReporte()">
+                <i class="ti ti-file-text" style="font-size:16px" aria-hidden="true"></i>
+                Crear reporte
+              </button>
+            </div>
+          </div>
+
+          <!-- RIGHT: feed -->
+          <div class="rpt-right">
+            <div class="rpt-right-header">
+              <h2>Reportes recientes</h2>
+              <span style="font-size:12px;color:var(--texto-suave)"><span class="rpt-status-dot"></span>En vivo</span>
+            </div>
+
+            <div class="rpt-filter-section">
+              <div class="rpt-filter-row">
+                <span class="rpt-filter-row-label">Departamento</span>
+                <button class="rpt-pill active-all" onclick="rptFilterDept(this,'all')">Todos</button>
+                <button class="rpt-pill" onclick="rptFilterDept(this,'mant')"><span class="rpt-dot rpt-dot-mant"></span>Mantenimiento</button>
+                <button class="rpt-pill" onclick="rptFilterDept(this,'bodega')"><span class="rpt-dot rpt-dot-bodega"></span>Bodega</button>
+                <button class="rpt-pill" onclick="rptFilterDept(this,'sis')"><span class="rpt-dot rpt-dot-sis"></span>Sistemas</button>
+                <button class="rpt-pill" onclick="rptFilterDept(this,'imp')"><span class="rpt-dot rpt-dot-imp"></span>Impresoras</button>
+              </div>
+              <div class="rpt-filter-row">
+                <span class="rpt-filter-row-label">Sucursal</span>
+                <button class="rpt-pill active-suc" onclick="rptFilterSuc(this,'all')">Todas</button>
+                <button class="rpt-pill" onclick="rptFilterSuc(this,'Simón Bolívar')">S. Bolívar</button>
+                <button class="rpt-pill" onclick="rptFilterSuc(this,'Insurgentes')">Insurgentes</button>
+                <button class="rpt-pill" onclick="rptFilterSuc(this,'Antígona')">Antígona</button>
+                <button class="rpt-pill" onclick="rptFilterSuc(this,'Lincoln Oxxo')">Lincoln Oxxo</button>
+                <button class="rpt-pill" onclick="rptFilterSuc(this,'Lincoln 2')">Lincoln 2</button>
+                <button class="rpt-pill" onclick="rptFilterSuc(this,'Ruiz Cortines')">R. Cortines</button>
+                <button class="rpt-pill" onclick="rptFilterSuc(this,'Rodas')">Rodas</button>
+                <button class="rpt-pill" onclick="rptFilterSuc(this,'Cuauhtémoc')">Cuauhtémoc</button>
+                <button class="rpt-pill" onclick="rptFilterSuc(this,'Ordóñez')">Ordóñez</button>
+              </div>
+              <div class="rpt-filter-row">
+                <span class="rpt-filter-row-label">Estado</span>
+                <button class="rpt-pill active-all" onclick="rptFilterStatus(this,'all')">Todos</button>
+                <button class="rpt-pill" onclick="rptFilterStatus(this,'pendiente')"><span class="rpt-dot" style="background:#BA7517"></span>Pendiente</button>
+                <button class="rpt-pill" onclick="rptFilterStatus(this,'realizado')"><span class="rpt-dot" style="background:#1D9E75"></span>Realizado</button>
+              </div>
+            </div>
+
+            <div class="rpt-feed" id="rpt-feed">
+
+              <div class="rpt-card imp" data-dept="imp" data-suc="Simón Bolívar" data-status="pendiente">
+                <div class="rpt-card-top">
+                  <div class="rpt-card-meta">
+                    <span class="rpt-dept-tag imp">Impresoras</span>
+                    <span class="rpt-suc-name">Simón Bolívar</span>
+                    <span class="rpt-new-badge">nuevo</span>
+                  </div>
+                  <div class="rpt-card-right">
+                    <span class="rpt-card-time">Hoy · 16:48</span>
+                    <button class="rpt-status-toggle pendiente" onclick="rptToggleStatus(this)" aria-label="Cambiar estado">
+                      <i class="ti ti-clock" style="font-size:11px" aria-hidden="true"></i> Pendiente
+                    </button>
+                  </div>
+                </div>
+                <p class="rpt-card-desc">Impresora sigue con mensaje de unidad de rodillo de transferencia.</p>
+                <div class="rpt-card-footer"><span class="rpt-mention">@Monitoreo</span><span class="rpt-printer-chip">A79M011034413</span></div>
+              </div>
+
+              <div class="rpt-card mant" data-dept="mant" data-suc="Lincoln Oxxo" data-status="pendiente">
+                <div class="rpt-card-top">
+                  <div class="rpt-card-meta">
+                    <span class="rpt-dept-tag mant">Mantenimiento</span>
+                    <span class="rpt-suc-name">Lincoln Oxxo</span>
+                  </div>
+                  <div class="rpt-card-right">
+                    <span class="rpt-card-time">Hoy · 14:22</span>
+                    <button class="rpt-status-toggle pendiente" onclick="rptToggleStatus(this)" aria-label="Cambiar estado">
+                      <i class="ti ti-clock" style="font-size:11px" aria-hidden="true"></i> Pendiente
+                    </button>
+                  </div>
+                </div>
+                <p class="rpt-card-desc">Aire acondicionado de sala principal no enciende.</p>
+                <div class="rpt-card-footer"><span class="rpt-mention">@Monitoreo</span></div>
+              </div>
+
+              <div class="rpt-card sis" data-dept="sis" data-suc="Insurgentes" data-status="realizado">
+                <div class="rpt-card-top">
+                  <div class="rpt-card-meta">
+                    <span class="rpt-dept-tag sis">Sistemas</span>
+                    <span class="rpt-suc-name">Insurgentes</span>
+                  </div>
+                  <div class="rpt-card-right">
+                    <span class="rpt-card-time">Ayer · 18:05</span>
+                    <button class="rpt-status-toggle realizado" onclick="rptToggleStatus(this)" aria-label="Cambiar estado">
+                      <i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i> Realizado
+                    </button>
+                  </div>
+                </div>
+                <p class="rpt-card-desc">El equipo de caja no conecta a internet desde la mañana.</p>
+                <div class="rpt-card-footer"><span class="rpt-mention">@Monitoreo</span></div>
+              </div>
+
+              <div class="rpt-card bodega" data-dept="bodega" data-suc="Rodas" data-status="pendiente">
+                <div class="rpt-card-top">
+                  <div class="rpt-card-meta">
+                    <span class="rpt-dept-tag bodega">Bodega</span>
+                    <span class="rpt-suc-name">Rodas</span>
+                  </div>
+                  <div class="rpt-card-right">
+                    <span class="rpt-card-time">Ayer · 11:30</span>
+                    <button class="rpt-status-toggle pendiente" onclick="rptToggleStatus(this)" aria-label="Cambiar estado">
+                      <i class="ti ti-clock" style="font-size:11px" aria-hidden="true"></i> Pendiente
+                    </button>
+                  </div>
+                </div>
+                <p class="rpt-card-desc">Faltan cajas de resma carta. Solicitud urgente para cubrir operación.</p>
+                <div class="rpt-card-footer"><span class="rpt-mention">@Monitoreo</span></div>
+              </div>
+
+              <div class="rpt-card imp" data-dept="imp" data-suc="Antígona" data-status="realizado">
+                <div class="rpt-card-top">
+                  <div class="rpt-card-meta">
+                    <span class="rpt-dept-tag imp">Impresoras</span>
+                    <span class="rpt-suc-name">Antígona</span>
+                  </div>
+                  <div class="rpt-card-right">
+                    <span class="rpt-card-time">Ayer · 09:15</span>
+                    <button class="rpt-status-toggle realizado" onclick="rptToggleStatus(this)" aria-label="Cambiar estado">
+                      <i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i> Realizado
+                    </button>
+                  </div>
+                </div>
+                <p class="rpt-card-desc">Error de tóner bajo en equipo principal. Se reemplazó cartucho negro.</p>
+                <div class="rpt-card-footer"><span class="rpt-mention">@Monitoreo</span><span class="rpt-printer-chip">B12C004921</span></div>
+              </div>
+
+              <div class="rpt-card mant" data-dept="mant" data-suc="Simón Bolívar" data-status="pendiente">
+                <div class="rpt-card-top">
+                  <div class="rpt-card-meta">
+                    <span class="rpt-dept-tag mant">Mantenimiento</span>
+                    <span class="rpt-suc-name">Simón Bolívar</span>
+                  </div>
+                  <div class="rpt-card-right">
+                    <span class="rpt-card-time">Ayer · 08:50</span>
+                    <button class="rpt-status-toggle pendiente" onclick="rptToggleStatus(this)" aria-label="Cambiar estado">
+                      <i class="ti ti-clock" style="font-size:11px" aria-hidden="true"></i> Pendiente
+                    </button>
+                  </div>
+                </div>
+                <p class="rpt-card-desc">Fuga de agua en baño de empleados, piso mojado con riesgo de caída.</p>
+                <div class="rpt-card-footer"><span class="rpt-mention">@Monitoreo</span></div>
+              </div>
+
+            </div><!-- /rpt-feed -->
+          </div><!-- /rpt-right -->
+        </div><!-- /rpt-wrap -->
       </div>
 
       <div class="panel-seccion oculta" id="sec-empleados">
-        <div class="panel-en-construccion">
-          <i class="ti ti-users"></i>
-          <h2>Empleados</h2>
-          <p>Esta sección está en construcción</p>
+        <div style="max-width:460px;margin:80px auto;text-align:center">
+          <div style="width:68px;height:68px;background:var(--fondo-alt);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:2.2rem;color:var(--acento)">
+            <i class="ti ti-users"></i>
+          </div>
+          <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:var(--texto)">Panel de Empleados</h2>
+          <p style="color:var(--texto-suave);font-size:.88rem;margin-bottom:22px;line-height:1.6">
+            Auditorías diarias, ranking, puntos, bonos y gestión de turnos.<br>
+            Se abre en su propia página.
+          </p>
+          <a href="/empleados.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:var(--acento);color:#fff;font-size:.9rem;font-weight:600;text-decoration:none;transition:background .2s" onmouseover="this.style.background='var(--acento-oscuro)'" onmouseout="this.style.background='var(--acento)'">
+            <i class="ti ti-external-link"></i> Abrir panel de empleados
+          </a>
         </div>
       </div>
 
@@ -684,11 +1118,127 @@
       </div>
 
       <div class="panel-seccion oculta" id="sec-usuarios">
-        <div class="panel-en-construccion">
-          <i class="ti ti-user-cog"></i>
-          <h2>Usuarios</h2>
-          <p>Esta sección está en construcción</p>
+
+        <div class="usr-stats">
+          <div class="usr-stat-card">
+            <div class="usr-stat-label">Total empleados</div>
+            <div class="usr-stat-val" id="usr-cnt-emp-tot">0</div>
+            <div class="usr-stat-sub" style="color:#16a34a" id="usr-cnt-emp-act">0 activos</div>
+          </div>
+          <div class="usr-stat-card">
+            <div class="usr-stat-label">Clientes registrados</div>
+            <div class="usr-stat-val" id="usr-cnt-cli-tot">0</div>
+            <div class="usr-stat-sub" style="color:var(--texto-suave)" id="usr-cnt-cli-mes">Este mes: —</div>
+          </div>
+          <div class="usr-stat-card">
+            <div class="usr-stat-label">Códigos disponibles</div>
+            <div class="usr-stat-val" id="usr-cnt-cod-dis">0</div>
+            <div class="usr-stat-sub" style="color:var(--texto-suave)" id="usr-cnt-cod-usa">0 usados</div>
+          </div>
+          <div class="usr-stat-card" style="cursor:pointer" onclick="usrFiltrarInactivos()" title="Clic para filtrar inactivos">
+            <div class="usr-stat-label">Cuentas inactivas</div>
+            <div class="usr-stat-val" id="usr-cnt-inac" style="color:#991b1b">0</div>
+            <div class="usr-stat-sub" style="color:var(--texto-suave)">Clic para filtrar</div>
+          </div>
         </div>
+
+        <div style="background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio);overflow:hidden">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--borde)">
+            <span style="font-size:.88rem;font-weight:600;color:var(--texto)">Gestión de cuentas</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button class="usr-btn-export" id="usr-btn-export" onclick="usrExportarCSV()">
+                <i class="ti ti-file-download" aria-hidden="true"></i> Exportar CSV
+              </button>
+              <button class="usr-btn-nuevo" id="usr-btn-nuevo-emp">
+                <i class="ti ti-user-plus" aria-hidden="true"></i> Nuevo empleado
+              </button>
+            </div>
+          </div>
+
+          <div class="usr-tabs-row">
+            <button class="usr-tab active" id="usr-tab-emp" onclick="usrSetTab('emp')">
+              <i class="ti ti-id-badge" aria-hidden="true"></i> Empleados
+              <span class="usr-tab-count" id="usr-tcnt-emp">0</span>
+            </button>
+            <button class="usr-tab" id="usr-tab-cli" onclick="usrSetTab('cli')">
+              <i class="ti ti-users" aria-hidden="true"></i> Clientes
+              <span class="usr-tab-count" id="usr-tcnt-cli">0</span>
+            </button>
+            <button class="usr-tab" id="usr-tab-cod" onclick="usrSetTab('cod')">
+              <i class="ti ti-key" aria-hidden="true"></i> Códigos de acceso
+              <span class="usr-tab-count" id="usr-tcnt-cod">0</span>
+            </button>
+          </div>
+
+          <div class="usr-filter-bar" id="usr-filter-bar">
+            <span class="usr-filter-label">Filtrar:</span>
+            <div id="usr-filtros-dinamicos" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
+            <span class="usr-filter-count" id="usr-filter-count"></span>
+          </div>
+
+          <div style="padding:14px 16px">
+
+            <div id="usr-vista-emp">
+              <table class="usr-tbl">
+                <colgroup>
+                  <col style="width:24%"><col style="width:13%"><col style="width:17%">
+                  <col style="width:11%"><col style="width:12%"><col style="width:16%"><col style="width:7%">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Empleado</th><th>Cargo</th><th>Sucursal</th>
+                    <th>Registro</th><th>Últ. conexión</th><th>Estado</th><th></th>
+                  </tr>
+                </thead>
+                <tbody id="usr-tbody-emp">
+                  <tr><td colspan="7" class="usr-empty">Cargando empleados…</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div id="usr-vista-cli" style="display:none">
+              <table class="usr-tbl">
+                <colgroup>
+                  <col style="width:34%"><col style="width:14%"><col style="width:12%">
+                  <col style="width:18%"><col style="width:15%"><col style="width:7%">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Cliente</th><th>Puntos</th><th>Canjes</th>
+                    <th>Registro</th><th>Estado</th><th></th>
+                  </tr>
+                </thead>
+                <tbody id="usr-tbody-cli">
+                  <tr><td colspan="6" class="usr-empty">Cargando clientes…</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div id="usr-vista-cod" style="display:none">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+                <span style="font-size:.78rem;color:var(--texto-suave)">Códigos de un solo uso — el cliente los canjea al registrarse</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <div class="usr-cod-qty" id="usr-cod-qty">
+                    <button class="usr-cod-qty-btn activo" data-qty="1">×1</button>
+                    <button class="usr-cod-qty-btn" data-qty="5">×5</button>
+                    <button class="usr-cod-qty-btn" data-qty="10">×10</button>
+                  </div>
+                  <button class="usr-btn-nuevo" id="usr-btn-gen-cod">
+                    <i class="ti ti-plus" aria-hidden="true"></i> Generar
+                  </button>
+                </div>
+              </div>
+              <div id="usr-lista-cod">
+                <div class="usr-empty">Cargando códigos…</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- El drawer de nuevo empleado y el modal de edición están al final del documento (position:fixed) -->
+
       </div>
 
       <div class="panel-seccion oculta" id="sec-auditoria">
@@ -727,6 +1277,124 @@
     </div><!-- /panel-content -->
   </div><!-- /panel-main -->
 </div><!-- /panel-root -->
+
+<!-- ============================================================
+     MODAL — Reporte generado (mensaje para copiar a WhatsApp)
+     ============================================================ -->
+<div class="rpt-overlay" id="rpt-overlay" onclick="rptCloseModal(event)">
+  <div class="rpt-modal" onclick="event.stopPropagation()">
+    <div class="rpt-modal-header">
+      <h3>Reporte generado</h3>
+      <button class="rpt-close-btn" onclick="rptCloseModal()" aria-label="Cerrar">
+        <i class="ti ti-x" style="font-size:16px" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="rpt-msg-preview"><pre id="rpt-msg-text"></pre></div>
+    <div class="rpt-modal-actions">
+      <button class="rpt-copy-btn" onclick="rptCopiarMensaje()">
+        <i class="ti ti-copy" style="font-size:16px" id="rpt-copy-icon" aria-hidden="true"></i>
+        <span id="rpt-copy-label">Copiar mensaje</span>
+      </button>
+      <button class="rpt-close-secondary-btn" onclick="rptCloseModal()">
+        <i class="ti ti-arrow-left" style="font-size:14px" aria-hidden="true"></i>
+        Volver a reportes
+      </button>
+      <div class="rpt-wa-hint">
+        <svg class="rpt-wa-icon" viewBox="0 0 24 24" fill="#1D9E75" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Copia y pega en WhatsApp manualmente
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     DRAWER — Crear nuevo empleado (desliza desde la derecha)
+     ============================================================ -->
+<div id="usr-drawer-bg" class="usr-drawer-bg" onclick="usrCerrarDrawer()"></div>
+<div id="usr-drawer" class="usr-drawer">
+  <div class="usr-drawer-head">
+    <div class="usr-drawer-title">
+      <i class="ti ti-user-plus" aria-hidden="true"></i> Nuevo empleado
+    </div>
+    <button class="usr-drawer-close" onclick="usrCerrarDrawer()">
+      <i class="ti ti-x" aria-hidden="true"></i>
+    </button>
+  </div>
+  <div class="usr-drawer-body">
+    <div>
+      <label class="usr-field-lbl">Nombre completo</label>
+      <input class="usr-field-inp" type="text" id="usr-reg-nombre" placeholder="Ej: Carlos López Reyes">
+    </div>
+    <div>
+      <label class="usr-field-lbl">Correo electrónico</label>
+      <input class="usr-field-inp" type="email" id="usr-reg-correo" placeholder="carlos@i24h.mx">
+    </div>
+    <div>
+      <label class="usr-field-lbl">Cargo</label>
+      <select class="usr-field-inp" id="usr-reg-cargo">
+        <option value="colaborador">Colaborador</option>
+        <option value="encargado">Encargado</option>
+        <option value="lider">Líder</option>
+        <option value="coordinador">Coordinador</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div>
+      <label class="usr-field-lbl">Sucursales <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--texto-suave)">(selecciona una o varias)</span></label>
+      <div class="usr-suc-checks" id="usr-reg-suc-wrap">
+        <label class="usr-suc-chk"><input type="checkbox" value="Simón Bolívar"> Simón Bolívar</label>
+        <label class="usr-suc-chk"><input type="checkbox" value="Insurgentes"> Insurgentes</label>
+        <label class="usr-suc-chk"><input type="checkbox" value="Antígona"> Antígona</label>
+        <label class="usr-suc-chk"><input type="checkbox" value="Lincoln Oxxo"> Lincoln Oxxo</label>
+        <label class="usr-suc-chk"><input type="checkbox" value="Lincoln 2"> Lincoln 2</label>
+        <label class="usr-suc-chk"><input type="checkbox" value="Ruiz Cortines"> Ruiz Cortines</label>
+        <label class="usr-suc-chk"><input type="checkbox" value="Rodas"> Rodas</label>
+        <label class="usr-suc-chk"><input type="checkbox" value="Cuauhtémoc"> Cuauhtémoc</label>
+        <label class="usr-suc-chk"><input type="checkbox" value="Ordóñez"> Ordóñez</label>
+      </div>
+    </div>
+    <div class="usr-field-row">
+      <div>
+        <label class="usr-field-lbl">Contraseña</label>
+        <input class="usr-field-inp" type="password" id="usr-reg-pass" placeholder="Mín. 6 caracteres">
+      </div>
+      <div>
+        <label class="usr-field-lbl">Confirmar</label>
+        <input class="usr-field-inp" type="password" id="usr-reg-pass2" placeholder="Repetir">
+      </div>
+    </div>
+    <p id="usr-reg-msg" style="display:none;font-size:.78rem;padding:8px 10px;border-radius:7px;margin-top:2px"></p>
+  </div>
+  <div class="usr-drawer-footer">
+    <button class="usr-btn-cancel" id="usr-btn-cancel-modal" onclick="usrCerrarDrawer()" style="flex:1">Cancelar</button>
+    <button class="usr-btn-save" id="usr-btn-guardar-emp" style="flex:2">
+      <i class="ti ti-check" aria-hidden="true"></i> Crear cuenta
+    </button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL DE EDICIÓN UNIVERSAL (cargo, sucursales, password,
+     puntos, canjes, QR)
+     ============================================================ -->
+<div id="usr-em-bg" class="usr-em-bg" onclick="if(event.target===this)usrCerrarEM()">
+  <div class="usr-em">
+    <div class="usr-em-head">
+      <div class="usr-em-ico"><i id="usr-em-ico-i" class="ti ti-edit" aria-hidden="true"></i></div>
+      <div>
+        <div class="usr-em-title" id="usr-em-title">Editar</div>
+        <div class="usr-em-sub"   id="usr-em-sub"></div>
+      </div>
+    </div>
+    <div class="usr-em-body" id="usr-em-body"></div>
+    <div class="usr-em-footer">
+      <button class="usr-btn-cancel" onclick="usrCerrarEM()" style="flex:1">Cancelar</button>
+      <button class="usr-btn-save"   id="usr-em-save-btn" style="flex:2">
+        <i class="ti ti-check" aria-hidden="true"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
 
 
 <!-- ============================================================
@@ -858,46 +1526,6 @@ const CAUSAS_SOBRA = ['Selecciona causa…','Error conteo turno anterior','Devol
 var conteosBitacora = {};
 var bitacoraIniciada = false;
 
-// ── funciones globales (las llaman los onclick inline) ──────────────────
-
-window.bitDelta = function(key, esp, delta) {
-  if (!bitacoraIniciada) return;
-  var act = conteosBitacora[key].valor !== null ? conteosBitacora[key].valor : esp;
-  conteosBitacora[key].valor = Math.max(0, act + delta);
-  if (conteosBitacora[key].valor === esp) conteosBitacora[key].justif = '';
-  renderBitacora();
-};
-
-window.bitOK = function(key, esp) {
-  if (!bitacoraIniciada) return;
-  conteosBitacora[key].valor = esp;
-  conteosBitacora[key].justif = '';
-  renderBitacora();
-};
-
-window.bitInput = function(el, key, esp) {
-  if (!bitacoraIniciada) return;
-  var n = parseInt(el.value);
-  if (!isNaN(n) && n >= 0) {
-    conteosBitacora[key].valor = n;
-    if (n === esp) conteosBitacora[key].justif = '';
-    var fila  = el.closest('.bit-prod-fila');
-    var badge = fila ? fila.querySelector('.bit-badge') : null;
-    if (badge) {
-      var diff = n - esp;
-      badge.className   = 'bit-badge ' + (diff === 0 ? 'bit-badge-ok' : diff < 0 ? 'bit-badge-falta' : 'bit-badge-sobra');
-      badge.textContent = diff === 0 ? '✓ OK' : diff < 0 ? ('−' + Math.abs(diff)) : ('+' + diff);
-    }
-    actualizarResumen();
-  }
-};
-
-window.bitChange = function() { renderBitacora(); };
-
-window.bitJustif = function(el, key) {
-  conteosBitacora[key].justif = el.value;
-};
-
 // ── render ──────────────────────────────────────────────────────────────
 
 function renderBitacora() {
@@ -942,14 +1570,13 @@ function renderBitacora() {
         '<span class="bit-prod-nombre">' + item.nombre + '</span>' +
         '<span class="bit-prod-esperado">' + item.esperado + '</span>' +
         '<div class="bit-conteo-wrap">' +
-          '<button class="bit-cbtn" onclick="bitDelta(\'' + key + '\',' + item.esperado + ',-1)"' + dis + '>−</button>' +
+          '<button class="bit-cbtn" data-key="' + key + '" data-esp="' + item.esperado + '" data-delta="-1"' + dis + '>−</button>' +
           '<input class="bit-cinp" type="number" min="0"' +
             ' value="' + (val !== null ? val : '') + '"' +
             ' placeholder="—"' +
-            ' oninput="bitInput(this,\'' + key + '\',' + item.esperado + ')"' +
-            ' onchange="bitChange()"' + dis + '>' +
-          '<button class="bit-cbtn" onclick="bitDelta(\'' + key + '\',' + item.esperado + ',1)"' + dis + '>+</button>' +
-          '<button class="bit-cbtn bit-cbtn-ok" onclick="bitOK(\'' + key + '\',' + item.esperado + ')"' + dis + ' title="Sin diferencia">✓</button>' +
+            ' data-key="' + key + '" data-esp="' + item.esperado + '"' + dis + '>' +
+          '<button class="bit-cbtn" data-key="' + key + '" data-esp="' + item.esperado + '" data-delta="1"' + dis + '>+</button>' +
+          '<button class="bit-cbtn bit-cbtn-ok" data-key="' + key + '" data-esp="' + item.esperado + '" data-ok="1"' + dis + ' title="Sin diferencia">✓</button>' +
         '</div>' +
         '<span class="bit-badge ' + bClass + '">' + bText + '</span>' +
       '</div>';
@@ -958,7 +1585,7 @@ function renderBitacora() {
         var causas = diff < 0 ? CAUSAS_FALTA : CAUSAS_SOBRA;
         html += '<div class="bit-justif-fila">' +
           '<span class="bit-justif-label"><i class="ti ti-alert-circle"></i> Justificación</span>' +
-          '<select class="bit-justif-select" onchange="bitJustif(this,\'' + key + '\')">' +
+          '<select class="bit-justif-select" data-key="' + key + '">' +
             causas.map(function(c) {
               return '<option value="' + c + '"' + (estado.justif === c ? ' selected' : '') + '>' + c + '</option>';
             }).join('') +
@@ -970,6 +1597,58 @@ function renderBitacora() {
   });
 
   cont.innerHTML = html;
+
+  // ── listeners directos tras cada render ────────────────────────────────
+  if (bitacoraIniciada) {
+    cont.querySelectorAll('[data-delta]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var k   = this.dataset.key;
+        var esp = +this.dataset.esp;
+        var dlt = +this.dataset.delta;
+        var act = conteosBitacora[k].valor !== null ? conteosBitacora[k].valor : esp;
+        conteosBitacora[k].valor = Math.max(0, act + dlt);
+        if (conteosBitacora[k].valor === esp) conteosBitacora[k].justif = '';
+        renderBitacora();
+      });
+    });
+
+    cont.querySelectorAll('[data-ok]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var k   = this.dataset.key;
+        var esp = +this.dataset.esp;
+        conteosBitacora[k].valor = esp;
+        conteosBitacora[k].justif = '';
+        renderBitacora();
+      });
+    });
+
+    cont.querySelectorAll('.bit-cinp').forEach(function(inp) {
+      inp.addEventListener('input', function() {
+        var k   = this.dataset.key;
+        var esp = +this.dataset.esp;
+        var n   = parseInt(this.value);
+        if (!isNaN(n) && n >= 0) {
+          conteosBitacora[k].valor = n;
+          if (n === esp) conteosBitacora[k].justif = '';
+          var fila  = this.closest('.bit-prod-fila');
+          var badge = fila ? fila.querySelector('.bit-badge') : null;
+          if (badge) {
+            var d = n - esp;
+            badge.className   = 'bit-badge ' + (d === 0 ? 'bit-badge-ok' : d < 0 ? 'bit-badge-falta' : 'bit-badge-sobra');
+            badge.textContent = d === 0 ? '✓ OK' : d < 0 ? (esp + ' − ' + n + ' = −' + Math.abs(d)) : (n + ' − ' + esp + ' = +' + d);
+          }
+          actualizarResumen();
+        }
+      });
+    });
+
+    cont.querySelectorAll('.bit-justif-select').forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        conteosBitacora[this.dataset.key].justif = this.value;
+      });
+    });
+  }
+
   actualizarResumen();
 }
 
@@ -1034,4 +1713,1203 @@ document.getElementById('btn-cerrar-bitacora')?.addEventListener('click', functi
 })();
 
 renderBitacora();
+
+// =============================================================
+//  SECCIÓN USUARIOS
+// =============================================================
+
+(function() {
+  let usrTab = 'emp';
+  let usrMenuAbierto = null;
+  let usrBusqueda = '', usrFiltroRol = '', usrFiltroSuc = '', usrFiltroEst = '', usrFiltroCod = '', usrFiltroPts = '';
+
+  const USR_ROL_CLASS = { admin:'rb-admin', coordinador:'rb-coord', lider:'rb-lider', encargado:'rb-encarg', colaborador:'rb-colab' };
+  const USR_ROL_LABEL = { admin:'Admin', coordinador:'Coordinador', lider:'Líder', encargado:'Encargado', colaborador:'Colaborador' };
+
+  const SUCURSALES = ['Simón Bolívar','Insurgentes','Antígona','Lincoln Oxxo','Lincoln 2','Ruiz Cortines','Rodas','Cuauhtémoc','Ordóñez'];
+
+  let usrEmpleados = [];
+  let usrClientes  = [];
+  let usrCodigos   = [];
+
+  async function usrCargarTodo() {
+    try {
+      const [rEmp, rCli, rCod] = await Promise.all([
+        fetch('/api/empleados'),
+        fetch('/api/clientes'),
+        fetch('/api/codigos')
+      ]);
+      usrEmpleados = await rEmp.json();
+      usrClientes  = await rCli.json();
+      usrCodigos   = await rCod.json();
+    } catch(e) {
+      usrEmpleados = [];
+      usrClientes  = [];
+      usrCodigos   = [];
+    }
+    usrActualizarStats();
+    usrRenderFiltros();
+    usrRenderAll();
+  }
+
+  function usrActualizarStats() {
+    const ahora     = new Date();
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    const activos   = usrEmpleados.filter(function(e) { return e.activo; }).length;
+    const inacEmp   = usrEmpleados.filter(function(e) { return !e.activo; }).length;
+    const inacCli   = usrClientes.filter(function(c)  { return !c.activo; }).length;
+    const codDis    = usrCodigos.filter(function(c)   { return !c.usado; }).length;
+    const codUsa    = usrCodigos.filter(function(c)   { return c.usado; }).length;
+    const cliMes    = usrClientes.filter(function(c)  { return c.fechaCreacion && new Date(c.fechaCreacion) >= inicioMes; }).length;
+    const el = function(id) { return document.getElementById(id); };
+    if(el('usr-cnt-emp-tot'))  el('usr-cnt-emp-tot').textContent  = usrEmpleados.length;
+    if(el('usr-cnt-emp-act'))  el('usr-cnt-emp-act').textContent  = activos + ' activos';
+    if(el('usr-cnt-cli-tot'))  el('usr-cnt-cli-tot').textContent  = usrClientes.length;
+    if(el('usr-cnt-cli-mes'))  el('usr-cnt-cli-mes').textContent  = 'Este mes: ' + cliMes;
+    if(el('usr-cnt-cod-dis'))  el('usr-cnt-cod-dis').textContent  = codDis;
+    if(el('usr-cnt-cod-usa'))  el('usr-cnt-cod-usa').textContent  = codUsa + ' usados';
+    if(el('usr-cnt-inac'))     el('usr-cnt-inac').textContent     = inacEmp + inacCli;
+    if(el('usr-tcnt-emp'))     el('usr-tcnt-emp').textContent     = usrEmpleados.length;
+    if(el('usr-tcnt-cli'))     el('usr-tcnt-cli').textContent     = usrClientes.length;
+    if(el('usr-tcnt-cod'))     el('usr-tcnt-cod').textContent     = usrCodigos.length;
+  }
+
+  function usrEmpFiltrados() {
+    return usrEmpleados.filter(e => {
+      const q = usrBusqueda.toLowerCase();
+      if(q && !(e.nombre||'').toLowerCase().includes(q) && !(e.correo||'').toLowerCase().includes(q)) return false;
+      if(usrFiltroRol && e.cargo !== usrFiltroRol) return false;
+      if(usrFiltroSuc && !(e.sucursales||[]).includes(usrFiltroSuc)) return false;
+      if(usrFiltroEst === '1' && !e.activo) return false;
+      if(usrFiltroEst === '0' && e.activo)  return false;
+      return true;
+    });
+  }
+
+  function usrCliFiltrados() {
+    return usrClientes.filter(c => {
+      const q = usrBusqueda.toLowerCase();
+      if(q && !(c.correo||'').toLowerCase().includes(q)) return false;
+      if(usrFiltroEst === '1' && !c.activo) return false;
+      if(usrFiltroEst === '0' && c.activo)  return false;
+      if(usrFiltroPts === 'alto'  && (c.puntos||0) <= 500) return false;
+      if(usrFiltroPts === 'medio' && ((c.puntos||0) < 100 || (c.puntos||0) > 500)) return false;
+      if(usrFiltroPts === 'bajo'  && (c.puntos||0) >= 100) return false;
+      return true;
+    });
+  }
+
+  function usrCodFiltrados() {
+    return usrCodigos.filter(c => {
+      if(usrFiltroCod === '0' && c.usado)  return false;
+      if(usrFiltroCod === '1' && !c.usado) return false;
+      return true;
+    });
+  }
+
+  function usrSetTab(t) {
+    usrTab = t;
+    usrBusqueda = ''; usrFiltroRol = ''; usrFiltroSuc = ''; usrFiltroEst = ''; usrFiltroCod = ''; usrFiltroPts = '';
+    ['emp','cli','cod'].forEach(x => {
+      const tab = document.getElementById('usr-tab-'+x);
+      const vista = document.getElementById('usr-vista-'+x);
+      if(tab)   tab.className   = 'usr-tab' + (t === x ? ' active' : '');
+      if(vista) vista.style.display = t === x ? '' : 'none';
+    });
+    usrCerrarMenu();
+    usrRenderFiltros();
+    usrRenderAll();
+  }
+  window.usrSetTab = usrSetTab;
+
+  function usrRenderFiltros() {
+    const wrap = document.getElementById('usr-filtros-dinamicos');
+    const cnt  = document.getElementById('usr-filter-count');
+    if(!wrap) return;
+
+    const hayFiltros = usrBusqueda || usrFiltroRol || usrFiltroSuc || usrFiltroEst || usrFiltroCod || usrFiltroPts;
+    const btnLimpiar = hayFiltros
+      ? '<button class="usr-btn-limpiar" onclick="usrBusqueda=\'\';usrFiltroRol=\'\';usrFiltroSuc=\'\';usrFiltroEst=\'\';usrFiltroCod=\'\';usrFiltroPts=\'\';usrRenderFiltros();usrRenderAll();">' +
+          '<i class="ti ti-x" aria-hidden="true"></i> Limpiar filtros' +
+        '</button>'
+      : '';
+
+    if(usrTab === 'emp') {
+      const sucOpts = SUCURSALES.map(function(s) { return '<option value="' + s + '"' + (usrFiltroSuc===s?' selected':'') + '>' + s + '</option>'; }).join('');
+      wrap.innerHTML =
+        '<div class="usr-search-wrap">' +
+          '<i class="ti ti-search" aria-hidden="true"></i>' +
+          '<input class="usr-sinp" placeholder="Nombre o correo…" value="' + usrBusqueda + '" oninput="usrBusqueda=this.value;usrRenderAll()">' +
+        '</div>' +
+        '<select class="usr-fsel" onchange="usrFiltroRol=this.value;usrRenderAll()">' +
+          '<option value="">Todos los cargos</option>' +
+          '<option value="admin"' + (usrFiltroRol==='admin'?' selected':'') + '>Admin</option>' +
+          '<option value="coordinador"' + (usrFiltroRol==='coordinador'?' selected':'') + '>Coordinador</option>' +
+          '<option value="lider"' + (usrFiltroRol==='lider'?' selected':'') + '>L\xEDder</option>' +
+          '<option value="encargado"' + (usrFiltroRol==='encargado'?' selected':'') + '>Encargado</option>' +
+          '<option value="colaborador"' + (usrFiltroRol==='colaborador'?' selected':'') + '>Colaborador</option>' +
+        '</select>' +
+        '<select class="usr-fsel" onchange="usrFiltroSuc=this.value;usrRenderAll()">' +
+          '<option value="">Todas las sucursales</option>' + sucOpts +
+        '</select>' +
+        '<select class="usr-fsel" onchange="usrFiltroEst=this.value;usrRenderAll()">' +
+          '<option value="">Activos e inactivos</option>' +
+          '<option value="1"' + (usrFiltroEst==='1'?' selected':'') + '>Solo activos</option>' +
+          '<option value="0"' + (usrFiltroEst==='0'?' selected':'') + '>Solo inactivos</option>' +
+        '</select>' + btnLimpiar;
+      if(cnt) cnt.textContent = usrEmpFiltrados().length + ' de ' + usrEmpleados.length;
+
+    } else if(usrTab === 'cli') {
+      wrap.innerHTML =
+        '<div class="usr-search-wrap">' +
+          '<i class="ti ti-search" aria-hidden="true"></i>' +
+          '<input class="usr-sinp" placeholder="Buscar por correo…" value="' + usrBusqueda + '" oninput="usrBusqueda=this.value;usrRenderAll()">' +
+        '</div>' +
+        '<select class="usr-fsel" onchange="usrFiltroEst=this.value;usrRenderAll()">' +
+          '<option value="">Todos los estados</option>' +
+          '<option value="1"' + (usrFiltroEst==='1'?' selected':'') + '>Solo activos</option>' +
+          '<option value="0"' + (usrFiltroEst==='0'?' selected':'') + '>Solo inactivos</option>' +
+        '</select>' +
+        '<select class="usr-fsel" onchange="usrFiltroPts=this.value;usrRenderAll()">' +
+          '<option value="">Todos los puntos</option>' +
+          '<option value="alto"' + (usrFiltroPts==='alto'?' selected':'') + '>M\xE1s de 500 pts</option>' +
+          '<option value="medio"' + (usrFiltroPts==='medio'?' selected':'') + '>100 – 500 pts</option>' +
+          '<option value="bajo"' + (usrFiltroPts==='bajo'?' selected':'') + '>Menos de 100 pts</option>' +
+        '</select>' + btnLimpiar;
+      if(cnt) cnt.textContent = usrCliFiltrados().length + ' de ' + usrClientes.length;
+
+    } else {
+      wrap.innerHTML =
+        '<select class="usr-fsel" onchange="usrFiltroCod=this.value;usrRenderAll()">' +
+          '<option value="">Todos los c\xF3digos</option>' +
+          '<option value="0"' + (usrFiltroCod==='0'?' selected':'') + '>Solo disponibles</option>' +
+          '<option value="1"' + (usrFiltroCod==='1'?' selected':'') + '>Solo usados</option>' +
+        '</select>' + btnLimpiar;
+      if(cnt) cnt.textContent = usrCodFiltrados().length + ' de ' + usrCodigos.length;
+    }
+  }
+  window.usrRenderFiltros = usrRenderFiltros;
+
+  function usrAbrirMenu(id) {
+    usrCerrarMenu();
+    const m = document.getElementById('usr-menu-' + id);
+    if(m) { m.classList.add('open'); usrMenuAbierto = id; }
+  }
+  window.usrAbrirMenu = usrAbrirMenu;
+
+  function usrCerrarMenu() {
+    if(usrMenuAbierto !== null) {
+      const m = document.getElementById('usr-menu-' + usrMenuAbierto);
+      if(m) m.classList.remove('open');
+      usrMenuAbierto = null;
+    }
+  }
+  window.usrCerrarMenu = usrCerrarMenu;
+
+  document.addEventListener('click', function(e) { if(!e.target.closest('.usr-menu-wrap')) usrCerrarMenu(); });
+
+  async function usrToggleEstado(id, tipo) {
+    try {
+      const res = await fetch('/api/usuarios/' + id + '/estado', { method: 'PATCH' });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'No se pudo cambiar el estado.');
+        return;
+      }
+      await usrCargarTodo();
+    } catch(e) {
+      alert('Error de conexión al cambiar el estado.');
+    }
+  }
+  window.usrToggleEstado = usrToggleEstado;
+
+  async function usrEliminarUsuario(id, nombre) {
+    if (!confirm('¿Eliminar la cuenta de "' + nombre + '"?\nEsta acción no se puede deshacer.')) return;
+    try {
+      const res = await fetch('/api/usuarios/' + id, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'No se pudo eliminar la cuenta.');
+        return;
+      }
+      await usrCargarTodo();
+    } catch(e) {
+      alert('Error de conexión al eliminar.');
+    }
+  }
+  window.usrEliminarUsuario = usrEliminarUsuario;
+
+  function usrRenderEmpleados() {
+    const tb = document.getElementById('usr-tbody-emp');
+    if(!tb) return;
+    const lista = usrEmpFiltrados();
+    if(!lista.length) { tb.innerHTML = '<tr><td colspan="7" class="usr-empty">No hay empleados que coincidan con los filtros</td></tr>'; return; }
+    tb.innerHTML = lista.map(function(e) {
+      const ini   = ((e.nombre||e.correo||'?').split(' ').map(function(w){return w[0];}).join('').toUpperCase()).slice(0,2);
+      const fecha = e.fechaCreacion ? new Date(e.fechaCreacion).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+      const conn  = tiempoRelativo(e.ultimaConexion);
+      const nom   = (e.nombre||e.correo).replace(/'/g,"\\'");
+      const sucAct = JSON.stringify(e.sucursales||[]).replace(/"/g,'&quot;');
+      return '<tr>' +
+        '<td><div class="usr-uinfo"><div class="usr-av usr-av-rojo">' + ini + '</div>' +
+          '<div><div class="usr-uname">' + (e.nombre||'—') + '</div>' +
+          '<div class="usr-ucorreo">' + e.correo + '</div></div></div></td>' +
+        '<td><span class="usr-role-badge ' + (USR_ROL_CLASS[e.cargo]||'') + '">' + (USR_ROL_LABEL[e.cargo]||e.cargo) + '</span></td>' +
+        '<td>' + ((e.sucursales||[]).length
+          ? (e.sucursales||[]).map(function(s){ return '<span class="usr-suc-tag">' + s + '</span>'; }).join('')
+          : '<span style="font-size:.72rem;color:var(--texto-suave)">—</span>') + '</td>' +
+        '<td style="font-size:.72rem;color:var(--texto-suave)">' + fecha + '</td>' +
+        '<td style="font-size:.72rem;color:var(--texto-suave)">' + conn + '</td>' +
+        '<td><div style="display:flex;align-items:center;gap:5px">' +
+          '<div class="usr-tog ' + (e.activo?'on':'off') + '" onclick="usrToggleEstado(\'' + e._id + '\',\'emp\')">' +
+            '<div class="usr-tog-t"></div></div>' +
+          '<span class="usr-tog-label">' + (e.activo?'Activo':'Inactivo') + '</span>' +
+        '</div></td>' +
+        '<td><div class="usr-menu-wrap">' +
+          '<button class="usr-act-btn" onclick="usrAbrirMenu(\'e' + e._id + '\')" aria-label="Acciones">' +
+            '<i class="ti ti-dots-vertical" aria-hidden="true"></i></button>' +
+          '<div class="usr-menu-dd" id="usr-menu-e' + e._id + '">' +
+            '<div class="usr-mitem" onclick="usrEditarCargo(\'' + e._id + '\',\'' + nom + '\',\'' + e.cargo + '\')"><i class="ti ti-briefcase" aria-hidden="true"></i> Editar cargo</div>' +
+            '<div class="usr-mitem" onclick="usrCambiarSucursales(\'' + e._id + '\',\'' + nom + '\',' + JSON.stringify(e.sucursales||[]) + ')"><i class="ti ti-building-store" aria-hidden="true"></i> Cambiar sucursales</div>' +
+            '<div class="usr-mitem" onclick="usrCambiarPassword(\'' + e._id + '\',\'' + nom + '\')"><i class="ti ti-lock" aria-hidden="true"></i> Cambiar contrase\xF1a</div>' +
+            '<div class="usr-mitem danger" onclick="usrCerrarMenu();usrEliminarUsuario(\'' + e._id + '\',\'' + nom + '\')"><i class="ti ti-trash" aria-hidden="true"></i> Eliminar cuenta</div>' +
+          '</div>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function usrRenderClientes() {
+    const tb = document.getElementById('usr-tbody-cli');
+    if(!tb) return;
+    const lista = usrCliFiltrados();
+    if(!lista.length) { tb.innerHTML = '<tr><td colspan="6" class="usr-empty">No hay clientes que coincidan con los filtros</td></tr>'; return; }
+    tb.innerHTML = lista.map(function(c) {
+      const ini   = (c.correo||'?').slice(0,2).toUpperCase();
+      const fecha = c.fechaCreacion ? new Date(c.fechaCreacion).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+      const corr  = c.correo.replace(/'/g,"\\'");
+      return '<tr>' +
+        '<td><div class="usr-uinfo"><div class="usr-av usr-av-azul">' + ini + '</div>' +
+          '<div><div class="usr-uname">' + c.correo + '</div>' +
+          '<div class="usr-ucorreo">ID: ' + ((c._id||'').slice(-6)) + '</div></div></div></td>' +
+        '<td><span style="font-size:.85rem;font-weight:600;color:var(--texto)">' + (c.puntos||0) + '</span>' +
+          '<span style="font-size:.7rem;color:var(--texto-suave)"> pts</span></td>' +
+        '<td style="font-size:.8rem;color:var(--texto-suave)">' + ((c.canjes||[]).length) + '</td>' +
+        '<td style="font-size:.72rem;color:var(--texto-suave)">' + fecha + '</td>' +
+        '<td><div style="display:flex;align-items:center;gap:5px">' +
+          '<div class="usr-tog ' + (c.activo?'on':'off') + '" onclick="usrToggleEstado(\'' + c._id + '\',\'cli\')">' +
+            '<div class="usr-tog-t"></div></div>' +
+          '<span class="usr-tog-label">' + (c.activo?'Activo':'Inactivo') + '</span>' +
+        '</div></td>' +
+        '<td><div class="usr-menu-wrap">' +
+          '<button class="usr-act-btn" onclick="usrAbrirMenu(\'c' + c._id + '\')" aria-label="Acciones">' +
+            '<i class="ti ti-dots-vertical" aria-hidden="true"></i></button>' +
+          '<div class="usr-menu-dd" id="usr-menu-c' + c._id + '">' +
+            '<div class="usr-mitem" onclick="usrVerCanjes(\'' + c._id + '\',\'' + corr + '\')"><i class="ti ti-gift" aria-hidden="true"></i> Ver canjes</div>' +
+            '<div class="usr-mitem" onclick="usrAjustarPuntos(\'' + c._id + '\',\'' + corr + '\',' + (c.puntos||0) + ')"><i class="ti ti-star" aria-hidden="true"></i> Ajustar puntos</div>' +
+            '<div class="usr-mitem" onclick="usrVerQR(\'' + c._id + '\',\'' + corr + '\',\'' + (c.qrId||'') + '\')"><i class="ti ti-qrcode" aria-hidden="true"></i> Ver QR</div>' +
+            '<div class="usr-mitem danger" onclick="usrCerrarMenu();usrEliminarUsuario(\'' + c._id + '\',\'' + corr + '\')"><i class="ti ti-trash" aria-hidden="true"></i> Eliminar cuenta</div>' +
+          '</div>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function usrRenderCodigos() {
+    const el = document.getElementById('usr-lista-cod');
+    if(!el) return;
+    const lista = usrCodFiltrados();
+    if(!lista.length) { el.innerHTML = '<div class="usr-empty">No hay códigos que coincidan con el filtro</div>'; return; }
+    el.innerHTML = lista.map(function(c) {
+      const fechaStr = c.fecha ? new Date(c.fecha).toLocaleDateString('es-MX') : '—';
+      const metaStr  = c.usado
+        ? 'Usado por <strong>' + (c.usadoPor||'—') + '</strong> · ' + fechaStr
+        : 'Creado por ' + (c.creadoPor||'—') + ' · ' + fechaStr;
+      return '<div class="usr-code-card">' +
+        '<div class="usr-code-status-ico ' + (c.usado?'used':'disp') + '">' +
+          '<i class="ti ' + (c.usado?'ti-check':'ti-key') + '" aria-hidden="true"></i>' +
+        '</div>' +
+        '<span class="usr-code-val">' + c.codigo + '</span>' +
+        '<div class="usr-code-meta">' +
+          '<span class="' + (c.usado?'usr-cu-si':'usr-cu-no') + '">' + (c.usado?'Usado':'Disponible') + '</span>' +
+          '<span>' + metaStr + '</span>' +
+        '</div>' +
+        (!c.usado
+          ? '<button class="usr-btn-copiar" onclick="usrCopiarCodigo(\'' + c.codigo + '\',this)">' +
+              '<i class="ti ti-copy" aria-hidden="true"></i> Copiar' +
+            '</button>' +
+            '<button class="usr-act-btn" onclick="usrRevocarCodigo(' + c.id + ')" aria-label="Revocar c\xF3digo" style="margin-left:4px">' +
+              '<i class="ti ti-trash" aria-hidden="true"></i>' +
+            '</button>'
+          : '') +
+      '</div>';
+    }).join('');
+  }
+
+  async function usrRevocarCodigo(id) {
+    if(!confirm('¿Seguro que quieres revocar este código? No podrá usarse.')) return;
+    try {
+      await fetch('/api/codigos/' + id, { method: 'DELETE' });
+      await usrCargarTodo();
+    } catch(e) { alert('Error al revocar el código.'); }
+  }
+  window.usrRevocarCodigo = usrRevocarCodigo;
+
+  function usrRenderAll() {
+    usrRenderEmpleados();
+    usrRenderClientes();
+    usrRenderCodigos();
+    const cnt = document.getElementById('usr-filter-count');
+    if(cnt) {
+      if(usrTab==='emp') cnt.textContent = usrEmpFiltrados().length + ' de ' + usrEmpleados.length;
+      else if(usrTab==='cli') cnt.textContent = usrCliFiltrados().length + ' de ' + usrClientes.length;
+      else cnt.textContent = usrCodFiltrados().length + ' de ' + usrCodigos.length;
+    }
+  }
+  window.usrRenderAll = usrRenderAll;
+
+  // ── helper: tiempo relativo ─────────────────────────────────────────────
+  function tiempoRelativo(fecha) {
+    if(!fecha) return '—';
+    var diff = Date.now() - new Date(fecha).getTime();
+    var min  = Math.floor(diff / 60000);
+    if(min < 1)  return 'Ahora mismo';
+    if(min < 60) return 'Hace ' + min + ' min';
+    var h = Math.floor(min / 60);
+    if(h < 24)   return 'Hace ' + h + 'h';
+    var d = Math.floor(h / 24);
+    if(d === 1)  return 'Ayer';
+    if(d < 30)   return 'Hace ' + d + ' d\xEDas';
+    var m = Math.floor(d / 30);
+    return 'Hace ' + m + ' mes' + (m === 1 ? '' : 'es');
+  }
+
+  // ── drawer (crear empleado) ─────────────────────────────────────────────
+  function usrAbrirDrawer() {
+    document.getElementById('usr-drawer-bg').classList.add('open');
+    document.getElementById('usr-drawer').classList.add('open');
+  }
+  function usrCerrarDrawer() {
+    document.getElementById('usr-drawer-bg').classList.remove('open');
+    document.getElementById('usr-drawer').classList.remove('open');
+  }
+  window.usrAbrirDrawer  = usrAbrirDrawer;
+  window.usrCerrarDrawer = usrCerrarDrawer;
+
+  // ── edit modal universal ────────────────────────────────────────────────
+  var usrEMaccion = null;
+
+  function usrAbrirEM(cfg) {
+    document.getElementById('usr-em-ico-i').className  = 'ti ' + (cfg.icono || 'ti-edit');
+    document.getElementById('usr-em-title').textContent = cfg.titulo || '';
+    document.getElementById('usr-em-sub').textContent   = cfg.sub    || '';
+    document.getElementById('usr-em-body').innerHTML    = cfg.html   || '';
+    var btn = document.getElementById('usr-em-save-btn');
+    if(cfg.readonly) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+      btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> ' + (cfg.guardarLabel || 'Guardar');
+    }
+    usrEMaccion = cfg.accion || null;
+    document.getElementById('usr-em-bg').classList.add('open');
+  }
+  function usrCerrarEM() {
+    document.getElementById('usr-em-bg').classList.remove('open');
+    usrEMaccion = null;
+  }
+  async function usrEMGuardar() {
+    if(usrEMaccion) await usrEMaccion();
+  }
+  window.usrCerrarEM  = usrCerrarEM;
+  window.usrEMGuardar = usrEMGuardar;
+  document.getElementById('usr-em-save-btn').addEventListener('click', usrEMGuardar);
+
+  // ── filtrar inactivos desde tarjeta de stats ────────────────────────────
+  function usrFiltrarInactivos() {
+    usrFiltroEst = '0';
+    usrSetTab('emp');
+  }
+  window.usrFiltrarInactivos = usrFiltrarInactivos;
+
+  // ── exportar CSV ────────────────────────────────────────────────────────
+  function usrExportarCSV() {
+    var rows, filename;
+    if(usrTab === 'emp') {
+      rows = usrEmpFiltrados().map(function(e) {
+        return [
+          '"' + (e.nombre||'').replace(/"/g,'""') + '"',
+          '"' + (e.correo||'').replace(/"/g,'""') + '"',
+          e.cargo||'',
+          '"' + (e.sucursales||[]).join(', ').replace(/"/g,'""') + '"',
+          e.activo ? 'Activo' : 'Inactivo',
+          e.fechaCreacion ? new Date(e.fechaCreacion).toLocaleDateString('es-MX') : ''
+        ].join(',');
+      });
+      rows.unshift('Nombre,Correo,Cargo,Sucursales,Estado,Registro');
+      filename = 'empleados.csv';
+    } else if(usrTab === 'cli') {
+      rows = usrCliFiltrados().map(function(c) {
+        return [
+          '"' + (c.correo||'').replace(/"/g,'""') + '"',
+          c.puntos||0,
+          (c.canjes||[]).length,
+          c.activo ? 'Activo' : 'Inactivo',
+          c.fechaCreacion ? new Date(c.fechaCreacion).toLocaleDateString('es-MX') : ''
+        ].join(',');
+      });
+      rows.unshift('Correo,Puntos,Canjes,Estado,Registro');
+      filename = 'clientes.csv';
+    } else {
+      rows = usrCodFiltrados().map(function(c) {
+        return [
+          '"' + (c.codigo||'').replace(/"/g,'""') + '"',
+          c.usado ? 'Usado' : 'Disponible',
+          '"' + (c.creadoPor||'').replace(/"/g,'""') + '"',
+          c.fecha ? new Date(c.fecha).toLocaleDateString('es-MX') : ''
+        ].join(',');
+      });
+      rows.unshift('C\xF3digo,Estado,Creado por,Fecha');
+      filename = 'codigos.csv';
+    }
+    var blob = new Blob(['﻿' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+  window.usrExportarCSV = usrExportarCSV;
+
+  // ── copiar código ───────────────────────────────────────────────────────
+  function usrCopiarCodigo(codigo, btn) {
+    navigator.clipboard.writeText(codigo).then(function() {
+      if(btn) {
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> Copiado';
+        btn.classList.add('copiado');
+        setTimeout(function() { btn.innerHTML = orig; btn.classList.remove('copiado'); }, 2000);
+      }
+    });
+  }
+  window.usrCopiarCodigo = usrCopiarCodigo;
+
+  // ── acción: editar cargo ────────────────────────────────────────────────
+  function usrEditarCargo(id, nombre, cargoActual) {
+    usrCerrarMenu();
+    usrAbrirEM({
+      icono: 'ti-briefcase',
+      titulo: 'Editar cargo',
+      sub: nombre,
+      html: '<label class="usr-field-lbl">Cargo</label>' +
+        '<select class="usr-field-inp" id="usr-em-cargo">' +
+        '<option value="colaborador"' + (cargoActual==='colaborador'?' selected':'') + '>Colaborador</option>' +
+        '<option value="encargado"'   + (cargoActual==='encargado'  ?' selected':'') + '>Encargado</option>' +
+        '<option value="lider"'       + (cargoActual==='lider'      ?' selected':'') + '>L\xEDder</option>' +
+        '<option value="coordinador"' + (cargoActual==='coordinador'?' selected':'') + '>Coordinador</option>' +
+        '<option value="admin"'       + (cargoActual==='admin'      ?' selected':'') + '>Admin</option>' +
+        '</select>',
+      accion: async function() {
+        var cargo = document.getElementById('usr-em-cargo').value;
+        var res = await fetch('/api/empleados/' + id + '/cargo', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cargo: cargo })
+        });
+        if(!res.ok) { var e = await res.json(); alert(e.error || 'Error al actualizar'); return; }
+        usrCerrarEM();
+        await usrCargarTodo();
+      }
+    });
+  }
+  window.usrEditarCargo = usrEditarCargo;
+
+  // ── acción: cambiar sucursales ──────────────────────────────────────────
+  function usrCambiarSucursales(id, nombre, sucActuales) {
+    usrCerrarMenu();
+    var sucHtml = SUCURSALES.map(function(s) {
+      var chk = (sucActuales||[]).indexOf(s) >= 0 ? ' checked' : '';
+      return '<label class="usr-suc-chk"><input type="checkbox" value="' + s + '"' + chk + '> ' + s + '</label>';
+    }).join('');
+    usrAbrirEM({
+      icono: 'ti-building-store',
+      titulo: 'Cambiar sucursales',
+      sub: nombre,
+      html: '<label class="usr-field-lbl">Sucursales</label>' +
+            '<div class="usr-suc-checks" id="usr-em-suc-wrap">' + sucHtml + '</div>',
+      accion: async function() {
+        var sels = Array.from(document.querySelectorAll('#usr-em-suc-wrap input:checked')).map(function(cb){ return cb.value; });
+        var res = await fetch('/api/empleados/' + id + '/sucursales', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sucursales: sels })
+        });
+        if(!res.ok) { var e = await res.json(); alert(e.error || 'Error al actualizar'); return; }
+        usrCerrarEM();
+        await usrCargarTodo();
+      }
+    });
+  }
+  window.usrCambiarSucursales = usrCambiarSucursales;
+
+  // ── acción: cambiar contraseña ──────────────────────────────────────────
+  function usrCambiarPassword(id, nombre) {
+    usrCerrarMenu();
+    usrAbrirEM({
+      icono: 'ti-lock',
+      titulo: 'Cambiar contrase\xF1a',
+      sub: nombre,
+      html: '<label class="usr-field-lbl">Nueva contrase\xF1a</label>' +
+            '<input class="usr-field-inp" type="password" id="usr-em-pass" placeholder="M\xEDn. 6 caracteres">' +
+            '<label class="usr-field-lbl">Confirmar contrase\xF1a</label>' +
+            '<input class="usr-field-inp" type="password" id="usr-em-pass2" placeholder="Repetir">',
+      accion: async function() {
+        var p  = document.getElementById('usr-em-pass').value;
+        var p2 = document.getElementById('usr-em-pass2').value;
+        if(p.length < 6) { alert('La contrase\xF1a debe tener al menos 6 caracteres.'); return; }
+        if(p !== p2)      { alert('Las contrase\xF1as no coinciden.'); return; }
+        var res = await fetch('/api/empleados/' + id + '/password', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: p })
+        });
+        if(!res.ok) { var e = await res.json(); alert(e.error || 'Error al cambiar contrase\xF1a'); return; }
+        usrCerrarEM();
+        alert('Contrase\xF1a cambiada correctamente.');
+      }
+    });
+  }
+  window.usrCambiarPassword = usrCambiarPassword;
+
+  // ── acción: ajustar puntos ──────────────────────────────────────────────
+  function usrAjustarPuntos(id, correo, ptsActuales) {
+    usrCerrarMenu();
+    usrAbrirEM({
+      icono: 'ti-star',
+      titulo: 'Ajustar puntos',
+      sub: correo,
+      html: '<p class="usr-pts-actual">Puntos actuales: <strong>' + (ptsActuales||0) + ' pts</strong></p>' +
+        '<div class="usr-pts-row">' +
+          '<button class="usr-pts-btn" onclick="var i=document.getElementById(\'usr-em-pts\');i.value=Math.max(-9999,Number(i.value)-10)">&#8722;10</button>' +
+          '<button class="usr-pts-btn" onclick="var i=document.getElementById(\'usr-em-pts\');i.value=Math.max(-9999,Number(i.value)-1)">&#8722;</button>' +
+          '<input class="usr-pts-inp" type="number" id="usr-em-pts" value="0">' +
+          '<button class="usr-pts-btn" onclick="var i=document.getElementById(\'usr-em-pts\');i.value=Number(i.value)+1">+</button>' +
+          '<button class="usr-pts-btn" onclick="var i=document.getElementById(\'usr-em-pts\');i.value=Number(i.value)+10">+10</button>' +
+        '</div>' +
+        '<label class="usr-field-lbl">Motivo del ajuste</label>' +
+        '<input class="usr-field-inp" type="text" id="usr-em-motivo" placeholder="Ej: Correcci\xF3n de puntos">',
+      guardarLabel: 'Aplicar ajuste',
+      accion: async function() {
+        var ajuste = Number(document.getElementById('usr-em-pts').value);
+        var motivo = document.getElementById('usr-em-motivo').value.trim();
+        if(!ajuste) { alert('Ingresa un valor distinto de 0.'); return; }
+        if(!motivo) { alert('El motivo es obligatorio.'); return; }
+        var res = await fetch('/api/clientes/' + id + '/puntos', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ajuste: ajuste, motivo: motivo })
+        });
+        if(!res.ok) { var e = await res.json(); alert(e.error || 'Error al ajustar puntos'); return; }
+        var datos = await res.json();
+        usrCerrarEM();
+        await usrCargarTodo();
+        alert('Puntos actualizados. Nuevo total: ' + datos.puntos + ' pts');
+      }
+    });
+  }
+  window.usrAjustarPuntos = usrAjustarPuntos;
+
+  // ── acción: ver canjes ──────────────────────────────────────────────────
+  async function usrVerCanjes(id, correo) {
+    usrCerrarMenu();
+    var res   = await fetch('/api/clientes/' + id + '/canjes');
+    var datos = await res.json();
+    var canjes = datos.canjes || [];
+    var html = canjes.length === 0
+      ? '<div class="usr-empty">Este cliente no ha realizado canjes todav\xEDa.</div>'
+      : canjes.map(function(cj) {
+          var f = cj.fecha ? new Date(cj.fecha).toLocaleDateString('es-MX') : '—';
+          return '<div class="usr-canje-item">' +
+            '<div class="usr-canje-ico"><i class="ti ti-gift" aria-hidden="true"></i></div>' +
+            '<div><div class="usr-canje-nombre">' + (cj.recompensa||'—') + '</div>' +
+            '<div class="usr-canje-meta">' + f + '</div></div>' +
+            '<div class="usr-canje-pts">&#8722;' + (cj.puntosUsados||0) + ' pts</div>' +
+          '</div>';
+        }).join('');
+    usrAbrirEM({
+      icono: 'ti-gift',
+      titulo: 'Historial de canjes',
+      sub: correo + ' \xB7 ' + canjes.length + ' canje' + (canjes.length === 1 ? '' : 's'),
+      html: html,
+      readonly: true
+    });
+  }
+  window.usrVerCanjes = usrVerCanjes;
+
+  // ── acción: ver QR ──────────────────────────────────────────────────────
+  function usrVerQR(id, correo, qrId) {
+    usrCerrarMenu();
+    var dato   = qrId || id;
+    var imgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(dato);
+    usrAbrirEM({
+      icono: 'ti-qrcode',
+      titulo: 'C\xF3digo QR',
+      sub: correo,
+      html: '<div class="usr-qr-wrap">' +
+        '<img class="usr-qr-img" src="' + imgUrl + '" alt="QR" width="220" height="220">' +
+        '<div class="usr-qr-id">' + dato + '</div>' +
+        '<button class="usr-qr-copy" onclick="navigator.clipboard.writeText(\'' + dato.replace(/'/g,"\\'") + '\').then(function(){this.innerHTML=\'<i class=\\\'ti ti-check\\\'></i> \xA1Copiado!\';}.bind(this))">' +
+          '<i class="ti ti-copy" aria-hidden="true"></i> Copiar ID' +
+        '</button>' +
+      '</div>',
+      readonly: true
+    });
+  }
+  window.usrVerQR = usrVerQR;
+
+  // ── selector de cantidad de códigos ────────────────────────────────────
+  var usrCodQty = 1;
+  document.querySelectorAll('#usr-cod-qty .usr-cod-qty-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      usrCodQty = Number(btn.dataset.qty);
+      document.querySelectorAll('#usr-cod-qty .usr-cod-qty-btn').forEach(function(b) {
+        b.classList.toggle('activo', b === btn);
+      });
+    });
+  });
+
+  // ── event listeners principales ─────────────────────────────────────────
+  var btnNuevo   = document.getElementById('usr-btn-nuevo-emp');
+  var btnGuardar = document.getElementById('usr-btn-guardar-emp');
+  var btnGenCod  = document.getElementById('usr-btn-gen-cod');
+
+  if(btnNuevo)  btnNuevo.addEventListener('click', usrAbrirDrawer);
+
+  if(btnGuardar) btnGuardar.addEventListener('click', async function() {
+    var nombre     = document.getElementById('usr-reg-nombre').value.trim();
+    var correo     = document.getElementById('usr-reg-correo').value.trim();
+    var cargo      = document.getElementById('usr-reg-cargo').value;
+    var pass       = document.getElementById('usr-reg-pass').value;
+    var pass2      = document.getElementById('usr-reg-pass2').value;
+    var msg        = document.getElementById('usr-reg-msg');
+    var sucursales = Array.from(document.querySelectorAll('#usr-reg-suc-wrap input:checked')).map(function(cb){ return cb.value; });
+
+    var mostrarMsg = function(txt, tipo) {
+      msg.textContent = txt;
+      msg.style.display = '';
+      var oscuro = document.body.classList.contains('dark');
+      msg.style.background = tipo === 'error' ? (oscuro ? '#450a0a' : '#fee2e2') : (oscuro ? '#052e16' : '#dcfce7');
+      msg.style.color      = tipo === 'error' ? (oscuro ? '#fca5a5' : '#991b1b') : (oscuro ? '#4ade80' : '#166534');
+    };
+
+    if(!nombre||!correo||!pass) return mostrarMsg('Completa todos los campos obligatorios.','error');
+    if(pass.length < 6)         return mostrarMsg('La contrase\xF1a debe tener al menos 6 caracteres.','error');
+    if(pass !== pass2)          return mostrarMsg('Las contrase\xF1as no coinciden.','error');
+
+    try {
+      var res = await fetch('/api/empleados', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo: correo, password: pass, nombre: nombre, cargo: cargo, sucursales: sucursales })
+      });
+      var datos = await res.json();
+      if(!res.ok) return mostrarMsg(datos.error || 'Error al crear la cuenta.','error');
+      mostrarMsg('\xA1Cuenta creada correctamente!','ok');
+      setTimeout(function() {
+        usrCerrarDrawer();
+        msg.style.display = 'none';
+        document.getElementById('usr-reg-nombre').value = '';
+        document.getElementById('usr-reg-correo').value = '';
+        document.getElementById('usr-reg-pass').value   = '';
+        document.getElementById('usr-reg-pass2').value  = '';
+        document.querySelectorAll('#usr-reg-suc-wrap input').forEach(function(cb){ cb.checked = false; });
+      }, 1500);
+      await usrCargarTodo();
+    } catch(e) { mostrarMsg('Error de conexi\xF3n con el servidor.','error'); }
+  });
+
+  if(btnGenCod) btnGenCod.addEventListener('click', async function() {
+    try {
+      var generados = [];
+      for(var i = 0; i < usrCodQty; i++) {
+        var res = await fetch('/api/codigos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ creadoPor: 'admin' })
+        });
+        var datos = await res.json();
+        if(!res.ok) { alert('Error al generar el c\xF3digo.'); return; }
+        generados.push(datos.codigo);
+      }
+      alert('C\xF3digo' + (generados.length > 1 ? 's generados:' : ' generado:') + '\n\n' + generados.join('\n') + '\n\nEntr\xE9galos al cliente en sucursal. Son de un solo uso.');
+      await usrCargarTodo();
+    } catch(e) { alert('Error de conexi\xF3n.'); }
+  });
+
+  usrCargarTodo();
+})();
+
+
+// ============================================================
+//  REPORTES DEPARTAMENTO
+// ============================================================
+(function () {
+  var rptActiveDept   = 'all';
+  var rptActiveSuc    = 'all';
+  var rptActiveStatus = 'all';
+
+  var rptDepts = { imp: 'Impresoras', mant: 'Mantenimiento', sis: 'Sistemas', bodega: 'Bodega' };
+  var rptDias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  var rptMeses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+  function rptPad(n) { return n.toString().padStart(2, '0'); }
+
+  function rptGetNow() {
+    var n = new Date();
+    return {
+      dia:   rptDias[n.getDay()],
+      fecha: rptPad(n.getDate()) + '/' + rptPad(n.getMonth() + 1) + '/' + n.getFullYear(),
+      hora:  rptPad(n.getHours()) + ':' + rptPad(n.getMinutes()),
+      d:     rptPad(n.getDate()),
+      mes:   rptMeses[n.getMonth()],
+      y:     n.getFullYear()
+    };
+  }
+
+  function rptTick() {
+    var t  = rptGetNow();
+    var e1 = document.getElementById('rpt-livetime');
+    var e2 = document.getElementById('rpt-cardtime');
+    if (e1) e1.textContent = t.dia + ', ' + t.d + ' ' + t.mes + ' ' + t.y + ' · ' + t.hora;
+    if (e2) e2.textContent = t.fecha + ' · ' + t.hora;
+  }
+
+  rptTick();
+  setInterval(rptTick, 30000);
+
+  window.rptSelectDept = function (dept) {
+    ['imp', 'mant', 'sis', 'bodega'].forEach(function (d) {
+      var btn = document.getElementById('rpt-d-' + d);
+      if (btn) btn.className = 'rpt-dept-btn';
+    });
+    var active = document.getElementById('rpt-d-' + dept);
+    if (active) active.classList.add('active-' + dept);
+    var extra = document.getElementById('rpt-extraFields');
+    if (extra) extra.style.display = dept === 'imp' ? 'flex' : 'none';
+  };
+
+  function rptApplyFilters() {
+    document.querySelectorAll('.rpt-card').forEach(function (c) {
+      var dOk  = rptActiveDept   === 'all' || c.dataset.dept   === rptActiveDept;
+      var sOk  = rptActiveSuc    === 'all' || c.dataset.suc    === rptActiveSuc;
+      var stOk = rptActiveStatus === 'all' || c.dataset.status === rptActiveStatus;
+      c.classList.toggle('hidden', !(dOk && sOk && stOk));
+    });
+  }
+
+  window.rptFilterDept = function (btn, val) {
+    btn.closest('.rpt-filter-row').querySelectorAll('.rpt-pill').forEach(function (p) { p.className = 'rpt-pill'; });
+    btn.classList.add(val === 'all' ? 'active-all' : 'active-' + val);
+    rptActiveDept = val;
+    rptApplyFilters();
+  };
+
+  window.rptFilterSuc = function (btn, val) {
+    btn.closest('.rpt-filter-row').querySelectorAll('.rpt-pill').forEach(function (p) { p.className = 'rpt-pill'; });
+    btn.classList.add('active-suc');
+    rptActiveSuc = val;
+    rptApplyFilters();
+  };
+
+  window.rptFilterStatus = function (btn, val) {
+    btn.closest('.rpt-filter-row').querySelectorAll('.rpt-pill').forEach(function (p) { p.className = 'rpt-pill'; });
+    btn.classList.add(val === 'all' ? 'active-all' : val === 'pendiente' ? 'active-pend' : 'active-done');
+    rptActiveStatus = val;
+    rptApplyFilters();
+  };
+
+  window.rptToggleStatus = function (btn) {
+    var card   = btn.closest('.rpt-card');
+    var isPend = card.dataset.status === 'pendiente';
+    card.dataset.status = isPend ? 'realizado' : 'pendiente';
+    card.classList.toggle('done', !isPend);
+    btn.className = 'rpt-status-toggle ' + (isPend ? 'realizado' : 'pendiente');
+    btn.innerHTML = isPend
+      ? '<i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i> Realizado'
+      : '<i class="ti ti-clock" style="font-size:11px" aria-hidden="true"></i> Pendiente';
+    rptApplyFilters();
+  };
+
+  window.rptCrearReporte = function () {
+    var suc   = document.getElementById('rpt-sel-suc').value;
+    var desc  = document.getElementById('rpt-inp-desc').value.trim();
+    var t     = rptGetNow();
+    var active = document.querySelector('[id^="rpt-d-"][class*="active"]');
+    var dept  = active ? active.id.replace('rpt-d-', '') : 'imp';
+
+    var lines = [suc, t.fecha, t.dia, '', 'REPORTE', '', rptDepts[dept], ''];
+    if (dept === 'imp') {
+      var marca = document.getElementById('rpt-inp-marca').value.trim();
+      var num   = document.getElementById('rpt-inp-num').value.trim();
+      if (marca) lines.push(marca);
+      if (num)   { lines.push(''); lines.push('No. Impresora'); lines.push(num); }
+      lines.push('');
+    }
+    lines.push(desc || 'Sin descripción.');
+    lines.push('');
+    lines.push('@Monitoreo');
+
+    // Insertar tarjeta al inicio del feed
+    var feed = document.getElementById('rpt-feed');
+    var card = document.createElement('div');
+    card.className        = 'rpt-card ' + dept;
+    card.dataset.dept     = dept;
+    card.dataset.suc      = suc;
+    card.dataset.status   = 'pendiente';
+
+    var numVal  = dept === 'imp' ? document.getElementById('rpt-inp-num').value.trim() : '';
+    var impChip = numVal ? '<span class="rpt-printer-chip">' + numVal + '</span>' : '';
+
+    card.innerHTML =
+      '<div class="rpt-card-top">' +
+        '<div class="rpt-card-meta">' +
+          '<span class="rpt-dept-tag ' + dept + '">' + rptDepts[dept] + '</span>' +
+          '<span class="rpt-suc-name">' + suc + '</span>' +
+          '<span class="rpt-new-badge">nuevo</span>' +
+        '</div>' +
+        '<div class="rpt-card-right">' +
+          '<span class="rpt-card-time">Ahora · ' + t.hora + '</span>' +
+          '<button class="rpt-status-toggle pendiente" onclick="rptToggleStatus(this)" aria-label="Cambiar estado">' +
+            '<i class="ti ti-clock" style="font-size:11px" aria-hidden="true"></i> Pendiente' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+      '<p class="rpt-card-desc">' + (desc || 'Sin descripción.') + '</p>' +
+      '<div class="rpt-card-footer"><span class="rpt-mention">@Monitoreo</span>' + impChip + '</div>';
+
+    feed.insertBefore(card, feed.firstChild);
+
+    // Actualizar badge del menú
+    var badge = document.querySelector('[data-seccion="reportes"] .panel-badge');
+    if (badge) badge.textContent = parseInt(badge.textContent || '0') + 1;
+
+    // Mostrar modal
+    document.getElementById('rpt-msg-text').textContent = lines.join('\n');
+    document.getElementById('rpt-overlay').classList.add('open');
+    document.getElementById('rpt-copy-label').textContent = 'Copiar mensaje';
+    document.getElementById('rpt-copy-icon').className    = 'ti ti-copy';
+
+    // Limpiar formulario
+    document.getElementById('rpt-inp-desc').value  = '';
+    document.getElementById('rpt-inp-num').value   = '';
+    document.getElementById('rpt-inp-marca').value = '';
+
+    rptApplyFilters();
+  };
+
+  window.rptCopiarMensaje = function () {
+    var txt = document.getElementById('rpt-msg-text').textContent;
+    navigator.clipboard.writeText(txt).then(function () {
+      document.getElementById('rpt-copy-label').textContent = '¡Copiado!';
+      document.getElementById('rpt-copy-icon').className    = 'ti ti-check';
+      setTimeout(function () {
+        document.getElementById('rpt-copy-label').textContent = 'Copiar mensaje';
+        document.getElementById('rpt-copy-icon').className    = 'ti ti-copy';
+      }, 2500);
+    }).catch(function () {
+      document.getElementById('rpt-copy-label').textContent = 'Copia el texto arriba';
+    });
+  };
+
+  window.rptCloseModal = function (e) {
+    if (!e || e.target === document.getElementById('rpt-overlay')) {
+      document.getElementById('rpt-overlay').classList.remove('open');
+    }
+  };
+
+  // Cerrar modal con Escape
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var overlay = document.getElementById('rpt-overlay');
+      if (overlay && overlay.classList.contains('open')) overlay.classList.remove('open');
+    }
+  });
+})();
+
+// =============================================================
+//  SECCIÓN VENTAS — lógica completa
+// =============================================================
+(function () {
+
+  // Colores fijos de categoría
+  var CAT_COLOR = { Novedades: '#7F77DD', Papelería: '#1D9E75', Snack: '#D85A30' };
+
+  // Badge de sucursal: fondo y texto
+  var SUC_BADGE = {
+    'simon-bolivar': { bg: '#dbeafe', color: '#1e40af', label: 'S.Bolívar' },
+    'insurgentes':   { bg: '#ede9fe', color: '#5b21b6', label: 'Insurgentes' },
+    'antigona':      { bg: '#d1fae5', color: '#065f46', label: 'Antígona'  },
+    'lincoln-oxxo':  { bg: '#fef3c7', color: '#92400e', label: 'L.Oxxo'    },
+    'lincoln-2':     { bg: '#ffedd5', color: '#7c2d12', label: 'Lincoln 2'  },
+    'ruiz-cortines': { bg: '#dbeafe', color: '#1e3a5f', label: 'R.Cortines' },
+    'rodas':         { bg: '#ede9fe', color: '#4a1d96', label: 'Rodas'      },
+    'cuauhtemoc':    { bg: '#d1fae5', color: '#064e3b', label: 'Cuauhtémoc' },
+    'ordonez':       { bg: '#fef3c7', color: '#78350f', label: 'Ordóñez'    },
+  };
+
+  // Mapeo nombre de sucursal → id para los badges
+  var SUC_NAME_TO_ID = {
+    'Simón Bolívar': 'simon-bolivar', 'Insurgentes': 'insurgentes',
+    'Antígona': 'antigona',           'Lincoln Oxxo': 'lincoln-oxxo',
+    'Lincoln 2': 'lincoln-2',         'Ruiz Cortines': 'ruiz-cortines',
+    'Rodas': 'rodas',                 'Cuauhtémoc': 'cuauhtemoc',
+    'Ordóñez': 'ordonez',
+  };
+
+  var vntPeriodo  = '7';
+  var vntSucursal = 'todas';
+  var vntTopCat   = 'todas';
+  var vntData     = null;
+  var vntCargado  = false;
+
+  function fmt(n) { return '$' + n.toLocaleString('es-MX'); }
+  function fmtDelta(d) { return (d >= 0 ? '+' : '') + d.toFixed(1) + '%'; }
+
+  // Pills de período
+  document.querySelectorAll('.vnt-pill').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.vnt-pill').forEach(function (b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      vntPeriodo = this.dataset.periodo;
+      vntCargar();
+    });
+  });
+
+  // Filtro de sucursal
+  var vntSucSel = document.getElementById('vnt-suc-filter');
+  if (vntSucSel) vntSucSel.addEventListener('change', function () {
+    vntSucursal = this.value;
+    vntCargar();
+  });
+
+  // Filtro de categoría en top productos
+  var vntTopSel = document.getElementById('vnt-top-cat-filter');
+  if (vntTopSel) vntTopSel.addEventListener('change', function () {
+    vntTopCat = this.value;
+    vntCargarTop();
+  });
+
+  // Exportar CSV
+  var vntExpBtn = document.getElementById('vnt-export-btn');
+  if (vntExpBtn) vntExpBtn.addEventListener('click', vntExportar);
+
+  // Activar carga cuando se entra a la sección Ventas
+  var vntNavBtn = document.querySelector('[data-seccion="ventas"]');
+  if (vntNavBtn) vntNavBtn.addEventListener('click', function () {
+    if (!vntCargado) vntCargar();
+  });
+
+  // ── carga principal ────────────────────────────────────────────────────────
+
+  async function vntCargar() {
+    try {
+      var r = await fetch('/api/ventas?sucursal=' + vntSucursal + '&periodo=' + vntPeriodo);
+      vntData    = await r.json();
+      vntCargado = true;
+      vntRenderKpis();
+      vntRenderDesglose();
+      vntRenderTabla();
+      vntCargarTop();
+      vntCargarAlertas();
+    } catch (e) { console.error('Ventas:', e); }
+  }
+
+  // ── KPIs ───────────────────────────────────────────────────────────────────
+
+  function vntRenderKpis() {
+    if (!vntData) return;
+    var d = vntData;
+    var el = function (id) { return document.getElementById(id); };
+
+    if (el('vnt-k-total'))       el('vnt-k-total').textContent   = fmt(d.totalGeneral);
+    if (el('vnt-k-activas'))     el('vnt-k-activas').textContent  = d.desglose.length + ' / 9';
+    if (el('vnt-k-top-suc') && d.topSucursal)  el('vnt-k-top-suc').textContent  = d.topSucursal.nombre;
+    if (el('vnt-k-top-suc-val') && d.topSucursal) {
+      el('vnt-k-top-suc-val').textContent = fmt(d.topSucursal.total);
+      el('vnt-k-top-suc-val').style.color = 'var(--texto-suave)';
+    }
+    if (el('vnt-k-top-cat') && d.topCategoria) {
+      el('vnt-k-top-cat').textContent    = d.topCategoria.nombre;
+      el('vnt-k-top-cat').style.color    = CAT_COLOR[d.topCategoria.nombre] || 'var(--texto)';
+    }
+    if (el('vnt-k-top-cat-val') && d.topCategoria) {
+      el('vnt-k-top-cat-val').textContent = fmt(d.topCategoria.total);
+      el('vnt-k-top-cat-val').style.color = 'var(--texto-suave)';
+    }
+    if (el('vnt-k-delta')) {
+      var pos = d.deltaPromedio >= 0;
+      el('vnt-k-delta').textContent = fmtDelta(d.deltaPromedio) + ' vs período anterior';
+      el('vnt-k-delta').className   = 'vnt-kpi-delta ' + (pos ? 'vnt-delta-pos' : 'vnt-delta-neg');
+    }
+  }
+
+  // ── Desglose por sucursal (grid 3×3) ──────────────────────────────────────
+
+  function vntRenderDesglose() {
+    if (!vntData) return;
+    var grid = document.getElementById('vnt-suc-grid');
+    if (!grid) return;
+    var cats = ['Novedades', 'Papelería', 'Snack'];
+
+    grid.innerHTML = vntData.desglose.map(function (suc) {
+      var maxCat = Math.max.apply(null, cats.map(function (c) { return suc.categorias[c] || 0; }));
+      var pos    = suc.delta >= 0;
+
+      var barras = cats.map(function (cat) {
+        var val = suc.categorias[cat] || 0;
+        var pct = maxCat > 0 ? Math.round(val / maxCat * 100) : 0;
+        var col = CAT_COLOR[cat];
+        return '<div class="vnt-barra-row">' +
+          '<span class="vnt-barra-label" style="color:' + col + '">' + cat + '</span>' +
+          '<div class="vnt-barra-track">' +
+            '<div class="vnt-barra-fill" style="width:' + pct + '%;background:' + col + '"></div>' +
+          '</div>' +
+          '<span class="vnt-barra-val">' + fmt(val) + '</span>' +
+        '</div>';
+      }).join('');
+
+      var deltaHtml = pos
+        ? '<span class="vnt-delta-pos">↑ ' + fmtDelta(suc.delta) + '</span>'
+        : '<span class="vnt-delta-neg">↓ ' + fmtDelta(suc.delta) + '</span>';
+
+      return '<div class="vnt-suc-card">' +
+        '<div class="vnt-suc-card-head">' +
+          '<span class="vnt-suc-card-nombre">' + suc.nombre + '</span>' +
+          deltaHtml +
+        '</div>' +
+        '<div class="vnt-suc-card-total">' + fmt(suc.total) + '</div>' +
+        barras +
+      '</div>';
+    }).join('');
+  }
+
+  // ── Tabla comparativa (3 cat × 9 suc) ─────────────────────────────────────
+
+  function vntRenderTabla() {
+    if (!vntData) return;
+    var tabla = document.getElementById('vnt-tabla');
+    if (!tabla) return;
+    var cats = ['Novedades', 'Papelería', 'Snack'];
+    var sucs = vntData.desglose;
+
+    // Abreviaciones para cabecera de columna
+    var abr = function (n) {
+      return n.replace('Simón Bolívar', 'S.Bolívar')
+               .replace('Lincoln Oxxo', 'L.Oxxo')
+               .replace('Lincoln 2',    'L.2')
+               .replace('Ruiz Cortines','R.Cortines');
+    };
+
+    var html = '<thead><tr><th class="vnt-th-cat">Categoría</th>';
+    sucs.forEach(function (s) { html += '<th>' + abr(s.nombre) + '</th>'; });
+    html += '</tr></thead><tbody>';
+
+    cats.forEach(function (cat) {
+      var col    = CAT_COLOR[cat];
+      var vals   = sucs.map(function (s) { return s.categorias[cat] || 0; });
+      var maxVal = Math.max.apply(null, vals);
+
+      html += '<tr><td><span class="vnt-cat-dot" style="background:' + col + '"></span>' + cat + '</td>';
+      sucs.forEach(function (s) {
+        var val   = s.categorias[cat] || 0;
+        var ganó  = val === maxVal && maxVal > 0;
+        html += '<td class="' + (ganó ? 'vnt-winner' : '') + '">' + (ganó ? '🏆 ' : '') + fmt(val) + '</td>';
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody>';
+    tabla.innerHTML = html;
+  }
+
+  // ── Top productos ──────────────────────────────────────────────────────────
+
+  async function vntCargarTop() {
+    var tb = document.getElementById('vnt-top-body');
+    if (!tb) return;
+    tb.innerHTML = '<tr><td colspan="5" class="vnt-empty">Cargando…</td></tr>';
+    try {
+      var r    = await fetch('/api/ventas/top-productos?categoria=' + vntTopCat + '&periodo=' + vntPeriodo);
+      var data = await r.json();
+      if (!data.length) { tb.innerHTML = '<tr><td colspan="5" class="vnt-empty">Sin datos</td></tr>'; return; }
+      tb.innerHTML = data.map(function (p, i) {
+        var sid   = SUC_NAME_TO_ID[p.sucursal] || '';
+        var badge = SUC_BADGE[sid] || { bg: '#f3f4f6', color: '#374151', label: p.sucursal };
+        var catCol = CAT_COLOR[p.categoria] || '#666';
+        return '<tr>' +
+          '<td style="font-weight:700;color:var(--texto-suave);font-size:.75rem">' + (i + 1) + '</td>' +
+          '<td>' +
+            '<span style="font-size:.6rem;padding:2px 6px;border-radius:99px;background:' + catCol + '22;color:' + catCol + ';font-weight:700;margin-right:4px">' + p.categoria[0] + '</span>' +
+            '<span style="font-size:.8rem">' + p.nombre + '</span>' +
+          '</td>' +
+          '<td><span style="font-size:.68rem;padding:2px 7px;border-radius:99px;background:' + badge.bg + ';color:' + badge.color + ';font-weight:600">' + badge.label + '</span></td>' +
+          '<td style="text-align:right;font-size:.8rem;font-weight:600">' + p.unidades.toLocaleString('es-MX') + '</td>' +
+          '<td style="text-align:right;font-size:.8rem;font-weight:700;color:var(--texto)">' + fmt(p.venta) + '</td>' +
+        '</tr>';
+      }).join('');
+    } catch (e) {
+      tb.innerHTML = '<tr><td colspan="5" class="vnt-empty">Error al cargar</td></tr>';
+    }
+  }
+
+  // ── Alertas de rotación ────────────────────────────────────────────────────
+
+  async function vntCargarAlertas() {
+    var lista = document.getElementById('vnt-alertas-list');
+    if (!lista) return;
+    try {
+      var r    = await fetch('/api/ventas/alertas');
+      var data = await r.json();
+      if (!data.length) {
+        lista.innerHTML = '<div class="vnt-alerta-empty"><i class="ti ti-checks"></i><span>Sin alertas activas</span></div>';
+        return;
+      }
+      lista.innerHTML = data.map(function (a) {
+        var peligro = a.tipo === 'quiebre';
+        return '<div class="vnt-alerta-card ' + (peligro ? 'vnt-alerta-danger' : 'vnt-alerta-warning') + '">' +
+          '<div class="vnt-alerta-ico">' +
+            (peligro ? '<i class="ti ti-flame"></i>' : '<i class="ti ti-package"></i>') +
+          '</div>' +
+          '<div class="vnt-alerta-body">' +
+            '<p class="vnt-alerta-prod">' + a.producto + '</p>' +
+            '<p class="vnt-alerta-meta">' + a.sucursal + ' · Stock: ' + a.stock + ' · ' + a.vendidos7 + ' uds/7d</p>' +
+            '<p class="vnt-alerta-msg">' + a.mensaje + '</p>' +
+          '</div>' +
+          '<span class="vnt-alerta-tag">' + (peligro ? 'Quiebre' : 'Estancada') + '</span>' +
+        '</div>';
+      }).join('');
+    } catch (e) {
+      lista.innerHTML = '<div class="vnt-alerta-empty">Error al cargar alertas</div>';
+    }
+  }
+
+  // ── Exportar CSV ───────────────────────────────────────────────────────────
+
+  function vntExportar() {
+    if (!vntData) return;
+    var cats = ['Novedades', 'Papelería', 'Snack'];
+    var csv  = 'Sucursal,' + cats.join(',') + ',Total\n';
+    vntData.desglose.forEach(function (s) {
+      var vals = cats.map(function (c) { return s.categorias[c] || 0; });
+      csv += s.nombre + ',' + vals.join(',') + ',' + s.total + '\n';
+    });
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href   = url;
+    a.download = 'ventas_' + vntPeriodo + 'd.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+})();
 </script>

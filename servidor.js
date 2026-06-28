@@ -16,6 +16,8 @@ import { fileURLToPath } from 'url';
 import { engine }     from 'express-handlebars';
 import QRCode         from 'qrcode';
 import Usuario        from './models/Usuario.js';
+import Empleado       from './models/Empleado.js';
+import Auditoria      from './models/Auditoria.js';
 
 // Carga las variables del archivo .env (MONGO_URI, Puerto, etc.)
 dotenv.config();
@@ -394,6 +396,9 @@ app.post('/api/login', async (req, res) => {
     const passwordCorrecta = await usuario.verificarPassword(password);
     if (!passwordCorrecta) return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
 
+    // Registra la última conexión (sin esperar para no ralentizar el login)
+    Usuario.findByIdAndUpdate(usuario._id, { ultimaConexion: new Date() }).exec();
+
     // Guarda el usuario en la sesión del servidor
     req.session.usuario = {
       id:     usuario._id,
@@ -475,7 +480,7 @@ app.get('/api/empleados', requireAuth, async (req, res) => {
 });
 
 app.post('/api/empleados', requireAuth, requireAdmin, async (req, res) => {
-  const { correo, password, nombre, cargo } = req.body;
+  const { correo, password, nombre, cargo, sucursales } = req.body;
 
   if (!correo || !password || !cargo) return res.status(400).json({ error: 'Faltan datos' });
   if (password.length < 6)           return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
@@ -483,9 +488,11 @@ app.post('/api/empleados', requireAuth, requireAdmin, async (req, res) => {
   const cargosValidos = ['admin', 'coordinador', 'lider', 'encargado', 'colaborador'];
   if (!cargosValidos.includes(cargo)) return res.status(400).json({ error: 'Cargo inválido' });
 
+  const sucursalesLimpias = Array.isArray(sucursales) ? sucursales : [];
+
   try {
-    const nuevo = await Usuario.create({ correo, password, nombre, cargo });
-    res.json({ id: nuevo._id, correo: nuevo.correo, nombre: nuevo.nombre, cargo: nuevo.cargo });
+    const nuevo = await Usuario.create({ correo, password, nombre, cargo, sucursales: sucursalesLimpias });
+    res.json({ id: nuevo._id, correo: nuevo.correo, nombre: nuevo.nombre, cargo: nuevo.cargo, sucursales: nuevo.sucursales });
   } catch (err) {
     if (err.code === 11000) return res.status(409).json({ error: 'Ese correo ya está registrado' });
     res.status(500).json({ error: 'Error al crear empleado' });
@@ -525,6 +532,88 @@ app.patch('/api/usuarios/:id/estado', requireAuth, requireAdmin, async (req, res
 });
 
 // =============================================================
+//  ELIMINAR CUENTA — DELETE /api/usuarios/:id
+// =============================================================
+
+app.delete('/api/usuarios/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const usuario = await Usuario.findById(req.params.id);
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const sesiónActual = req.session.usuario;
+    if (String(usuario._id) === String(sesiónActual?.id))
+      return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta' });
+
+    await Usuario.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ error: 'Error al eliminar usuario' });
+  }
+});
+
+// =============================================================
+//  EDITAR EMPLEADO — cargo, sucursales, contraseña
+// =============================================================
+
+app.patch('/api/empleados/:id/cargo', requireAuth, requireAdmin, async (req, res) => {
+  const { cargo } = req.body;
+  const validos = ['admin', 'coordinador', 'lider', 'encargado', 'colaborador'];
+  if (!validos.includes(cargo)) return res.status(400).json({ error: 'Cargo inválido' });
+  try {
+    const emp = await Usuario.findByIdAndUpdate(req.params.id, { cargo }, { new: true });
+    if (!emp) return res.status(404).json({ error: 'Empleado no encontrado' });
+    res.json({ id: emp._id, cargo: emp.cargo });
+  } catch { res.status(500).json({ error: 'Error al actualizar cargo' }); }
+});
+
+app.patch('/api/empleados/:id/sucursales', requireAuth, requireAdmin, async (req, res) => {
+  const { sucursales } = req.body;
+  if (!Array.isArray(sucursales)) return res.status(400).json({ error: 'Formato inválido' });
+  try {
+    const emp = await Usuario.findByIdAndUpdate(req.params.id, { sucursales }, { new: true });
+    if (!emp) return res.status(404).json({ error: 'Empleado no encontrado' });
+    res.json({ id: emp._id, sucursales: emp.sucursales });
+  } catch { res.status(500).json({ error: 'Error al actualizar sucursales' }); }
+});
+
+app.patch('/api/empleados/:id/password', requireAuth, requireAdmin, async (req, res) => {
+  const { password } = req.body;
+  if (!password || password.length < 6)
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  try {
+    const hash = await import('bcryptjs').then(m => m.default.hash(password, 10));
+    const emp  = await Usuario.findByIdAndUpdate(req.params.id, { password: hash }, { new: true });
+    if (!emp) return res.status(404).json({ error: 'Empleado no encontrado' });
+    res.json({ ok: true });
+  } catch { res.status(500).json({ error: 'Error al cambiar contraseña' }); }
+});
+
+// =============================================================
+//  CLIENTES — ajustar puntos, obtener canjes
+// =============================================================
+
+app.patch('/api/clientes/:id/puntos', requireAuth, requireAdmin, async (req, res) => {
+  const { ajuste, motivo } = req.body;
+  if (typeof ajuste !== 'number') return res.status(400).json({ error: 'Ajuste inválido' });
+  if (!motivo?.trim())            return res.status(400).json({ error: 'El motivo es obligatorio' });
+  try {
+    const cli = await Usuario.findById(req.params.id);
+    if (!cli || cli.cargo !== 'cliente') return res.status(404).json({ error: 'Cliente no encontrado' });
+    cli.puntos = Math.max(0, (cli.puntos || 0) + ajuste);
+    await cli.save();
+    res.json({ id: cli._id, puntos: cli.puntos });
+  } catch { res.status(500).json({ error: 'Error al ajustar puntos' }); }
+});
+
+app.get('/api/clientes/:id/canjes', requireAuth, async (req, res) => {
+  try {
+    const cli = await Usuario.findById(req.params.id);
+    if (!cli || cli.cargo !== 'cliente') return res.status(404).json({ error: 'Cliente no encontrado' });
+    res.json({ canjes: cli.canjes || [] });
+  } catch { res.status(500).json({ error: 'Error al obtener canjes' }); }
+});
+
+// =============================================================
 //  RESUMEN GENERAL (MongoDB)
 //  GET /api/resumen  → contadores para las tarjetas del panel
 // =============================================================
@@ -547,6 +636,308 @@ app.get('/api/resumen', requireAuth, async (req, res) => {
     });
   } catch {
     res.status(500).json({ error: 'Error al obtener resumen' });
+  }
+});
+
+// =============================================================
+//  VENTAS — datos mock listos para swappear por queries a PG
+//  Convención de tabla real: ventas_DD_MM_YYYY_sucursal
+// =============================================================
+
+const VNT_SUCURSALES = [
+  { id: 'simon-bolivar', nombre: 'Simón Bolívar' },
+  { id: 'insurgentes',   nombre: 'Insurgentes'   },
+  { id: 'antigona',      nombre: 'Antígona'       },
+  { id: 'lincoln-oxxo',  nombre: 'Lincoln Oxxo'  },
+  { id: 'lincoln-2',     nombre: 'Lincoln 2'      },
+  { id: 'ruiz-cortines', nombre: 'Ruiz Cortines' },
+  { id: 'rodas',         nombre: 'Rodas'          },
+  { id: 'cuauhtemoc',    nombre: 'Cuauhtémoc'    },
+  { id: 'ordonez',       nombre: 'Ordóñez'        },
+];
+
+// Ventas base diarias por sucursal y categoría — sin Limpieza
+const VNT_BASE = {
+  'simon-bolivar': { Novedades: 8400,  Papelería: 12300, Snack: 3200 },
+  'insurgentes':   { Novedades: 6100,  Papelería: 9800,  Snack: 2400 },
+  'antigona':      { Novedades: 5700,  Papelería: 8600,  Snack: 1900 },
+  'lincoln-oxxo':  { Novedades: 4300,  Papelería: 7200,  Snack: 1600 },
+  'lincoln-2':     { Novedades: 3900,  Papelería: 6500,  Snack: 1400 },
+  'ruiz-cortines': { Novedades: 5200,  Papelería: 8100,  Snack: 2100 },
+  'rodas':         { Novedades: 4800,  Papelería: 7500,  Snack: 1750 },
+  'cuauhtemoc':    { Novedades: 4100,  Papelería: 6800,  Snack: 1550 },
+  'ordonez':       { Novedades: 3600,  Papelería: 5900,  Snack: 1300 },
+};
+
+// Variación vs período anterior — determinista, sin Math.random
+const VNT_DELTA = {
+  'simon-bolivar':  4.2,
+  'insurgentes':   -1.8,
+  'antigona':       7.5,
+  'lincoln-oxxo':  -3.1,
+  'lincoln-2':      2.9,
+  'ruiz-cortines':  5.4,
+  'rodas':         -0.6,
+  'cuauhtemoc':     8.1,
+  'ordonez':       -2.4,
+};
+
+const VNT_MULT = { hoy: 1, '7': 7, '15': 15, '30': 30 };
+
+// GET /api/ventas?sucursal=&periodo=
+// Devuelve ventas agrupadas por sucursal y categoría (sin Limpieza)
+app.get('/api/ventas', requireAuth, (req, res) => {
+  const { sucursal = 'todas', periodo = '7' } = req.query;
+  const mult = VNT_MULT[periodo] || 7;
+  const cats = ['Novedades', 'Papelería', 'Snack'];
+
+  const sucsFiltradas = sucursal === 'todas'
+    ? VNT_SUCURSALES
+    : VNT_SUCURSALES.filter(s => s.id === sucursal);
+
+  const desglose = sucsFiltradas.map(s => {
+    const base = VNT_BASE[s.id] || {};
+    const categorias = {};
+    let totalSuc = 0;
+    cats.forEach(cat => {
+      const val = Math.round((base[cat] || 0) * mult);
+      categorias[cat] = val;
+      totalSuc += val;
+    });
+    return { id: s.id, nombre: s.nombre, total: totalSuc, categorias, delta: VNT_DELTA[s.id] || 0 };
+  });
+
+  const totalGeneral   = desglose.reduce((a, s) => a + s.total, 0);
+  const topSucursal    = [...desglose].sort((a, b) => b.total - a.total)[0];
+  const deltaPromedio  = Math.round(
+    desglose.reduce((a, s) => a + s.delta, 0) / (desglose.length || 1) * 10
+  ) / 10;
+
+  const porCategoria = {};
+  cats.forEach(cat => {
+    porCategoria[cat] = desglose.reduce((a, s) => a + (s.categorias[cat] || 0), 0);
+  });
+  const topCategoria = Object.entries(porCategoria).sort((a, b) => b[1] - a[1])[0];
+
+  res.json({
+    periodo,
+    sucursal,
+    totalGeneral,
+    topSucursal:  topSucursal  ? { id: topSucursal.id, nombre: topSucursal.nombre, total: topSucursal.total } : null,
+    topCategoria: topCategoria ? { nombre: topCategoria[0], total: topCategoria[1] } : null,
+    deltaPromedio,
+    desglose,
+    porCategoria,
+  });
+});
+
+// GET /api/ventas/top-productos?categoria=&periodo=
+// Devuelve los N productos más vendidos — sin categoría Limpieza
+app.get('/api/ventas/top-productos', requireAuth, (req, res) => {
+  const { categoria = 'todas', periodo = '7' } = req.query;
+  const mult = VNT_MULT[periodo] || 7;
+
+  const PRODUCTOS_MOCK = [
+    { nombre: 'Hoja doble carta',       categoria: 'Papelería', sucursal: 'Simón Bolívar', unidades: 320, precio: 2.5  },
+    { nombre: 'Tabloide couche suelto', categoria: 'Papelería', sucursal: 'Insurgentes',   unidades: 280, precio: 4.0  },
+    { nombre: 'Novedad rojo $20',       categoria: 'Novedades', sucursal: 'Antígona',       unidades: 215, precio: 20   },
+    { nombre: 'Hoja opalina',           categoria: 'Papelería', sucursal: 'Ruiz Cortines',  unidades: 190, precio: 3.5  },
+    { nombre: 'Pasta transparente',     categoria: 'Papelería', sucursal: 'Simón Bolívar',  unidades: 175, precio: 5.0  },
+    { nombre: 'Novedad azul $30',       categoria: 'Novedades', sucursal: 'Cuauhtémoc',     unidades: 160, precio: 30   },
+    { nombre: 'Sabritas varios',        categoria: 'Snack',     sucursal: 'Lincoln Oxxo',   unidades: 155, precio: 15   },
+    { nombre: 'Galleta varios',         categoria: 'Snack',     sucursal: 'Rodas',           unidades: 142, precio: 12   },
+    { nombre: 'Legajo carta',           categoria: 'Papelería', sucursal: 'Lincoln 2',       unidades: 138, precio: 6.0  },
+    { nombre: 'Coca Cola',             categoria: 'Snack',     sucursal: 'Ordóñez',         unidades: 130, precio: 18   },
+    { nombre: 'Novedad verde $40',      categoria: 'Novedades', sucursal: 'Insurgentes',     unidades: 125, precio: 40   },
+    { nombre: 'Pluma negra',            categoria: 'Papelería', sucursal: 'Antígona',        unidades: 118, precio: 3.0  },
+    { nombre: 'Agua 500ml',             categoria: 'Snack',     sucursal: 'Simón Bolívar',   unidades: 115, precio: 10   },
+    { nombre: 'Llavero Funko',          categoria: 'Novedades', sucursal: 'Ruiz Cortines',   unidades:  98, precio: 50   },
+    { nombre: 'Enmicado carta',         categoria: 'Papelería', sucursal: 'Cuauhtémoc',      unidades:  90, precio: 12   },
+  ];
+
+  let lista = categoria === 'todas' ? PRODUCTOS_MOCK : PRODUCTOS_MOCK.filter(p => p.categoria === categoria);
+
+  const resultado = lista.slice(0, 10).map(p => ({
+    nombre:    p.nombre,
+    categoria: p.categoria,
+    sucursal:  p.sucursal,
+    unidades:  Math.round(p.unidades * mult / 7),
+    venta:     Math.round(p.unidades * mult / 7 * p.precio),
+  }));
+
+  res.json(resultado);
+});
+
+// GET /api/ventas/alertas
+// Cruce ventas + inventario: riesgo de quiebre y mercancía estancada
+app.get('/api/ventas/alertas', requireAuth, (req, res) => {
+  res.json([
+    { tipo: 'quiebre',  producto: 'Novedad rojo $20',   sucursal: 'Antígona',      stock:  3, vendidos7: 215, mensaje: 'Alto movimiento con stock crítico' },
+    { tipo: 'quiebre',  producto: 'Sabritas varios',     sucursal: 'Lincoln Oxxo',  stock:  5, vendidos7: 155, mensaje: 'Alto movimiento con stock crítico' },
+    { tipo: 'quiebre',  producto: 'Agua 500ml',          sucursal: 'Simón Bolívar', stock:  8, vendidos7: 115, mensaje: 'Alto movimiento con stock bajo'    },
+    { tipo: 'estancada',producto: 'Novedad negra $350',  sucursal: 'Insurgentes',   stock: 12, vendidos7:   0, mensaje: 'Sin ventas en 7 días'              },
+    { tipo: 'estancada',producto: 'Memoria USB 32gb',    sucursal: 'Cuauhtémoc',    stock:  9, vendidos7:   1, mensaje: 'Stock alto, baja rotación'         },
+    { tipo: 'estancada',producto: 'Llavero Funko',       sucursal: 'Ordóñez',       stock: 14, vendidos7:   2, mensaje: 'Stock alto, baja rotación'         },
+  ]);
+});
+
+// =============================================================
+//  STAFF (empleados de desempeño) — colección separada de los usuarios auth
+//  Rutas bajo /api/staff para no pisar las rutas de /api/empleados (auth)
+// =============================================================
+
+const SUCURSALES_STAFF = ['Simon Bolivar', 'Centro', 'Sureste'];
+
+// GET /api/staff?sucursal=&orden=puntaje|ventas|turnos
+app.get('/api/staff', requireAuth, async (req, res) => {
+  const { sucursal, orden = 'puntaje' } = req.query;
+  const filtro = { activo: true };
+  if (sucursal && SUCURSALES_STAFF.includes(sucursal)) filtro.sucursal = sucursal;
+
+  try {
+    let lista = await Empleado.find(filtro)
+      .populate('lider_id', 'nombre')
+      .populate('coordinador_id', 'nombre')
+      .lean();
+
+    if (orden === 'ventas')  lista.sort((a, b) => b.ventas_extraordinarias - a.ventas_extraordinarias);
+    else if (orden === 'turnos') lista.sort((a, b) => (b.turnos?.length || 0) - (a.turnos?.length || 0));
+    else lista.sort((a, b) => b.puntos_acumulados - a.puntos_acumulados);
+
+    res.json(lista);
+  } catch {
+    res.status(500).json({ error: 'Error al obtener staff' });
+  }
+});
+
+// GET /api/staff/:id/historial
+app.get('/api/staff/:id/historial', requireAuth, async (req, res) => {
+  try {
+    const hist = await Auditoria.find({ empleado_id: req.params.id })
+      .sort({ fecha: -1 })
+      .limit(30)
+      .lean();
+    const conPromedio = hist.map(a => {
+      const s = a.ventas + a.actitud + a.cumplimiento + a.asistencia
+              + a.limpieza + a.atencion_cliente + a.eficiencia;
+      return { ...a, promedio: parseFloat((s / 7).toFixed(2)) };
+    });
+    res.json(conPromedio);
+  } catch {
+    res.status(500).json({ error: 'Error al obtener historial' });
+  }
+});
+
+// POST /api/staff — crear empleado de staff
+app.post('/api/staff', requireAuth, requireAdmin, async (req, res) => {
+  const { nombre, sucursal, lider_id, coordinador_id, rol, turnos } = req.body;
+  if (!nombre?.trim()) return res.status(400).json({ error: 'Nombre requerido' });
+  if (sucursal && !SUCURSALES_STAFF.includes(sucursal))
+    return res.status(400).json({ error: 'Sucursal inválida' });
+  try {
+    const emp = await Empleado.create({ nombre: nombre.trim(), sucursal, lider_id, coordinador_id, rol, turnos });
+    res.json(emp);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al crear empleado' });
+  }
+});
+
+// PATCH /api/staff/:id — editar sucursal, lider, turnos, nivel_bono, etc.
+app.patch('/api/staff/:id', requireAuth, requireAdmin, async (req, res) => {
+  const campos = ['sucursal', 'lider_id', 'coordinador_id', 'rol', 'turnos',
+                  'puntos_acumulados', 'ventas_extraordinarias', 'nivel_bono', 'activo'];
+  const update = {};
+  for (const c of campos) if (req.body[c] !== undefined) update[c] = req.body[c];
+
+  if (update.sucursal && !SUCURSALES_STAFF.includes(update.sucursal))
+    return res.status(400).json({ error: 'Sucursal inválida' });
+
+  try {
+    const emp = await Empleado.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!emp) return res.status(404).json({ error: 'Empleado no encontrado' });
+    res.json(emp);
+  } catch {
+    res.status(500).json({ error: 'Error al actualizar empleado' });
+  }
+});
+
+// GET /api/auditorias/hoy?sucursal=
+// Devuelve todos los empleados activos con bandera auditado:true/false del día actual
+app.get('/api/auditorias/hoy', requireAuth, async (req, res) => {
+  const { sucursal } = req.query;
+  const filtro = { activo: true };
+  if (sucursal && SUCURSALES_STAFF.includes(sucursal)) filtro.sucursal = sucursal;
+
+  try {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const mañana = new Date(hoy); mañana.setDate(mañana.getDate() + 1);
+
+    const [empleados, audHoy] = await Promise.all([
+      Empleado.find(filtro).lean(),
+      Auditoria.find({ fecha: { $gte: hoy, $lt: mañana } }).lean(),
+    ]);
+
+    const auditadosSet = new Set(audHoy.map(a => String(a.empleado_id)));
+    const resultado = empleados.map(e => ({
+      ...e,
+      auditado_hoy: auditadosSet.has(String(e._id)),
+      auditoria_hoy: audHoy.find(a => String(a.empleado_id) === String(e._id)) || null,
+    }));
+
+    // Calcular promedio en auditoria_hoy
+    resultado.forEach(e => {
+      if (e.auditoria_hoy) {
+        const a = e.auditoria_hoy;
+        const s = a.ventas + a.actitud + a.cumplimiento + a.asistencia
+                + a.limpieza + a.atencion_cliente + a.eficiencia;
+        e.auditoria_hoy.promedio = parseFloat((s / 7).toFixed(2));
+      }
+    });
+
+    res.json(resultado);
+  } catch {
+    res.status(500).json({ error: 'Error al obtener auditorías de hoy' });
+  }
+});
+
+// POST /api/auditorias — registrar auditoría diaria
+app.post('/api/auditorias', requireAuth, async (req, res) => {
+  const RUBROS = ['ventas', 'actitud', 'cumplimiento', 'asistencia', 'limpieza', 'atencion_cliente', 'eficiencia'];
+  const { empleado_id, lider_auditor_id, fecha, ...rubros } = req.body;
+
+  if (!empleado_id) return res.status(400).json({ error: 'empleado_id requerido' });
+  for (const r of RUBROS) {
+    const v = Number(rubros[r]);
+    if (!rubros[r] || v < 1 || v > 10) return res.status(400).json({ error: `Rubro inválido: ${r}` });
+  }
+
+  try {
+    // Evitar duplicado del mismo día
+    const dia = fecha ? new Date(fecha) : new Date();
+    dia.setHours(0, 0, 0, 0);
+    const siguiente = new Date(dia); siguiente.setDate(siguiente.getDate() + 1);
+    const existente = await Auditoria.findOne({ empleado_id, fecha: { $gte: dia, $lt: siguiente } });
+    if (existente) return res.status(409).json({ error: 'Este empleado ya tiene auditoría hoy' });
+
+    const s = RUBROS.reduce((acc, r) => acc + Number(rubros[r]), 0);
+    const promedio = parseFloat((s / 7).toFixed(2));
+    // Puntos: 10 × promedio, redondeado
+    const puntos_otorgados = Math.round(promedio * 10);
+
+    const aud = await Auditoria.create({
+      empleado_id, lider_auditor_id: lider_auditor_id || null,
+      fecha: fecha ? new Date(fecha) : new Date(),
+      ...Object.fromEntries(RUBROS.map(r => [r, Number(rubros[r])])),
+      puntos_otorgados,
+    });
+
+    // Actualizar puntos acumulados del empleado
+    await Empleado.findByIdAndUpdate(empleado_id, { $inc: { puntos_acumulados: puntos_otorgados } });
+
+    res.json({ ...aud.toJSON(), promedio });
+  } catch {
+    res.status(500).json({ error: 'Error al registrar auditoría' });
   }
 });
 
