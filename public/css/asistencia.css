@@ -1,0 +1,166 @@
+/* ============================================================
+   ASISTENCIA — pantalla de kiosco, marcación, y tab de reporte
+   ============================================================ */
+
+/* ── Pantalla de kiosco (QR) ─────────────────────────────────── */
+.as-kiosco {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e0a0a;
+}
+
+.as-kiosco-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 48px 56px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.as-kiosco-suc {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e0a0a;
+  margin-bottom: 24px;
+}
+
+.as-kiosco-qr {
+  width: 320px;
+  height: 320px;
+  image-rendering: pixelated;
+}
+
+.as-kiosco-hint {
+  margin-top: 24px;
+  color: #555;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.as-kiosco-refresh {
+  margin-top: 8px;
+  color: #999;
+  font-size: 0.8rem;
+}
+
+/* ── Pantalla de marcación (en el teléfono) ──────────────────── */
+.as-marcar {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.as-marcar-card {
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.as-marcar-icon {
+  font-size: 3rem;
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.as-marcar-icon--ok { color: #27ae60; }
+.as-marcar-icon--error { color: #c0392b; }
+
+.as-marcar-msg {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.as-marcar-sub {
+  color: #777;
+  font-size: 0.9rem;
+  margin-top: 12px;
+}
+
+.as-marcar-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.as-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.as-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.as-btn-comida { background: #f0ad4e; color: #fff; }
+.as-btn-salida { background: #c0392b; color: #fff; }
+
+/* ── Tabs de Horarios (Vista semanal / Horas trabajadas) ─────── */
+.hor-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 24px 0;
+}
+
+.hor-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 10px 10px 0 0;
+  color: #777;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.hor-tab--active {
+  color: #c0392b;
+  border-bottom: 2px solid #c0392b;
+}
+
+/* ── Tab "Horas trabajadas" dentro de Horarios ───────────────── */
+.has-table-wrap {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.has-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.has-table th,
+.has-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-2, #e5e5e5);
+}
+
+.has-table th {
+  font-weight: 600;
+  color: #666;
+}
+
+.has-diff-pos { color: #27ae60; font-weight: 600; }
+.has-diff-neg { color: #c0392b; font-weight: 600; }
+.has-empty { color: #999; padding: 24px; text-align: center; }

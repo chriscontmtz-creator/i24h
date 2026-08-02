@@ -4,10 +4,16 @@
     <!-- NAV -->
     <div class="nav">
       <div class="logo">i24h
-        <div><img src="/css/imagenes/estilos.png" alt="Logo i24h"></div>
+        <div><img src="/imagenes/estilos.png" alt="Logo i24h"></div>
         <span>Internet 24 Horas · Nuevo Leon</span>
       </div>
-      <div class="nav-links">
+
+      <!-- Botón hamburguesa (solo visible en móvil) -->
+      <button class="nav-hamburger" id="nav-hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
+        <i class="ti ti-menu-2" id="nav-hamburger-ico" aria-hidden="true"></i>
+      </button>
+
+      <div class="nav-links" id="nav-links">
         <a href="#root">Inicio</a>
         <a href="#sec-servicios">Servicios</a>
         <a href="#sec-productos">Productos</a>

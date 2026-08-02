@@ -578,11 +578,58 @@ body.dark .dash-nav-item--active {
   font-size: 13px;
 }
 
+/* ── Hamburguesa (oculta en escritorio) ──────────────────────── */
+.dash-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--d-borde);
+  background: var(--d-sup-alt);
+  color: var(--d-texto);
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.dash-sidebar-fondo {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 290;
+}
+
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .dash-sidebar { display: none; }
+  /* El sidebar (con el link "Volver a Panel") ya no se oculta:
+     pasa a ser un drawer abierto por el botón hamburguesa —
+     antes quedaba oculto sin ninguna forma de volver a abrirlo. */
+  .dash-hamburger { display: flex; }
+
+  .dash-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 300;
+    width: 240px;
+    max-width: 82vw;
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+    box-shadow: 2px 0 16px rgba(0,0,0,.25);
+  }
+  .dash-sidebar.abierta { transform: translateX(0); }
+  .dash-sidebar-fondo.visible { display: block; }
+
   .dash-main    { padding: 1rem; }
+  .dash-page-header { flex-wrap: wrap; }
   .dash-kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .dash-grid-2   { grid-template-columns: 1fr; }
   .dash-turno-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .dash-kpi-grid { grid-template-columns: 1fr; }
 }

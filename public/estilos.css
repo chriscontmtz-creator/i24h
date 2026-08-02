@@ -1578,6 +1578,16 @@ body.dark .error-msg.success { background: #052e16; color: #86efac; }
 .panel-seccion        { display: block; }
 .panel-seccion.oculta { display: none; }
 
+.panel-hamburger { display: none; }
+
+.panel-sidebar-fondo {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 290;
+}
+
 
 /* --- METRIC CARDS --- */
 .panel-metrics {
@@ -3648,6 +3658,122 @@ html.dark .inv-badge-ok   { background: #052e16; color: #4ade80; }
 
 
 /* =============================================================
+   PROMOCIONES — sec-promociones (panel admin)
+   ============================================================= */
+.promo-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.promo-titulo { font-size: 1.3rem; font-weight: 700; color: var(--texto); margin: 0; }
+
+.promo-sub { color: var(--texto-suave); font-size: .85rem; margin: 0 0 20px; }
+
+.promo-btn-nueva {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .85rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--acento);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .2s;
+}
+
+.promo-btn-nueva:hover { background: var(--acento-oscuro); }
+
+.promo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.promo-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.promo-card-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+  background: var(--fondo-alt);
+}
+
+.promo-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+
+.promo-card-hdr { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
+
+.promo-card-titulo { font-size: .95rem; font-weight: 600; color: var(--texto); margin: 0; }
+
+.promo-card-desc { font-size: .82rem; color: var(--texto-suave); margin: 0; }
+
+.promo-card-beneficio {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--acento);
+  width: fit-content;
+}
+
+.promo-card-vigencia {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .75rem;
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+.promo-card-acciones { display: flex; gap: 8px; margin-top: 4px; }
+
+.promo-badge {
+  font-size: .68rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.promo-badge-vigente  { background: #dcfce7; color: #166534; }
+.promo-badge-proxima  { background: #dbeafe; color: #1e40af; }
+.promo-badge-vencida  { background: var(--fondo-alt); color: var(--texto-suave); }
+.promo-badge-inactiva { background: #fee2e2; color: #991b1b; }
+
+body.dark .promo-badge-vigente,
+html.dark .promo-badge-vigente  { background: #052e16; color: #4ade80; }
+body.dark .promo-badge-proxima,
+html.dark .promo-badge-proxima  { background: #172554; color: #93c5fd; }
+body.dark .promo-badge-inactiva,
+html.dark .promo-badge-inactiva { background: #450a0a; color: #fca5a5; }
+
+.foto-subir-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+
+/* =============================================================
    REPORTES DEPARTAMENTO — sec-reportes
    ============================================================= */
 
@@ -4678,3 +4804,115 @@ body.dark .vnt-alerta-warning .vnt-alerta-tag { background: #1c1007; color: #fbb
 
 /* Sidebar — hover sutil en la tarjeta del usuario */
 .panel-sidebar-usuario:hover { background: var(--fondo-alt); }
+
+
+/* =============================================================
+   PANEL — MÓVIL (hasta 768px)
+   Va al FINAL del archivo a propósito: así siempre gana sobre
+   cualquier regla .panel-* / .dash-* definida más arriba, sin
+   depender del orden en que aparezcan (a igual especificidad,
+   en CSS gana la regla declarada después).
+   El sidebar pasa a ser un drawer que se desliza desde la izquierda,
+   controlado por el botón hamburguesa del topbar.
+   ============================================================= */
+@media (max-width: 768px) {
+  .panel-hamburger { display: flex; }
+
+  .panel-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 300;
+    width: 250px;
+    max-width: 82vw;
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+    box-shadow: 2px 0 16px rgba(0,0,0,.25);
+  }
+  .panel-sidebar.abierta { transform: translateX(0); }
+
+  .panel-sidebar-fondo.visible { display: block; }
+
+  .panel-topbar { padding: 0 12px; gap: 10px; }
+  .panel-topbar-centro { display: none; }
+  .panel-content { padding: 14px; }
+
+  .panel-metrics { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  /* Filas del dashboard: de varias columnas a una sola, apiladas */
+  .dash-grid-3     { grid-template-columns: 1fr; }
+  .panel-dash-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .panel-metrics { grid-template-columns: 1fr; }
+}
+
+/* =============================================================
+   BITÁCORA — MÓVIL (hasta 768px)
+   Va al final por la misma razón que el bloque "PANEL — MÓVIL":
+   así gana sobre las reglas .bit-* definidas más arriba sin
+   depender del orden de declaración.
+   Cada fila de producto pasa de una grilla de 4 columnas fijas
+   (pensada para escritorio) a una tarjeta apilada de 2 filas,
+   con controles de conteo más grandes para tocar con el dedo.
+   ============================================================= */
+@media (max-width: 768px) {
+  .bit-header-bar { flex-direction: column; align-items: stretch; }
+
+  .bit-meta { flex-direction: column; align-items: stretch; }
+
+  .bit-header-bar .bit-select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: .9rem;
+  }
+
+  .bit-meta-right { flex-direction: column; align-items: stretch; }
+
+  .bit-btn-iniciar,
+  .bit-btn-cerrar { width: 100%; justify-content: center; padding: 12px 16px; }
+
+  .bit-resumen-bar { gap: 10px 16px; }
+
+  /* Encabezados de columna ya no aplican: cada dato lleva su propia etiqueta */
+  .bit-col-headers { display: none; }
+
+  .bit-prod-fila {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "nombre  badge"
+      "esperado conteo";
+    row-gap: 8px;
+    padding: 12px 16px;
+  }
+
+  .bit-prod-fila .bit-prod-nombre { grid-area: nombre; font-size: .92rem; font-weight: 500; }
+
+  .bit-prod-fila .bit-badge { grid-area: badge; justify-self: end; align-self: start; margin: 0; }
+
+  .bit-prod-fila .bit-prod-esperado {
+    grid-area: esperado;
+    text-align: left;
+    align-self: center;
+  }
+  .bit-prod-fila .bit-prod-esperado::before {
+    content: "Esperado: ";
+    font-weight: 400;
+    color: var(--texto-suave);
+  }
+
+  .bit-prod-fila .bit-conteo-wrap { grid-area: conteo; justify-content: flex-end; gap: 6px; }
+
+  /* Botones e input de conteo: tamaño táctil cómodo (~40px) */
+  .bit-cbtn { width: 40px; height: 40px; font-size: 18px; }
+  .bit-cinp { width: 64px; height: 40px; font-size: 1rem; }
+
+  .bit-justif-fila { flex-wrap: wrap; }
+  .bit-justif-select { width: 100%; }
+
+  /* Modal de detalle de una bitácora guardada: permite scroll horizontal
+     de la tabla en vez de romper el ancho de la página */
+  .bit-det-scroll { overflow-x: auto; }
+  .bit-det-tabla { min-width: 560px; }
+}

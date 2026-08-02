@@ -63,12 +63,19 @@ let revDiaActual      = window.REV_DIA      || 'todos';
 
 // ── Cambiar entre tabs ─────────────────────────────────────────
 function revCambiarTab(tab) {
+  var tabEl   = document.getElementById('tab-' + tab);
+  var panelEl = document.getElementById('panel-' + tab);
+  // Si 'tab' viene de ?tab= en la URL puede no existir ninguno de los 3
+  // tabs reales — sin esto, un enlace/URL manual con un valor inválido
+  // rompía el script entero de la página (y con él, todos los botones).
+  if (!tabEl || !panelEl) return;
+
   revTabActual = tab;
   document.querySelectorAll('.rev-tab').forEach(t => t.classList.remove('rev-tab--active'));
   document.querySelectorAll('.rev-panel').forEach(p => p.classList.add('rev-panel--oculto'));
 
-  document.getElementById('tab-' + tab).classList.add('rev-tab--active');
-  document.getElementById('panel-' + tab).classList.remove('rev-panel--oculto');
+  tabEl.classList.add('rev-tab--active');
+  panelEl.classList.remove('rev-panel--oculto');
 }
 
 // ── Cambiar periodo (muestra/oculta rango personalizado) ──────

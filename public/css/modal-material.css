@@ -1,0 +1,228 @@
+/* ============================================================
+   VENTA SIN MATERIAL Y SIN TICKETS — modal (reemplaza a Corrección de Ventas)
+   ============================================================ */
+
+.vsm-overlay.hidden,
+.vsm-panel.hidden,
+.vsm-estado.hidden,
+.vsm-tk-resultado.hidden {
+  display: none;
+}
+
+.vsm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.vsm-container {
+  background: var(--panel-bg, #1a1a1a);
+  color: var(--texto, #eee);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.vsm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.vsm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vsm-badge {
+  background: #c0392b;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.vsm-titulo {
+  font-size: 1.2rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vsm-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.vsm-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+}
+
+.vsm-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.vsm-tab--active {
+  color: #f87171;
+  border-bottom-color: #c0392b;
+}
+
+.vsm-filtros {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.vsm-filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vsm-filtro-grupo--ancho {
+  flex: 1;
+  min-width: 220px;
+}
+
+.vsm-filtro-grupo label {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.vsm-input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: inherit;
+}
+
+.vsm-btn-cargar,
+.vsm-btn-agregar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vsm-estado {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.vsm-estado--error   { background: rgba(192, 57, 43, 0.15); color: #f87171; }
+.vsm-estado--loading { background: rgba(255, 255, 255, 0.08); color: #ccc; }
+.vsm-estado--ok      { background: rgba(39, 174, 96, 0.15);  color: #6ee7a5; }
+
+.vsm-tabla-wrap {
+  overflow-x: auto;
+}
+
+.vsm-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.vsm-tabla th,
+.vsm-tabla td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vsm-tabla .col-num { text-align: right; }
+
+.vsm-fila-vacia {
+  text-align: center;
+  color: #777;
+  padding: 24px !important;
+}
+
+.vsm-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vsm-footer-nota {
+  color: #999;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vsm-footer-total {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+/* ── Tab de tickets ────────────────────────────────────────── */
+.vsm-tk-info {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.vsm-tk-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.vsm-tk-previos {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.vsm-tk-previo-item {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}

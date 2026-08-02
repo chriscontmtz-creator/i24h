@@ -3,7 +3,7 @@
   <!-- ═══════════════════════════════════════════════════════════
        SIDEBAR
        ═══════════════════════════════════════════════════════════ -->
-  <aside class="dash-sidebar">
+  <aside class="dash-sidebar" id="dash-sidebar">
     <div class="dash-logo">
       <span class="dash-logo-mark">i24h</span>
       <span class="dash-logo-label">Dashboard</span>
@@ -45,6 +45,9 @@
     </div>
   </aside>
 
+  <!-- Fondo oscuro detrás del sidebar cuando está abierto en móvil -->
+  <div class="dash-sidebar-fondo" id="dash-sidebar-fondo"></div>
+
   <!-- ═══════════════════════════════════════════════════════════
        MAIN CONTENT
        ═══════════════════════════════════════════════════════════ -->
@@ -54,6 +57,9 @@
     <div class="dash-page-header">
       <div>
         <h1 class="dash-page-title">
+          <button class="dash-hamburger" id="dash-hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="dash-sidebar">
+            <i class="ti ti-menu-2"></i>
+          </button>
           Dashboard
           <span class="dash-pill dash-pill--acento">{{labelPeriodo}}</span>
         </h1>

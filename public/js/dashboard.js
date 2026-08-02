@@ -1,5 +1,28 @@
 // dashboard.js — lógica del cliente para el Dashboard i24h
 
+// ── Menú del sidebar (móvil) ──────────────────────────────────
+(function () {
+  const btn   = document.getElementById('dash-hamburger');
+  const sb    = document.getElementById('dash-sidebar');
+  const fondo = document.getElementById('dash-sidebar-fondo');
+  if (!btn || !sb || !fondo) return;
+
+  function cerrar() {
+    sb.classList.remove('abierta');
+    fondo.classList.remove('visible');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const abierto = sb.classList.toggle('abierta');
+    fondo.classList.toggle('visible', abierto);
+    btn.setAttribute('aria-expanded', String(abierto));
+  });
+
+  fondo.addEventListener('click', cerrar);
+})();
+
 // ── Dark mode ──────────────────────────────────────────────────
 (function () {
   const btn = document.getElementById('dash-dark-btn');

@@ -5,7 +5,7 @@
   <!-- ============================================================
        SIDEBAR
        ============================================================ -->
-  <aside class="panel-sidebar">
+  <aside class="panel-sidebar" id="panel-sidebar">
 
     <!-- Logo -->
     <div class="panel-sidebar-logo">
@@ -16,6 +16,7 @@
     <!-- Menú de navegación -->
     <nav class="panel-nav-menu">
 
+      {{#unless esColaborador}}
       <!-- PRINCIPAL -->
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Principal</span>
@@ -32,16 +33,20 @@
           <i class="ti ti-cash-register"></i><span>Ventas</span>
         </button>
       </div>
+      {{/unless}}
 
       <!-- OPERACIONES -->
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Operaciones</span>
+        {{#unless esColaborador}}
         <a href="/revisiones" class="panel-nav-item" style="text-decoration:none">
           <i class="ti ti-clipboard-check"></i><span>Revisiones</span>
         </a>
-        <button class="panel-nav-item" data-seccion="bitacoras" data-titulo="Bitácoras">
+        {{/unless}}
+        <button class="panel-nav-item{{#if esColaborador}} active{{/if}}" data-seccion="bitacoras" data-titulo="Bitácoras">
           <i class="ti ti-notebook"></i><span>Bitácoras</span>
         </button>
+        {{#unless esColaborador}}
         <button class="panel-nav-item" data-seccion="inventario" data-titulo="Inventario / Stock">
           <i class="ti ti-package"></i><span>Inventario / Stock</span>
         </button>
@@ -49,8 +54,10 @@
           <i class="ti ti-clipboard-list"></i><span>Reportes depto.</span>
           <span class="panel-badge">0</span>
         </button>
+        {{/unless}}
       </div>
 
+      {{#unless esColaborador}}
       <!-- EQUIPO -->
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Equipo</span>
@@ -61,16 +68,23 @@
           <i class="ti ti-calendar-time"></i><span>Horarios</span>
         </a>
       </div>
+      {{/unless}}
 
       <!-- SISTEMA (solo admins) -->
       {{#if esAdmin}}
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Sistema</span>
-        <button class="panel-nav-action" onclick="window.abrirModalCorreccion()">
-          <i class="ti ti-pencil-dollar"></i><span>Corregir ventas</span>
+        <button class="panel-nav-action" onclick="window.abrirModalMaterial()">
+          <i class="ti ti-pencil-dollar"></i><span>Venta sin material y sin tickets</span>
         </button>
         <button class="panel-nav-item" data-seccion="usuarios" data-titulo="Usuarios">
           <i class="ti ti-user-cog"></i><span>Usuarios</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="promociones" data-titulo="Promociones">
+          <i class="ti ti-speakerphone"></i><span>Promociones</span>
+        </button>
+        <button class="panel-nav-item" data-seccion="fotos-sucursal" data-titulo="Fotos de sucursal">
+          <i class="ti ti-photo"></i><span>Fotos de sucursal</span>
         </button>
         <button class="panel-nav-item" data-seccion="configuracion" data-titulo="Configuración">
           <i class="ti ti-settings"></i><span>Configuración</span>
@@ -99,7 +113,14 @@
       <i class="ti ti-pencil" style="font-size:13px;color:var(--texto-suave);flex-shrink:0;margin-left:auto"></i>
     </div>
 
+    <button class="panel-nav-action" id="panel-btn-logout" style="margin:2px 8px 8px">
+      <i class="ti ti-logout"></i> Cerrar sesión
+    </button>
+
   </aside>
+
+  <!-- Fondo oscuro detrás del sidebar cuando está abierto en móvil -->
+  <div class="panel-sidebar-fondo" id="panel-sidebar-fondo"></div>
 
 
   <!-- ============================================================
@@ -109,7 +130,12 @@
 
     <!-- Topbar -->
     <div class="panel-topbar">
-      <h1 class="panel-topbar-titulo" id="panel-titulo">Dashboard</h1>
+      <!-- Botón hamburguesa (solo visible en móvil) -->
+      <button class="nav-hamburger panel-hamburger" id="panel-hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="panel-sidebar">
+        <i class="ti ti-menu-2" id="panel-hamburger-ico" aria-hidden="true"></i>
+      </button>
+
+      <h1 class="panel-topbar-titulo" id="panel-titulo">{{#if esColaborador}}Bitácoras{{else}}Dashboard{{/if}}</h1>
 
       <div class="panel-topbar-centro">
         <span class="panel-suc-pill">
@@ -136,7 +162,7 @@
       <!-- ======================================================
            DASHBOARD (por defecto)
            ====================================================== -->
-      <div class="panel-seccion" id="sec-dashboard">
+      <div class="panel-seccion{{#if esColaborador}} oculta{{/if}}" id="sec-dashboard">
 
         <!-- ── Fila 1: 4 KPIs ──────────────────────────────── -->
         <div class="panel-metrics">
@@ -549,8 +575,8 @@
           <button
             class="vnt-export-btn"
             style="background:rgba(192,57,43,.15);border-color:rgba(192,57,43,.4);color:#f87171"
-            onclick="window.abrirModalCorreccion()">
-            <i class="ti ti-pencil-dollar"></i> Corregir ventas
+            onclick="window.abrirModalMaterial()">
+            <i class="ti ti-pencil-dollar"></i> Venta sin material y sin tickets
           </button>
           {{/if}}
         </div>
@@ -676,20 +702,20 @@
 
       </div>
 
-      <div class="panel-seccion oculta" id="sec-bitacoras">
+      <div class="panel-seccion{{#unless esColaborador}} oculta{{/unless}}" id="sec-bitacoras">
+
+        {{#if esColaborador}}{{#unless sucursalesBitacora.length}}
+        <p class="bit-sync-note" style="margin-bottom:16px">
+          <i class="ti ti-alert-triangle"></i> No tienes ninguna sucursal asignada todavía — pide a un administrador que te agregue una desde Usuarios.
+        </p>
+        {{/unless}}{{/if}}
 
         <div class="bit-header-bar">
           <div class="bit-meta">
             <select class="bit-select" id="bit-sucursal">
-              <option>Simón Bolívar</option>
-              <option>Insurgentes</option>
-              <option>Antígona</option>
-              <option>Lincoln Oxxo</option>
-              <option>Lincoln 2</option>
-              <option>Ruiz Cortines</option>
-              <option>Rodas</option>
-              <option>Cuauhtémoc</option>
-              <option>Ordóñez</option>
+              {{#each sucursalesBitacora}}
+              <option>{{this}}</option>
+              {{/each}}
             </select>
             <select class="bit-select" id="bit-turno">
               <option>Turno 1 — 07:00 a 15:00</option>
@@ -1277,6 +1303,49 @@
 
       </div>
 
+      <div class="panel-seccion oculta" id="sec-promociones">
+        <div class="promo-top-bar">
+          <h1 class="promo-titulo">Promociones</h1>
+          <button class="promo-btn-nueva" id="promo-btn-nueva">
+            <i class="ti ti-plus"></i> Nueva promoción
+          </button>
+        </div>
+        <p class="promo-sub">Las promociones activas y vigentes aparecen en el panel del cliente. Las vencidas o inactivas se quedan aquí, no se borran solas.</p>
+        <div class="promo-grid" id="promo-grid">
+          <div class="usr-empty">Cargando promociones…</div>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-fotos-sucursal">
+        <div class="promo-top-bar">
+          <h1 class="promo-titulo">Fotos de sucursal</h1>
+        </div>
+        <p class="promo-sub">Solo imágenes (jpg, png o webp), máx. 5MB. Se muestran en el panel del cliente agrupadas por sucursal.</p>
+
+        <div class="foto-subir-bar">
+          <select class="usr-field-inp" id="foto-sel-suc" style="max-width:220px">
+            <option value="Simón Bolívar">Simón Bolívar</option>
+            <option value="Insurgentes">Insurgentes</option>
+            <option value="Antígona">Antígona</option>
+            <option value="Lincoln Oxxo">Lincoln Oxxo</option>
+            <option value="Lincoln 2">Lincoln 2</option>
+            <option value="Ruiz Cortines">Ruiz Cortines</option>
+            <option value="Rodas">Rodas</option>
+            <option value="Cuauhtémoc">Cuauhtémoc</option>
+            <option value="Ordóñez">Ordóñez</option>
+          </select>
+          <input type="file" id="foto-input-archivo" accept="image/png,image/jpeg,image/webp" style="display:none">
+          <button class="promo-btn-nueva" id="foto-btn-subir" type="button">
+            <i class="ti ti-upload"></i> Subir foto
+          </button>
+          <span id="foto-subiendo-msg" style="display:none;color:var(--texto-suave);font-size:.82rem">Subiendo…</span>
+        </div>
+
+        <div class="promo-grid" id="foto-grid" style="margin-top:20px">
+          <div class="usr-empty">Cargando fotos…</div>
+        </div>
+      </div>
+
       <div class="panel-seccion oculta" id="sec-configuracion">
         <div class="panel-en-construccion">
           <i class="ti ti-settings"></i>
@@ -1858,13 +1927,30 @@ function actualizarResumen() {
 
 // ── iniciar / cerrar bitácora ─────────────────────────────────────────────
 
+// Turno según la hora actual (hora México): T1 07:00–15:00, T2 15:00–23:00, T3 23:00–07:00
+function bitTurnoActual() {
+  var horaMx = new Date(Date.now() - 6 * 60 * 60 * 1000).getUTCHours();
+  if (horaMx >= 7  && horaMx < 15) return 0; // T1
+  if (horaMx >= 15 && horaMx < 23) return 1; // T2
+  return 2; // T3 (23:00–06:59)
+}
+
+function bitAutoSeleccionarTurno() {
+  var sel = document.getElementById('bit-turno');
+  if (sel) sel.selectedIndex = bitTurnoActual();
+}
+
+// Al abrir el panel, deja el turno correcto ya marcado
+bitAutoSeleccionarTurno();
+
 document.getElementById('btn-iniciar-conteo')?.addEventListener('click', function() {
   var btn      = this;
   var sucursal = document.getElementById('bit-sucursal')?.value || 'Simón Bolívar';
 
-  // Auto-rellenar fecha con hoy en hora México (UTC-6)
+  // Auto-rellenar fecha y turno con el momento actual en hora México (UTC-6)
   var hoyMx = new Date(Date.now() - 6 * 60 * 60 * 1000);
   document.getElementById('bit-fecha').value = hoyMx.toISOString().split('T')[0];
+  bitAutoSeleccionarTurno();
 
   btn.innerHTML = '<i class="ti ti-loader-2"></i> Cargando corte…';
   btn.disabled  = true;
@@ -2504,6 +2590,7 @@ renderBitacora();
   async function usrEMGuardar() {
     if(usrEMaccion) await usrEMaccion();
   }
+  window.usrAbrirEM   = usrAbrirEM;
   window.usrCerrarEM  = usrCerrarEM;
   window.usrEMGuardar = usrEMGuardar;
   document.getElementById('usr-em-save-btn').addEventListener('click', usrEMGuardar);
@@ -2872,6 +2959,239 @@ renderBitacora();
   });
 
   usrCargarTodo();
+})();
+
+
+// ============================================================
+//  PROMOCIONES — CRUD desde el panel (solo admin/coordinador)
+// ============================================================
+(function () {
+  var promoLista = [];
+
+  function promoFmtFecha(f) {
+    return new Date(f).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function promoEstado(p) {
+    var ahora = new Date();
+    var ini   = new Date(p.fechaInicio);
+    var fin   = new Date(p.fechaFin);
+    if (!p.activa) return { txt: 'Inactiva', cls: 'promo-badge-inactiva' };
+    if (ahora < ini) return { txt: 'Próxima', cls: 'promo-badge-proxima' };
+    if (ahora > fin) return { txt: 'Vencida', cls: 'promo-badge-vencida' };
+    return { txt: 'Vigente', cls: 'promo-badge-vigente' };
+  }
+
+  function promoRender() {
+    var cont = document.getElementById('promo-grid');
+    if (!cont) return;
+    if (!promoLista.length) {
+      cont.innerHTML = '<div class="usr-empty">Aún no hay promociones. Crea la primera con el botón de arriba.</div>';
+      return;
+    }
+    cont.innerHTML = promoLista.map(function (p) {
+      var estado = promoEstado(p);
+      return '<div class="promo-card">' +
+        (p.imagenUrl ? '<img class="promo-card-img" src="' + p.imagenUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
+        '<div class="promo-card-body">' +
+          '<div class="promo-card-hdr">' +
+            '<p class="promo-card-titulo">' + p.titulo + '</p>' +
+            '<span class="promo-badge ' + estado.cls + '">' + estado.txt + '</span>' +
+          '</div>' +
+          '<p class="promo-card-desc">' + p.descripcion + '</p>' +
+          (p.beneficio ? '<span class="promo-card-beneficio"><i class="ti ti-gift"></i> ' + p.beneficio + '</span>' : '') +
+          '<p class="promo-card-vigencia"><i class="ti ti-calendar"></i> ' + promoFmtFecha(p.fechaInicio) + ' — ' + promoFmtFecha(p.fechaFin) + '</p>' +
+          '<div class="promo-card-acciones">' +
+            '<button class="btn-o btn-sm" onclick="promoEditar(\'' + p._id + '\')"><i class="ti ti-edit"></i> Editar</button>' +
+            '<button class="btn-o btn-sm" onclick="promoEliminar(\'' + p._id + '\')"><i class="ti ti-trash"></i> Eliminar</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function promoCargar() {
+    try {
+      var res  = await fetch('/api/promociones');
+      promoLista = await res.json();
+      promoRender();
+    } catch (e) {
+      var cont = document.getElementById('promo-grid');
+      if (cont) cont.innerHTML = '<div class="usr-empty">Error al cargar promociones.</div>';
+    }
+  }
+
+  function promoFormHtml(p) {
+    p = p || {};
+    var toInputDate = function (f) { return f ? new Date(f).toISOString().slice(0, 10) : ''; };
+    return '<label class="usr-field-lbl">Título</label>' +
+      '<input class="usr-field-inp" type="text" id="promo-em-titulo" value="' + (p.titulo || '').replace(/"/g, '&quot;') + '" placeholder="Ej: 2x1 en impresiones">' +
+      '<label class="usr-field-lbl">Descripción</label>' +
+      '<textarea class="usr-field-inp" id="promo-em-desc" rows="3" placeholder="Detalles de la promoción">' + (p.descripcion || '') + '</textarea>' +
+      '<label class="usr-field-lbl">Imagen (URL, opcional)</label>' +
+      '<input class="usr-field-inp" type="text" id="promo-em-img" value="' + (p.imagenUrl || '').replace(/"/g, '&quot;') + '" placeholder="https://...">' +
+      '<label class="usr-field-lbl">Beneficio (opcional)</label>' +
+      '<input class="usr-field-inp" type="text" id="promo-em-beneficio" value="' + (p.beneficio || '').replace(/"/g, '&quot;') + '" placeholder="Ej: 20% de descuento">' +
+      '<label class="usr-field-lbl">Vigencia</label>' +
+      '<div class="usr-pts-row" style="gap:8px">' +
+        '<input class="usr-field-inp" type="date" id="promo-em-inicio" value="' + toInputDate(p.fechaInicio) + '">' +
+        '<input class="usr-field-inp" type="date" id="promo-em-fin" value="' + toInputDate(p.fechaFin) + '">' +
+      '</div>' +
+      '<label class="usr-field-lbl" style="display:flex;align-items:center;gap:8px;margin-top:10px">' +
+        '<input type="checkbox" id="promo-em-activa"' + (p.activa === false ? '' : ' checked') + '> Activa' +
+      '</label>';
+  }
+
+  function promoLeerForm() {
+    return {
+      titulo:      document.getElementById('promo-em-titulo').value.trim(),
+      descripcion: document.getElementById('promo-em-desc').value.trim(),
+      imagenUrl:   document.getElementById('promo-em-img').value.trim(),
+      beneficio:   document.getElementById('promo-em-beneficio').value.trim(),
+      fechaInicio: document.getElementById('promo-em-inicio').value,
+      fechaFin:    document.getElementById('promo-em-fin').value,
+      activa:      document.getElementById('promo-em-activa').checked,
+    };
+  }
+
+  function promoAbrirNueva() {
+    window.usrAbrirEM({
+      icono: 'ti-speakerphone',
+      titulo: 'Nueva promoción',
+      sub: 'Se muestra en el panel del cliente mientras esté vigente',
+      html: promoFormHtml(),
+      guardarLabel: 'Crear promoción',
+      accion: async function () {
+        var datos = promoLeerForm();
+        if (!datos.titulo || !datos.descripcion || !datos.fechaInicio || !datos.fechaFin) {
+          alert('Completa título, descripción y vigencia.'); return;
+        }
+        var res  = await fetch('/api/promociones', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos),
+        });
+        if (!res.ok) { var e = await res.json(); alert(e.error || 'Error al crear la promoción.'); return; }
+        window.usrCerrarEM();
+        await promoCargar();
+      },
+    });
+  }
+
+  window.promoEditar = function (id) {
+    var p = promoLista.find(function (x) { return x._id === id; });
+    if (!p) return;
+    window.usrAbrirEM({
+      icono: 'ti-speakerphone',
+      titulo: 'Editar promoción',
+      sub: p.titulo,
+      html: promoFormHtml(p),
+      guardarLabel: 'Guardar cambios',
+      accion: async function () {
+        var datos = promoLeerForm();
+        if (!datos.titulo || !datos.descripcion || !datos.fechaInicio || !datos.fechaFin) {
+          alert('Completa título, descripción y vigencia.'); return;
+        }
+        var res  = await fetch('/api/promociones/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos),
+        });
+        if (!res.ok) { var e = await res.json(); alert(e.error || 'Error al guardar los cambios.'); return; }
+        window.usrCerrarEM();
+        await promoCargar();
+      },
+    });
+  };
+
+  window.promoEliminar = async function (id) {
+    if (!confirm('¿Eliminar esta promoción? No se puede deshacer.')) return;
+    var res = await fetch('/api/promociones/' + id, { method: 'DELETE' });
+    if (!res.ok) { var e = await res.json(); alert(e.error || 'Error al eliminar.'); return; }
+    await promoCargar();
+  };
+
+  var btnNueva = document.getElementById('promo-btn-nueva');
+  if (btnNueva) btnNueva.addEventListener('click', promoAbrirNueva);
+
+  document.querySelector('[data-seccion="promociones"]')?.addEventListener('click', promoCargar);
+})();
+
+
+// ============================================================
+//  FOTOS DE SUCURSAL — subida real de archivos (solo admin/coordinador)
+// ============================================================
+(function () {
+  var fotoLista = [];
+
+  function fotoRender() {
+    var cont = document.getElementById('foto-grid');
+    if (!cont) return;
+    if (!fotoLista.length) {
+      cont.innerHTML = '<div class="usr-empty">Esta sucursal todavía no tiene fotos.</div>';
+      return;
+    }
+    cont.innerHTML = fotoLista.map(function (f) {
+      return '<div class="promo-card">' +
+        '<img class="promo-card-img" src="/imagenes/sucursales/' + f.archivo + '" alt="" loading="lazy">' +
+        '<div class="promo-card-body">' +
+          '<button class="btn-o btn-sm" onclick="fotoEliminar(\'' + f._id + '\')" style="width:100%"><i class="ti ti-trash"></i> Eliminar</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function fotoCargar() {
+    var sel = document.getElementById('foto-sel-suc');
+    var cont = document.getElementById('foto-grid');
+    try {
+      var res  = await fetch('/api/fotos-sucursal?sucursal=' + encodeURIComponent(sel.value));
+      fotoLista = await res.json();
+      fotoRender();
+    } catch (e) {
+      if (cont) cont.innerHTML = '<div class="usr-empty">Error al cargar las fotos.</div>';
+    }
+  }
+
+  window.fotoEliminar = async function (id) {
+    if (!confirm('¿Eliminar esta foto? No se puede deshacer.')) return;
+    var res = await fetch('/api/fotos-sucursal/' + id, { method: 'DELETE' });
+    if (!res.ok) { var e = await res.json(); alert(e.error || 'Error al eliminar.'); return; }
+    await fotoCargar();
+  };
+
+  var selSuc   = document.getElementById('foto-sel-suc');
+  var btnSubir = document.getElementById('foto-btn-subir');
+  var inpArch  = document.getElementById('foto-input-archivo');
+  var msgSub   = document.getElementById('foto-subiendo-msg');
+
+  if (selSuc) selSuc.addEventListener('change', fotoCargar);
+  if (btnSubir) btnSubir.addEventListener('click', function () { inpArch.click(); });
+
+  if (inpArch) inpArch.addEventListener('change', async function () {
+    var archivo = inpArch.files[0];
+    if (!archivo) return;
+
+    var datos = new FormData();
+    datos.append('sucursal', selSuc.value);
+    datos.append('foto', archivo);
+
+    btnSubir.disabled = true;
+    if (msgSub) msgSub.style.display = 'inline';
+    try {
+      var res = await fetch('/api/fotos-sucursal', { method: 'POST', body: datos });
+      if (!res.ok) { var e = await res.json(); alert(e.error || 'Error al subir la foto.'); }
+      else { await fotoCargar(); }
+    } catch (e) {
+      alert('Error de conexión al subir la foto.');
+    } finally {
+      btnSubir.disabled = false;
+      if (msgSub) msgSub.style.display = 'none';
+      inpArch.value = '';
+    }
+  });
+
+  document.querySelector('[data-seccion="fotos-sucursal"]')?.addEventListener('click', fotoCargar);
 })();
 
 
@@ -3597,136 +3917,6 @@ renderBitacora();
   document.querySelector('[data-seccion="dashboard"]')?.addEventListener('click', dashCargar);
 })();
 
-// =============================================================
-//  CLIENTES — lista real desde /api/clientes
-// =============================================================
-(function () {
-  var todosClientes = [];
-
-  function cliRenderTabla(lista) {
-    var tbody = document.getElementById('cli-tbody');
-    if (!tbody) return;
-    if (!lista.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--texto-suave);padding:32px">Sin clientes registrados</td></tr>';
-      return;
-    }
-    tbody.innerHTML = lista.map(function (c) {
-      var estado = c.activo
-        ? '<span class="panel-badge-ok">Activo</span>'
-        : '<span style="background:#3f1d1d;color:#f87171;font-size:.7rem;padding:2px 8px;border-radius:20px">Inactivo</span>';
-      var nombre = c.nombre || '—';
-      var canjes = (c.canjes || []).length;
-      return '<tr>' +
-        '<td><strong>' + nombre + '</strong></td>' +
-        '<td style="color:var(--texto-suave);font-size:.82rem">' + c.correo + '</td>' +
-        '<td style="font-weight:600;color:var(--acento)">' + (c.puntos || 0) + ' pts</td>' +
-        '<td style="color:var(--texto-suave)">' + canjes + '</td>' +
-        '<td>' + estado + '</td>' +
-        '<td><button class="usr-btn-accion" onclick="usrAjustarPuntos(\'' + c._id + '\',\'' + c.correo + '\',' + (c.puntos || 0) + ')" title="Ajustar puntos" style="padding:4px 8px;font-size:11px"><i class="ti ti-coin"></i> Puntos</button></td>' +
-      '</tr>';
-    }).join('');
-  }
-
-  function cliActualizarStats(lista) {
-    var total  = lista.length;
-    var activos = lista.filter(function (c) { return c.activo; }).length;
-    var sumPts = lista.reduce(function (s, c) { return s + (c.puntos || 0); }, 0);
-    var prom   = total ? Math.round(sumPts / total) : 0;
-
-    var el;
-    el = document.getElementById('cli-cnt-total'); if (el) el.textContent = total;
-    el = document.getElementById('cli-cnt-pts');   if (el) el.textContent = prom;
-    el = document.getElementById('cli-cnt-act');   if (el) el.textContent = activos;
-    el = document.getElementById('cli-sub-act');   if (el) el.textContent = Math.round(activos / (total || 1) * 100) + '% del total';
-  }
-
-  async function cliCargar() {
-    try {
-      var resp = await fetch('/api/clientes');
-      if (!resp.ok) throw new Error();
-      todosClientes = await resp.json();
-      cliActualizarStats(todosClientes);
-      cliRenderTabla(todosClientes);
-    } catch (e) {
-      var tbody = document.getElementById('cli-tbody');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#f87171;padding:32px">Error al cargar clientes</td></tr>';
-    }
-  }
-
-  window.cliBuscar = function (q) {
-    q = q.toLowerCase();
-    var filtrados = todosClientes.filter(function (c) {
-      return (c.nombre || '').toLowerCase().includes(q) || c.correo.toLowerCase().includes(q);
-    });
-    cliRenderTabla(filtrados);
-  };
-
-  // Carga cuando se activa la sección
-  document.querySelector('[data-seccion="clientes"]')?.addEventListener('click', cliCargar);
-})();
-
-// =============================================================
-//  AUDITORÍA — tabla del día desde /api/auditorias/hoy
-// =============================================================
-(function () {
-  function audRenderTabla(lista) {
-    var tbody = document.getElementById('aud-tbody');
-    if (!tbody) return;
-    if (!lista.length) {
-      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--texto-suave);padding:32px">Sin registros de auditoría hoy</td></tr>';
-      return;
-    }
-    tbody.innerHTML = lista.map(function (e) {
-      var a   = e.auditoria_hoy;
-      var cel = function (v) {
-        if (v === undefined || v === null) return '<td style="color:var(--texto-suave)">—</td>';
-        var color = v >= 8 ? '#16a34a' : v >= 5 ? '#d97706' : '#dc2626';
-        return '<td style="font-weight:600;color:' + color + '">' + v + '</td>';
-      };
-      var prom = a ? a.promedio : null;
-      var badgeAud = e.auditado_hoy
-        ? '<span class="panel-badge-ok" style="font-size:.7rem">Auditado</span>'
-        : '<span style="background:var(--fondo-alt);color:var(--texto-suave);font-size:.7rem;padding:2px 8px;border-radius:20px">Pendiente</span>';
-
-      return '<tr>' +
-        '<td><strong>' + e.nombre + '</strong></td>' +
-        '<td style="color:var(--texto-suave);font-size:.82rem">' + (e.sucursal || '—') + '</td>' +
-        cel(a && a.ventas) +
-        cel(a && a.actitud) +
-        cel(a && a.cumplimiento) +
-        cel(a && a.asistencia) +
-        cel(a && a.limpieza) +
-        cel(a && a.atencion_cliente) +
-        cel(a && a.eficiencia) +
-        (prom !== null ? '<td style="font-weight:700;color:var(--acento)">' + prom + '</td>' : '<td style="color:var(--texto-suave)">—</td>') +
-        '<td>' + badgeAud + '</td>' +
-      '</tr>';
-    }).join('');
-  }
-
-  window.audCargar = async function () {
-    var sub = document.getElementById('aud-sub');
-    if (sub) sub.textContent = 'Cargando…';
-    try {
-      var suc  = document.getElementById('aud-sel-suc')?.value || '';
-      var url  = '/api/auditorias/hoy' + (suc ? '?sucursal=' + encodeURIComponent(suc) : '');
-      var resp = await fetch(url);
-      if (!resp.ok) throw new Error();
-      var lista = await resp.json();
-      var aud   = lista.filter(function (e) { return e.auditado_hoy; }).length;
-      if (sub) sub.textContent = aud + ' de ' + lista.length + ' empleados auditados hoy';
-      audRenderTabla(lista);
-    } catch (e) {
-      var tbody = document.getElementById('aud-tbody');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#f87171;padding:32px">Error al cargar auditorías</td></tr>';
-      if (sub) sub.textContent = 'Error al cargar';
-    }
-  };
-
-  // Carga cuando se activa la sección
-  document.querySelector('[data-seccion="auditoria"]')?.addEventListener('click', window.audCargar);
-})();
-
 // ── Inventario: descarga de Excel con stock actual ──────────────────────────
 function descargarInventario(categoria) {
   const sucursal = document.getElementById('inv-sucursal')?.value;
@@ -3750,122 +3940,139 @@ function descargarInventario(categoria) {
 </script>
 
 {{!-- ============================================================
-     MODAL DE CORRECCIÓN DE VENTAS — solo visible para admins
+     MODAL VENTA SIN MATERIAL Y SIN TICKETS — solo visible para admins
      ============================================================ --}}
 {{#if esAdmin}}
-<div id="mcor-overlay" class="mcor-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="mcor-titulo">
-  <div class="mcor-container">
+<div id="vsm-overlay" class="vsm-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="vsm-titulo">
+  <div class="vsm-container">
 
     <!-- ── Header ──────────────────────────────────────────── -->
-    <div class="mcor-header">
-      <div class="mcor-header-left">
-        <span class="mcor-badge">ADMIN</span>
-        <h2 id="mcor-titulo" class="mcor-titulo">
-          <i class="ti ti-pencil-dollar"></i> Corrección de Ventas
+    <div class="vsm-header">
+      <div class="vsm-header-left">
+        <span class="vsm-badge">ADMIN</span>
+        <h2 id="vsm-titulo" class="vsm-titulo">
+          <i class="ti ti-pencil-dollar"></i> Venta sin material y sin tickets
         </h2>
       </div>
-      <button class="mcor-close" id="mcor-close" aria-label="Cerrar">&times;</button>
+      <button class="vsm-close" id="vsm-close" aria-label="Cerrar">&times;</button>
     </div>
 
-    <!-- ── Filtros ──────────────────────────────────────────── -->
-    <div class="mcor-filtros">
-      <div class="mcor-filtro-grupo">
-        <label for="mcor-fecha">Fecha del día</label>
-        <input type="date" id="mcor-fecha" class="mcor-input">
-      </div>
-      <div class="mcor-filtro-grupo">
-        <label for="mcor-sucursal">Sucursal</label>
-        <select id="mcor-sucursal" class="mcor-input">
-          <option value="">— Selecciona —</option>
-          <option value="Simón Bolívar">Simón Bolívar</option>
-          <option value="Insurgentes">Insurgentes</option>
-          <option value="Antígona">Antígona</option>
-          <option value="Lincoln Oxxo">Lincoln Oxxo</option>
-          <option value="Lincoln 2">Lincoln 2</option>
-          <option value="Ruiz Cortines">Ruiz Cortines</option>
-          <option value="Rodas">Rodas</option>
-          <option value="Cuauhtémoc">Cuauhtémoc</option>
-          <option value="Ordóñez">Ordóñez</option>
-        </select>
-      </div>
-      <button class="mcor-btn-cargar" id="mcor-btn-cargar">
-        <i class="ti ti-search"></i> Cargar
+    <!-- ── Tabs ──────────────────────────────────────────────── -->
+    <div class="vsm-tabs">
+      <button class="vsm-tab vsm-tab--active" id="vsm-tab-material" onclick="window.vsmSwitchTab('material')">
+        <i class="ti ti-package"></i> Material
+      </button>
+      <button class="vsm-tab" id="vsm-tab-tickets" onclick="window.vsmSwitchTab('tickets')">
+        <i class="ti ti-ticket"></i> Tickets con error de impresión
       </button>
     </div>
 
-    <!-- ── Barra de acciones del registro (visible al cargar) ── -->
-    <div id="mcor-actions-bar" class="mcor-actions-bar hidden">
-      <div class="mcor-actions-left">
-        <span id="mcor-reg-badge" class="mcor-reg-badge"></span>
-        <span id="mcor-reg-info" class="mcor-reg-info"></span>
+    <!-- ── TAB: Material (automático, por palabra clave) ────── -->
+    <div id="vsm-panel-material" class="vsm-panel">
+      <div class="vsm-filtros">
+        <div class="vsm-filtro-grupo">
+          <label for="vsm-mat-fecha">Fecha del día</label>
+          <input type="date" id="vsm-mat-fecha" class="vsm-input">
+        </div>
+        <div class="vsm-filtro-grupo">
+          <label for="vsm-mat-sucursal">Sucursal</label>
+          <select id="vsm-mat-sucursal" class="vsm-input">
+            <option value="">— Selecciona —</option>
+            <option value="Simón Bolívar">Simón Bolívar</option>
+            <option value="Insurgentes">Insurgentes</option>
+            <option value="Antígona">Antígona</option>
+            <option value="Lincoln Oxxo">Lincoln Oxxo</option>
+            <option value="Lincoln 2">Lincoln 2</option>
+            <option value="Ruiz Cortines">Ruiz Cortines</option>
+            <option value="Rodas">Rodas</option>
+            <option value="Cuauhtémoc">Cuauhtémoc</option>
+            <option value="Ordóñez">Ordóñez</option>
+          </select>
+        </div>
+        <button class="vsm-btn-cargar" id="vsm-mat-btn-cargar">
+          <i class="ti ti-search"></i> Cargar
+        </button>
       </div>
-      <button class="mcor-btn-agregar" id="mcor-btn-agregar" onclick="window.mcorMostrarFormAgregar()">
-        <i class="ti ti-plus"></i> Agregar ítem
-      </button>
+
+      <div id="vsm-mat-estado" class="vsm-estado hidden"></div>
+
+      <div class="vsm-tabla-wrap">
+        <table class="vsm-tabla" id="vsm-mat-tabla">
+          <thead>
+            <tr>
+              <th>Caja</th>
+              <th>Turno</th>
+              <th class="col-num">Unidades</th>
+              <th class="col-num">Importe</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="vsm-mat-tbody">
+            <tr><td colspan="5" class="vsm-fila-vacia">Selecciona una fecha y sucursal para cargar.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="vsm-footer">
+        <span class="vsm-footer-nota">
+          <i class="ti ti-info-circle"></i> Se excluyen: legajos, cartulinas, memorias USB, snacks y novedades — no cuentan como venta real del departamento.
+        </span>
+        <div id="vsm-mat-total" class="vsm-footer-total">Total material: <strong>—</strong></div>
+      </div>
     </div>
 
-    <!-- ── Estado / alertas ─────────────────────────────────── -->
-    <div id="mcor-estado" class="mcor-estado hidden"></div>
+    <!-- ── TAB: Tickets con error de impresión (manual) ─────── -->
+    <div id="vsm-panel-tickets" class="vsm-panel hidden">
+      <div class="vsm-filtros">
+        <div class="vsm-filtro-grupo">
+          <label for="vsm-tk-sucursal">Sucursal</label>
+          <select id="vsm-tk-sucursal" class="vsm-input">
+            <option value="">— Selecciona —</option>
+            <option value="Simón Bolívar">Simón Bolívar</option>
+            <option value="Insurgentes">Insurgentes</option>
+            <option value="Antígona">Antígona</option>
+            <option value="Lincoln Oxxo">Lincoln Oxxo</option>
+            <option value="Lincoln 2">Lincoln 2</option>
+            <option value="Ruiz Cortines">Ruiz Cortines</option>
+            <option value="Rodas">Rodas</option>
+            <option value="Cuauhtémoc">Cuauhtémoc</option>
+            <option value="Ordóñez">Ordóñez</option>
+          </select>
+        </div>
+        <div class="vsm-filtro-grupo">
+          <label for="vsm-tk-nticket">Número de ticket</label>
+          <input type="number" id="vsm-tk-nticket" class="vsm-input" min="1" placeholder="Ej: 10234">
+        </div>
+        <button class="vsm-btn-cargar" id="vsm-tk-btn-buscar">
+          <i class="ti ti-search"></i> Buscar
+        </button>
+      </div>
 
-    <!-- ── Tabla de ítems ───────────────────────────────────── -->
-    <div class="mcor-tabla-wrap">
-      <table class="mcor-tabla" id="mcor-tabla">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Categoría</th>
-            <th class="col-num">Unidades</th>
-            <th class="col-num">Precio unit.</th>
-            <th class="col-num">Subtotal</th>
-            <th style="width:80px;text-align:center">Guardar</th>
-            <th style="width:36px"></th>
-          </tr>
-        </thead>
-        <tbody id="mcor-tbody">
-          <tr><td colspan="7" class="mcor-fila-vacia">
-            Selecciona una fecha y sucursal para cargar las ventas.
-          </td></tr>
-        </tbody>
-        <!-- Fila formulario de nuevo ítem (oculta por defecto) -->
-        <tfoot id="mcor-add-form" class="hidden">
-          <tr class="mcor-add-row">
-            <td><input type="text"   id="mcor-add-nombre" class="mcor-inp mcor-inp-nombre" placeholder="Nombre del producto"></td>
-            <td>
-              <select id="mcor-add-cat" class="mcor-inp">
-                <option value="Novedades">Novedades</option>
-                <option value="Papelería">Papelería</option>
-                <option value="Snack">Snack</option>
-                <option value="Otro">Otro</option>
-              </select>
-            </td>
-            <td class="col-num"><input type="number" id="mcor-add-uds"    class="mcor-inp" min="0" step="1"    value="1"></td>
-            <td class="col-num"><input type="number" id="mcor-add-precio" class="mcor-inp" min="0" step="0.01" value="0"></td>
-            <td class="col-num" id="mcor-add-sub" style="font-weight:600;color:var(--acento)">$0.00</td>
-            <td style="text-align:center">
-              <button class="mcor-btn-row mcor-btn-ok" onclick="window.mcorSubmitAgregar()">
-                <i class="ti ti-check"></i> Guardar
-              </button>
-            </td>
-            <td style="text-align:center">
-              <button class="mcor-btn-del" onclick="window.mcorOcultarFormAgregar()" title="Cancelar">
-                <i class="ti ti-x"></i>
-              </button>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+      <div id="vsm-tk-estado" class="vsm-estado hidden"></div>
 
-    <!-- ── Historial de correcciones ───────────────────────── -->
-    <div id="mcor-historial" class="mcor-historial hidden"></div>
+      <div id="vsm-tk-resultado" class="vsm-tk-resultado hidden">
+        <div class="vsm-tk-info">
+          <span>Ticket <strong id="vsm-tk-info-num">—</strong></span>
+          <span>Importe total: <strong id="vsm-tk-info-importe">—</strong></span>
+          <span>Fecha: <strong id="vsm-tk-info-fecha">—</strong></span>
+        </div>
 
-    <!-- ── Footer ──────────────────────────────────────────── -->
-    <div class="mcor-footer">
-      <span class="mcor-footer-nota">
-        <i class="ti ti-shield-check"></i> Cambios registrados en historial de auditoría.
-      </span>
-      <div id="mcor-foot-total" class="mcor-footer-total">Total del día: <strong>—</strong></div>
-      <button class="mcor-btn-cerrar" id="mcor-btn-cerrar2">Cerrar</button>
+        <div class="vsm-tk-form">
+          <div class="vsm-filtro-grupo">
+            <label for="vsm-tk-monto">Monto a descontar</label>
+            <input type="number" id="vsm-tk-monto" class="vsm-input" min="0.01" step="0.01">
+          </div>
+          <div class="vsm-filtro-grupo vsm-filtro-grupo--ancho">
+            <label for="vsm-tk-motivo">Motivo</label>
+            <input type="text" id="vsm-tk-motivo" class="vsm-input" placeholder="Ej: Error de impresión, tóner mal configurado" maxlength="300">
+          </div>
+          <button class="vsm-btn-agregar" id="vsm-tk-btn-aplicar" onclick="window.vsmAplicarAjuste()">
+            <i class="ti ti-check"></i> Aplicar descuento
+          </button>
+        </div>
+
+        <div id="vsm-tk-previos" class="vsm-tk-previos"></div>
+      </div>
     </div>
 
   </div>

@@ -12,6 +12,7 @@ import rateLimit from 'express-rate-limit';
 import path      from 'path';
 import { fileURLToPath } from 'url';
 import { engine } from 'express-handlebars';
+import mongoSanitize from 'express-mongo-sanitize';
 
 import conectarDB      from './src/config/db.js';
 import authRoutes      from './src/routes/auth.js';
@@ -22,15 +23,18 @@ import usuariosRoutes  from './src/routes/usuarios.js';
 import codigosRoutes   from './src/routes/codigos.js';
 import comentariosRoutes from './src/routes/comentarios.js';
 import ventasRoutes         from './src/routes/ventas.js';
-import ventasRegistrosRoutes from './src/routes/ventasRegistros.js';
+import materialRoutes       from './src/routes/material.js';
 import resumenRoutes         from './src/routes/resumen.js';
 import horariosRoutes   from './src/routes/horarios.js';
+import asistenciaRoutes from './src/routes/asistencia.js';
 import reportesRoutes   from './src/routes/reportes.js';
 import dashboardRoutes  from './src/routes/dashboard.js';
 import revisionesRoutes from './src/routes/revisiones.js';
 import bitacorasRoutes  from './src/routes/bitacoras.js';
 import ticketsRoutes    from './src/routes/tickets.js';
 import inventarioRoutes from './src/routes/inventario.js';
+import promocionesRoutes from './src/routes/promociones.js';
+import fotosRoutes       from './src/routes/fotos.js';
 import { iniciarCronCortes } from './src/utils/cronCortes.js';
 
 // En ES Modules, __dirname no existe — se obtiene así:
@@ -62,6 +66,8 @@ app.set('views', path.join(__dirname, 'src/views'));
 // =============================================================
 //  SEGURIDAD — helmet + rate limiting
 // =============================================================
+const esProduccion = process.env.NODE_ENV === 'production';
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -75,8 +81,15 @@ app.use(helmet({
       imgSrc:        ["'self'", 'data:', 'https://api.qrserver.com'],
       // cdn.jsdelivr.net necesario para que DevTools no bloquee los .map de íconos
       connectSrc:    ["'self'", 'https://cdn.jsdelivr.net'],
+      // Solo forzar HTTPS en producción. En LAN/local (http://192.168.x.x)
+      // esto rompe CSS/JS/imágenes: el navegador intenta bajarlos por https
+      // y falla en silencio porque este servidor no habla HTTPS ahí.
+      upgradeInsecureRequests: esProduccion ? [] : null,
     },
   },
+  // Mismo motivo: HSTS le dice al navegador "nunca más uses http con este
+  // host", lo cual rompería el acceso local/LAN por http permanentemente.
+  hsts: esProduccion,
 }));
 
 // 100 peticiones cada 15 min por IP en todas las rutas /api/
@@ -90,24 +103,42 @@ app.use('/api/', rateLimit({
 
 // =============================================================
 //  SESIONES
+//  SESSION_SECRET es obligatorio — un secreto por defecto conocido
+//  permitiría forjar cookies de sesión válidas.
 // =============================================================
+if (!process.env.SESSION_SECRET) {
+  console.error('✗ ERROR: falta SESSION_SECRET en .env');
+  console.error('  Genera uno con: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+  console.error('  y agrégalo a .env como SESSION_SECRET=...');
+  process.exit(1);
+}
+
 app.use(session({
   name:   'i24h.sid',
-  secret: process.env.SESSION_SECRET || 'i24h-secreto-local',
+  secret: process.env.SESSION_SECRET,
   resave:            false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
+    secure:   process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge:   1000 * 60 * 60 * 8,  // 8 horas
   },
 }));
 
 // =============================================================
 //  PARSERS Y ARCHIVOS ESTÁTICOS
-//  express.static sirve CSS/JS del cliente desde la raíz del proyecto
+//  Solo se sirve public/ — NUNCA __dirname completo, porque eso
+//  expondría código fuente, .env, datos/ y src/ por HTTP.
 // =============================================================
 app.use(express.json());
-app.use(express.static(__dirname, { index: false }));
+
+// Quita cualquier clave que empiece con '$' o contenga '.' de
+// req.body/req.query/req.params — bloquea inyección de operadores
+// Mongo (ej. ?sucursal[$ne]=1) en cualquier ruta, presente o futura.
+app.use(mongoSanitize());
+
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 // =============================================================
 //  RUTAS
@@ -120,15 +151,18 @@ app.use('/api', usuariosRoutes);     // estado, delete
 app.use('/api', codigosRoutes);      // codigos
 app.use('/api', comentariosRoutes);  // comentarios
 app.use('/api', ventasRoutes);              // ventas (mock JSON)
-app.use('/api', ventasRegistrosRoutes);    // registros diarios reales (MongoDB)
+app.use('/api', materialRoutes);           // venta sin material y sin tickets (error de impresión)
 app.use('/api', resumenRoutes);            // resumen
 app.use('/horarios',   horariosRoutes);  // horarios (módulo propio)
+app.use('/asistencia', asistenciaRoutes); // checador QR + horas trabajadas
 app.use('/api',        reportesRoutes);  // reportes de departamento
 app.use('/dashboard',  dashboardRoutes); // dashboard analítico
 app.use('/revisiones', revisionesRoutes); // módulo de revisiones/contadores
 app.use('/api',        bitacorasRoutes);  // bitácoras de turno
 app.use('/api',        ticketsRoutes);   // tickets del sync (CyberPlanet)
 app.use('/api',        inventarioRoutes); // inventario — descarga de Excel
+app.use('/api',        promocionesRoutes); // promociones del panel de cliente
+app.use('/api',        fotosRoutes);       // fotos de sucursal para el panel de cliente
 
 // =============================================================
 //  ARRANCAR

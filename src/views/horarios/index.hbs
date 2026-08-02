@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="/css/asistencia.css">
+
 <div class="hor-shell">
 
   <!-- ═══════════════════════════════════════════════════════════
@@ -60,9 +62,21 @@
   </header>
 
   <!-- ═══════════════════════════════════════════════════════════
+       Tabs — Vista semanal (existente) / Horas trabajadas (nueva)
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="hor-tabs">
+    <button class="hor-tab hor-tab--active" id="hor-tab-semanal" onclick="horSwitchTab('semanal')">
+      <i class="ti ti-calendar-time"></i> Vista semanal
+    </button>
+    <button class="hor-tab" id="hor-tab-has" onclick="horSwitchTab('has')">
+      <i class="ti ti-clock-hour-4"></i> Horas trabajadas
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
        SECCIÓN B — Vista semanal por sucursal (renderizada por JS)
        ═══════════════════════════════════════════════════════════ -->
-  <main class="hor-content">
+  <main class="hor-content" id="hor-main-semanal">
 
     <div id="hor-conflict-bar" class="conflict-bar">
       <i class="ti ti-alert-triangle"></i>
@@ -150,6 +164,10 @@
           <div class="team-col-header">
             <div class="team-col-title">Equipo</div>
             <div class="team-col-suc" id="hor-editor-suc-label">—</div>
+            <div class="team-col-buscar">
+              <i class="ti ti-search"></i>
+              <input type="text" id="hor-team-buscar" placeholder="Buscar por nombre…" autocomplete="off">
+            </div>
           </div>
           <div class="team-list" id="hor-team-list">
             <!-- Cargado por JS al abrir el editor -->
@@ -203,7 +221,7 @@
                 <span class="hor-legend-dot" style="background:var(--red)"></span>Triple (bloqueado)
               </span>
             </div>
-            <div style="display:flex;gap:8px">
+            <div class="editor-footer-actions" style="display:flex;gap:8px">
               <button class="hor-btn hor-btn-outline" onclick="horSaveGrid()">
                 <i class="ti ti-device-floppy"></i> Guardar borrador
               </button>
@@ -217,6 +235,30 @@
       </div>
     </div>
 
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECCIÓN — Horas trabajadas (nueva tab, oculta por defecto)
+       Datos vienen de /asistencia/api/horas-trabajadas, reusa la
+       misma semana/sucursal ya seleccionadas arriba.
+       ═══════════════════════════════════════════════════════════ -->
+  <main class="hor-content" id="has-view-wrap" style="display:none">
+    <div class="has-table-wrap">
+      <table class="has-table">
+        <thead>
+          <tr>
+            <th>Empleado</th>
+            <th>Sucursal</th>
+            <th>Horas trabajadas</th>
+            <th>Horas de comida</th>
+            <th>Horas esperadas</th>
+            <th>Diferencia</th>
+          </tr>
+        </thead>
+        <tbody id="has-table-body"></tbody>
+      </table>
+      <div id="has-empty" class="has-empty" style="display:none">Sin marcaciones esta semana</div>
+    </div>
   </main>
 
   <!-- ═══════════════════════════════════════════════════════════

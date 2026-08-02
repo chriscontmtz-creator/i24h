@@ -5,6 +5,57 @@
 
 
 // =============================================================
+//  CERRAR SESIÓN
+// =============================================================
+
+(function () {
+  var btn = document.getElementById('panel-btn-logout');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    if (!confirm('¿Cerrar sesión?')) return;
+    fetch('/api/logout', { method: 'POST' })
+      .then(function () { window.location.href = '/'; })
+      .catch(function () { window.location.href = '/'; });
+  });
+})();
+
+
+// =============================================================
+//  MENÚ DEL SIDEBAR (móvil) — drawer deslizable
+// =============================================================
+
+(function () {
+  var btn    = document.getElementById('panel-hamburger');
+  var ico    = document.getElementById('panel-hamburger-ico');
+  var sb     = document.getElementById('panel-sidebar');
+  var fondo  = document.getElementById('panel-sidebar-fondo');
+  if (!btn || !sb || !fondo) return;
+
+  function cerrar() {
+    sb.classList.remove('abierta');
+    fondo.classList.remove('visible');
+    btn.setAttribute('aria-expanded', 'false');
+    if (ico) ico.className = 'ti ti-menu-2';
+  }
+
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var abierto = sb.classList.toggle('abierta');
+    fondo.classList.toggle('visible', abierto);
+    btn.setAttribute('aria-expanded', String(abierto));
+    if (ico) ico.className = abierto ? 'ti ti-x' : 'ti ti-menu-2';
+  });
+
+  fondo.addEventListener('click', cerrar);
+
+  // Cierra el drawer al elegir una sección del menú
+  sb.addEventListener('click', function (e) {
+    if (e.target.closest('.panel-nav-item, .panel-nav-action, .panel-nav-inicio')) cerrar();
+  });
+})();
+
+
+// =============================================================
 //  MODO OSCURO
 //  Se aplica desde localStorage para que persista entre páginas
 // =============================================================

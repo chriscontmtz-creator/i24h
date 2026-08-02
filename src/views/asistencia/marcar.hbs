@@ -1,0 +1,80 @@
+<div class="as-marcar">
+  <div class="as-marcar-card" id="as-marcar-card" data-token="{{token}}">
+
+    {{#if error}}
+      <i class="ti ti-alert-triangle as-marcar-icon as-marcar-icon--error"></i>
+      <div class="as-marcar-msg">{{error}}</div>
+    {{/if}}
+
+    {{#if confirmar}}
+      <i class="ti ti-clock as-marcar-icon"></i>
+      <div class="as-marcar-msg">Marcar en <b>{{sucursal}}</b></div>
+      <div class="as-marcar-botones">
+        {{#each opciones}}
+          {{#if (eq this "entrada")}}
+            <button class="as-btn as-btn-entrada" data-tipo="entrada" onclick="asMarcar(this)">
+              <i class="ti ti-door-enter"></i> Marcar entrada
+            </button>
+          {{/if}}
+          {{#if (eq this "salida")}}
+            <button class="as-btn as-btn-salida" data-tipo="salida" onclick="asMarcar(this)">
+              <i class="ti ti-door-exit"></i> Marcar salida
+            </button>
+          {{/if}}
+          {{#if (eq this "inicio_comida")}}
+            <button class="as-btn as-btn-comida" data-tipo="inicio_comida" onclick="asMarcar(this)">
+              <i class="ti ti-coffee"></i> Iniciar comida
+            </button>
+          {{/if}}
+          {{#if (eq this "fin_comida")}}
+            <button class="as-btn as-btn-entrada" data-tipo="fin_comida" onclick="asMarcar(this)">
+              <i class="ti ti-coffee-off"></i> Terminar comida
+            </button>
+          {{/if}}
+        {{/each}}
+      </div>
+      <div id="as-marcar-resultado" class="as-marcar-sub"></div>
+    {{/if}}
+
+  </div>
+</div>
+
+{{#if confirmar}}
+<script>
+  var ETIQUETAS = {
+    entrada:       'Entrada registrada',
+    salida:        'Salida registrada',
+    inicio_comida: 'Inicio de comida registrado',
+    fin_comida:    'Fin de comida registrado',
+  };
+
+  async function asMarcar(btn) {
+    var card  = document.getElementById('as-marcar-card');
+    var token = card.dataset.token;
+    var tipo  = btn.dataset.tipo;
+    var botones = document.querySelectorAll('.as-btn');
+    botones.forEach(function (b) { b.disabled = true; });
+
+    try {
+      var resp = await fetch('/asistencia/api/marcar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token, tipo: tipo }),
+      });
+      var data = await resp.json();
+      if (!resp.ok) {
+        document.getElementById('as-marcar-resultado').textContent = data.error || 'Error al marcar';
+        botones.forEach(function (b) { b.disabled = false; });
+        return;
+      }
+      card.innerHTML =
+        '<i class="ti ti-circle-check as-marcar-icon as-marcar-icon--ok"></i>' +
+        '<div class="as-marcar-msg">' + (ETIQUETAS[data.tipo] || 'Registrado') + '</div>' +
+        '<div class="as-marcar-sub">Ya podés cerrar esta pestaña</div>';
+    } catch (err) {
+      document.getElementById('as-marcar-resultado').textContent = 'Error de conexión, intentá de nuevo';
+      botones.forEach(function (b) { b.disabled = false; });
+    }
+  }
+</script>
+{{/if}}

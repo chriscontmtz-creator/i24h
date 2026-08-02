@@ -97,8 +97,8 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
 
     res.render('horarios/index', {
       titulo:          'Horarios',
-      estiloExtra:     'public/css/horarios.css',
-      scriptPrincipal: 'public/js/horarios.js',
+      estiloExtra:     'css/horarios.css',
+      scriptPrincipal: 'js/horarios.js',
       horDataJson:     JSON.stringify({ horarios, empleados, semana, sucursal, sucursales: SUCURSALES }),
       horariosPorSucursal,
       semanaActual:    semana,

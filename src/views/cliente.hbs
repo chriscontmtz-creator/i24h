@@ -3,10 +3,16 @@
     <!-- NAV -->
     <div class="nav">
       <div class="logo">i24h
-        <div><img src="/CSS/IMAGENES/estilos.png" alt="Logo i24h"></div>
+        <div><img src="/imagenes/estilos.png" alt="Logo i24h"></div>
         <span>Internet 24 Horas · Nuevo Leon</span>
       </div>
-      <div class="nav-links">
+
+      <!-- Botón hamburguesa (solo visible en móvil) -->
+      <button class="nav-hamburger" id="nav-hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
+        <i class="ti ti-menu-2" id="nav-hamburger-ico" aria-hidden="true"></i>
+      </button>
+
+      <div class="nav-links" id="nav-links">
         <a href="/">Inicio</a>
         <button class="toggle-btn" id="toggle-btn" aria-label="Cambiar modo de color">
           <i class="ti ti-moon" id="tico" aria-hidden="true"></i>
@@ -29,7 +35,10 @@
             </div>
             <ul class="nav-dropdown-lista">
               <li role="menuitem"><a href="#qr"><i class="ti ti-qrcode"></i> Mi código QR</a></li>
+              {{#if hayPromociones}}<li role="menuitem"><a href="#promociones"><i class="ti ti-speakerphone"></i> Promociones</a></li>{{/if}}
+              {{#if hayFotosSucursales}}<li role="menuitem"><a href="#fotos-sucursal"><i class="ti ti-photo"></i> Fotos de sucursal</a></li>{{/if}}
               <li role="menuitem"><a href="#recompensas"><i class="ti ti-star"></i> Mis puntos</a></li>
+              <li role="menuitem"><a href="#catalogo"><i class="ti ti-shopping-cart"></i> Cotización</a></li>
               <li class="nav-dropdown-sep" role="separator"></li>
               <li class="item-peligro" role="menuitem">
                 <button id="btn-cerrar-sesion-nav"><i class="ti ti-logout"></i> Cerrar sesión</button>
@@ -65,20 +74,57 @@
         </div>
         <div class="qr-panel-info">
           <p class="qr-panel-titulo">Muestra este QR en caja</p>
-          <p class="qr-panel-desc">Escanea al realizar cualquier compra o servicio para acumular puntos automáticamente.</p>
+          <p class="qr-panel-desc">Muéstralo en caja al realizar tu compra o servicio para que el personal registre tus puntos.</p>
           <p class="qr-panel-id">ID: <code>{{usuario.qrId}}</code></p>
 
-          <!-- Botón Google Wallet -->
-          <button class="btn-wallet" id="btn-wallet" data-nombre="{{usuario.nombre}}" data-correo="{{usuario.correo}}" data-puntos="{{usuario.puntos}}" data-qrid="{{usuario.qrId}}">
+          <!-- Botón Google Wallet — deshabilitado hasta que la integración real esté lista -->
+          <button class="btn-wallet" disabled aria-disabled="true" title="Esta función todavía no está disponible">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M2 10H22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
-            Agregar a Google Wallet
+            Próximamente en Google Wallet
           </button>
         </div>
       </div>
     </div>
+
+    <!-- PROMOCIONES -->
+    {{#if hayPromociones}}
+    <div class="sec alt" id="promociones">
+      <p class="sec-lbl">Promociones vigentes</p>
+      <div class="promo-cli-grid">
+        {{#each promociones}}
+        <div class="promo-cli-card">
+          {{#if imagenUrl}}<img class="promo-cli-img" src="{{imagenUrl}}" alt="" loading="lazy" onerror="this.style.display='none'">{{/if}}
+          <div class="promo-cli-body">
+            <p class="promo-cli-titulo">{{titulo}}</p>
+            <p class="promo-cli-desc">{{descripcion}}</p>
+            {{#if beneficio}}<span class="promo-cli-beneficio"><i class="ti ti-gift" aria-hidden="true"></i> {{beneficio}}</span>{{/if}}
+            <p class="promo-cli-vigencia">Válido hasta {{fechaFin}}</p>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+    {{/if}}
+
+    <!-- FOTOS DE SUCURSAL -->
+    {{#if hayFotosSucursales}}
+    <div class="sec" id="fotos-sucursal">
+      <p class="sec-lbl">Conoce nuestras sucursales</p>
+      {{#each fotosSucursales}}
+      <div class="foto-suc-bloque">
+        <p class="foto-suc-titulo">{{sucursal}}</p>
+        <div class="foto-suc-grid">
+          {{#each urls}}
+          <img class="foto-suc-img" src="{{this}}" alt="Foto de la sucursal {{../sucursal}}" loading="lazy">
+          {{/each}}
+        </div>
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
 
     <!-- RECOMPENSAS -->
     <div class="sec alt" id="recompensas">
@@ -105,6 +151,42 @@
         </div>
         {{/each}}
       </div>
+    </div>
+
+    <!-- CATÁLOGO DE PRECIOS -->
+    <div class="sec alt" id="catalogo">
+      <p class="sec-lbl">Cotización — catálogo de precios</p>
+      {{#if hayCatalogo}}
+        <p class="sec-sub">Precios de referencia en Sucursal Simón Bolívar. Pueden variar por sucursal.</p>
+        <input
+          type="text"
+          class="catalogo-buscador"
+          id="catalogo-buscador"
+          placeholder="Buscar un producto o servicio…"
+          oninput="filtrarCatalogo(this.value)"
+        >
+        <div id="catalogo-lista">
+          {{#each catalogo}}
+          <div class="catalogo-cat-bloque" data-catalogo-cat>
+            <p class="catalogo-cat-titulo">{{categoria}}</p>
+            {{#each productos}}
+            <div class="catalogo-fila" data-catalogo-fila data-nombre="{{nombre}}">
+              <span class="catalogo-fila-nombre">{{nombre}}</span>
+              <span class="catalogo-fila-precio">${{precio}}</span>
+            </div>
+            {{/each}}
+          </div>
+          {{/each}}
+        </div>
+        <p class="catalogo-sin-resultados" id="catalogo-sin-resultados" style="display:none;">
+          Sin resultados para tu búsqueda.
+        </p>
+      {{else}}
+        <div class="estado-vacio">
+          <i class="ti ti-shopping-cart-off" aria-hidden="true"></i>
+          <p>El catálogo no está disponible por ahora.</p>
+        </div>
+      {{/if}}
     </div>
 
     <!-- HISTORIAL -->

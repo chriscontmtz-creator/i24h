@@ -407,8 +407,8 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
 
     res.render('revisiones/index', {
       titulo:          'Revisiones',
-      estiloExtra:     'public/css/revisiones.css',
-      scriptPrincipal: 'public/js/revisiones.js',
+      estiloExtra:     'css/revisiones.css',
+      scriptPrincipal: 'js/revisiones.js',
       usuario:         req.session.usuario,
       sucursalActiva:  sucursal,
       turnoActivo:     turno,

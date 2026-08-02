@@ -293,8 +293,8 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
 
     res.render('dashboard', {
       titulo:          'Dashboard',
-      estiloExtra:     'public/css/dashboard.css',
-      scriptPrincipal: 'public/js/dashboard.js',
+      estiloExtra:     'css/dashboard.css',
+      scriptPrincipal: 'js/dashboard.js',
       usuario:         req.session.usuario,
       sucursalActiva:  sucursalDisplay,
       periodoActivo:   periodo,

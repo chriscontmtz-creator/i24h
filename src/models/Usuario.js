@@ -60,6 +60,15 @@ const UsuarioEsquema = new mongoose.Schema(
       default: null,
     },
 
+    // Horas esperadas por día, para empleados cuyo horario no es un turno
+    // completo (líderes, coordinadores, medio tiempo). Si está seteado,
+    // pisa el cálculo automático por turno (T1/T2/T3) en el módulo de asistencia.
+    horasPersonalizadas: {
+      type:    Number,
+      default: null,
+      min:     0,
+    },
+
     // Fecha y hora del último inicio de sesión
     ultimaConexion: {
       type:    Date,

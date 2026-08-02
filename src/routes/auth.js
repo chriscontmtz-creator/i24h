@@ -69,7 +69,17 @@ router.post('/registro', async (req, res) => {
     entrada.usadoPor = nuevo.correo;
     entrada.fechaUso = new Date().toISOString();
     guardar('codigos.json', codigos);
-    res.json({ id: nuevo._id, correo: nuevo.correo, puntos: nuevo.puntos });
+
+    // Deja al cliente con sesión abierta de inmediato, igual que /api/login
+    req.session.usuario = {
+      id:     nuevo._id,
+      correo: nuevo.correo,
+      nombre: nuevo.nombre,
+      cargo:  nuevo.cargo,
+      puntos: nuevo.puntos,
+      turno:  null,
+    };
+    res.json(req.session.usuario);
   } catch (err) {
     if (err.code === 11000) return res.status(409).json({ error: 'Ese correo ya está registrado' });
     res.status(500).json({ error: 'Error al crear la cuenta' });

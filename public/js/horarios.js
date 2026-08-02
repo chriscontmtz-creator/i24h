@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
   horRenderView(horData.horarios, horData.empleados);
   horInitNavListeners();
   horInitIndicacionTipos();
+  horInitTabs();
 
   // Cerrar modal de indicación al hacer click fuera
   document.addEventListener('click', function(e) {
@@ -147,6 +148,7 @@ function horNavigateWeek(dir) {
   horSemana = addWeeks(horSemana, dir);
   horActualizarWeekUI();
   horCargarSemana(horSemana, horSucursal);
+  if (horTabActiva === 'has') hasCargarSemana(horSemana, horSucursal);
 }
 
 async function horCargarSemana(semana, sucursal) {
@@ -178,8 +180,88 @@ function horFilterSucursal(valor) {
       b.style.display = 'none';
     }
   });
+  if (horTabActiva === 'has') hasCargarSemana(horSemana, horSucursal);
 }
 window.horFilterSucursal = horFilterSucursal;
+
+// ── Tabs: Vista semanal / Horas trabajadas ────────────────────
+
+let horTabActiva = 'semanal';
+
+function horInitTabs() {
+  horSwitchTab('semanal');
+}
+
+function horSwitchTab(tab) {
+  horTabActiva = tab;
+
+  var btnSemanal = document.getElementById('hor-tab-semanal');
+  var btnHas     = document.getElementById('hor-tab-has');
+  var mainSemanal = document.getElementById('hor-main-semanal');
+  var mainHas      = document.getElementById('has-view-wrap');
+
+  if (tab === 'semanal') {
+    if (btnSemanal) btnSemanal.classList.add('hor-tab--active');
+    if (btnHas)     btnHas.classList.remove('hor-tab--active');
+    if (mainSemanal) mainSemanal.style.display = '';
+    if (mainHas)      mainHas.style.display = 'none';
+  } else {
+    if (btnSemanal) btnSemanal.classList.remove('hor-tab--active');
+    if (btnHas)     btnHas.classList.add('hor-tab--active');
+    if (mainSemanal) mainSemanal.style.display = 'none';
+    if (mainHas)      mainHas.style.display = '';
+    hasCargarSemana(horSemana, horSucursal);
+  }
+}
+window.horSwitchTab = horSwitchTab;
+
+// ── Horas trabajadas — carga y render de la tabla ─────────────
+
+async function hasCargarSemana(semana, sucursal) {
+  var tbody = document.getElementById('has-table-body');
+  var vacio = document.getElementById('has-empty');
+  if (!tbody) return;
+
+  try {
+    var url = '/asistencia/api/horas-trabajadas?semana=' + encodeURIComponent(semana) +
+      '&sucursal=' + encodeURIComponent(sucursal);
+    var resp = await fetch(url);
+    if (!resp.ok) throw new Error('Error ' + resp.status);
+    var data = await resp.json();
+    hasRenderTabla(data.filas || []);
+  } catch (err) {
+    tbody.innerHTML = '';
+    if (vacio) { vacio.style.display = ''; vacio.textContent = 'Error al cargar horas trabajadas'; }
+    console.error(err);
+  }
+}
+
+function hasRenderTabla(filas) {
+  var tbody = document.getElementById('has-table-body');
+  var vacio = document.getElementById('has-empty');
+  if (!tbody) return;
+
+  if (!filas.length) {
+    tbody.innerHTML = '';
+    if (vacio) { vacio.style.display = ''; vacio.textContent = 'Sin marcaciones esta semana'; }
+    return;
+  }
+  if (vacio) vacio.style.display = 'none';
+
+  tbody.innerHTML = filas.map(function (f) {
+    var diffTexto = f.diferencia == null ? '—' :
+      (f.diferencia >= 0 ? '+' : '') + f.diferencia + 'h';
+    var diffClase = f.diferencia == null ? '' : (f.diferencia < 0 ? 'has-diff-neg' : 'has-diff-pos');
+    return '<tr>' +
+      '<td>' + f.nombre + '</td>' +
+      '<td>' + f.sucursal + '</td>' +
+      '<td>' + f.horasTrabajadas + 'h</td>' +
+      '<td>' + f.horasComida + 'h</td>' +
+      '<td>' + (f.horasEsperadas == null ? '—' : f.horasEsperadas + 'h') + '</td>' +
+      '<td class="' + diffClase + '">' + diffTexto + '</td>' +
+      '</tr>';
+  }).join('');
+}
 
 // ── Render sección B: vista semanal ──────────────────────────
 
@@ -207,6 +289,7 @@ var PUNTO_COLOR = {
   'Ordóñez':        '#1abc9c',
 };
 var TURNOS_KEYS = ['T1', 'T2', 'T3'];
+var rosterActual = []; // roster completo (ya filtrado por sucursal), para el buscador de nombre
 
 function horRenderView(horarios, empleados) {
   var wrap = document.getElementById('hor-view-wrap');
@@ -373,11 +456,35 @@ async function horCargarRoster(sucursal) {
     var filtrados = todos.filter(function(e) {
       return (e.sucursales || []).includes(sucursal);
     });
+    rosterActual = filtrados;
+    var buscador = document.getElementById('hor-team-buscar');
+    if (buscador) buscador.value = '';
     horRenderRoster(filtrados);
   } catch (err) {
     console.error('Error al cargar roster:', err);
   }
 }
+
+// Quita acentos para que "cesar" encuentre "César"
+function horNormalizarTexto(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function horFiltrarRoster(texto) {
+  var q = horNormalizarTexto(texto).trim();
+  if (!q) { horRenderRoster(rosterActual); return; }
+  var filtrados = rosterActual.filter(function(e) {
+    return horNormalizarTexto(e.nombre).indexOf(q) !== -1;
+  });
+  horRenderRoster(filtrados);
+}
+
+(function () {
+  var buscador = document.getElementById('hor-team-buscar');
+  if (buscador) buscador.addEventListener('input', function () {
+    horFiltrarRoster(buscador.value);
+  });
+})();
 
 function horRenderRoster(empleados) {
   var list = document.getElementById('hor-team-list');
@@ -489,6 +596,41 @@ function horCrearDropChip(turno, dia, emp) {
 }
 
 // ── Drag & drop ───────────────────────────────────────────────
+// Lógica de asignación compartida entre el drag nativo (mouse/desktop)
+// y el drag táctil (móvil, ver horInitTouchDrag) para no duplicarla.
+function horAsignarEmpleadoACelda(empId, empNombre, empCargo, turno, dia) {
+  if (!empId || !turno || isNaN(dia)) return;
+
+  // Evitar duplicados en la misma celda
+  var celda = gridState.turnos[turno][dia];
+  var yaEsta = celda.empleados.some(function(e2) { return String(e2._id) === empId; });
+  if (yaEsta) { horToast('El empleado ya está en este turno', 'warning'); return; }
+
+  // Contar cuántos turnos tiene este empleado en este día (sin contar la celda destino)
+  var apariciones = 0;
+  TURNOS_KEYS.forEach(function(t) {
+    if (gridState.turnos[t][dia].empleados.some(function(e2) { return String(e2._id) === empId; })) {
+      apariciones++;
+    }
+  });
+
+  // 3 turnos mismo día: bloquear
+  if (apariciones >= 2) {
+    horToast(empNombre + ' ya tiene doble turno hoy — no se puede agregar un tercero', 'error');
+    return;
+  }
+
+  // Agregar empleado a la celda
+  celda.empleados.push({ _id: empId, nombre: empNombre, cargo: empCargo });
+  if (celda.estado === 'vacio') celda.estado = 'normal';
+
+  // 2 turnos mismo día: avisar pero permitir
+  if (apariciones === 1) {
+    horToast('⚠ Doble turno: ' + empNombre + ' ya tiene otro turno este día', 'warning');
+  }
+
+  horRenderGrid();
+}
 
 function horInitDragAndDrop() {
   var cards = document.querySelectorAll('.emp-card');
@@ -502,7 +644,94 @@ function horInitDragAndDrop() {
     card.addEventListener('dragend', function() {
       card.classList.remove('dragging');
     });
+
+    horInitTouchDrag(card);
   });
+}
+
+// El drag-and-drop HTML5 (dragstart/dragover/drop) no dispara en touch
+// (iOS/Android). Aquí se reimplementa a mano con touchstart/move/end:
+// se sigue el dedo con una tarjeta "fantasma" y, al soltar, se detecta
+// la celda debajo con elementFromPoint().
+function horInitTouchDrag(card) {
+  // El arrastre táctil solo inicia desde el ícono de agarre (⋮⋮), nunca
+  // desde el resto de la tarjeta — si no, cualquier intento de hacer
+  // scroll con el dedo sobre la lista se interpretaría como un arrastre
+  // y bloquearía el scroll normal del panel de equipo.
+  var handle = card.querySelector('.emp-grip');
+  if (!handle) return;
+
+  var ghost = null;
+  var hoverCell = null;
+  var startX = 0, startY = 0, dragging = false;
+  var UMBRAL = 8; // px de movimiento antes de mostrar el fantasma (solo visual)
+
+  // Quita cualquier fantasma que haya quedado pegado de un arrastre anterior
+  // interrumpido (ej. por el pull-to-refresh de Safari cortando el gesto)
+  function limpiarFantasmasHuerfanos() {
+    document.querySelectorAll('.emp-card-ghost').forEach(function(g) { g.remove(); });
+  }
+
+  handle.addEventListener('touchstart', function(e) {
+    // preventDefault desde el primer toque: este ícono solo sirve para
+    // arrastrar, así que jamás debe dejar que Safari interprete el gesto
+    // como scroll o, cerca del borde superior, como pull-to-refresh.
+    e.preventDefault();
+    limpiarFantasmasHuerfanos();
+    var t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
+    dragging = false;
+  }, { passive: false });
+
+  handle.addEventListener('touchmove', function(e) {
+    // Siempre, no solo tras el umbral: si se espera, Safari ya pudo haber
+    // iniciado su propio gesto (pull-to-refresh) y un preventDefault tardío
+    // no lo cancela.
+    e.preventDefault();
+
+    var t  = e.touches[0];
+    var dx = t.clientX - startX;
+    var dy = t.clientY - startY;
+
+    if (!dragging) {
+      if (Math.abs(dx) < UMBRAL && Math.abs(dy) < UMBRAL) return;
+      dragging = true;
+      card.classList.add('dragging');
+      ghost = card.cloneNode(true);
+      ghost.classList.add('emp-card-ghost');
+      document.body.appendChild(ghost);
+    }
+
+    if (ghost) {
+      ghost.style.left = (t.clientX - 100) + 'px';
+      ghost.style.top  = (t.clientY - 20) + 'px';
+    }
+
+    var el   = document.elementFromPoint(t.clientX, t.clientY);
+    var cell = el ? el.closest('.drop-cell') : null;
+    if (cell !== hoverCell) {
+      if (hoverCell) hoverCell.classList.remove('drop-cell--dragover');
+      if (cell)      cell.classList.add('drop-cell--dragover');
+      hoverCell = cell;
+    }
+  }, { passive: false });
+
+  function soltar() {
+    card.classList.remove('dragging');
+    if (ghost) { ghost.remove(); ghost = null; }
+    if (hoverCell) {
+      hoverCell.classList.remove('drop-cell--dragover');
+      horAsignarEmpleadoACelda(
+        card.dataset.id, card.dataset.nombre, card.dataset.cargo,
+        hoverCell.dataset.turno, parseInt(hoverCell.dataset.dia, 10)
+      );
+      hoverCell = null;
+    }
+    dragging = false;
+  }
+
+  handle.addEventListener('touchend', soltar);
+  handle.addEventListener('touchcancel', soltar);
 }
 
 function horInitDropZones() {
@@ -518,44 +747,13 @@ function horInitDropZones() {
     cell.addEventListener('drop', function(e) {
       e.preventDefault();
       cell.classList.remove('drop-cell--dragover');
-
-      var empId     = e.dataTransfer.getData('empId');
-      var empNombre = e.dataTransfer.getData('empNombre');
-      var empCargo  = e.dataTransfer.getData('empCargo');
-      var turno     = cell.dataset.turno;
-      var dia       = parseInt(cell.dataset.dia, 10);
-
-      if (!empId || !turno || isNaN(dia)) return;
-
-      // Evitar duplicados en la misma celda
-      var celda = gridState.turnos[turno][dia];
-      var yaEsta = celda.empleados.some(function(e2) { return String(e2._id) === empId; });
-      if (yaEsta) { horToast('El empleado ya está en este turno', 'warning'); return; }
-
-      // Contar cuántos turnos tiene este empleado en este día (sin contar la celda destino)
-      var apariciones = 0;
-      TURNOS_KEYS.forEach(function(t) {
-        if (gridState.turnos[t][dia].empleados.some(function(e2) { return String(e2._id) === empId; })) {
-          apariciones++;
-        }
-      });
-
-      // 3 turnos mismo día: bloquear
-      if (apariciones >= 2) {
-        horToast(empNombre + ' ya tiene doble turno hoy — no se puede agregar un tercero', 'error');
-        return;
-      }
-
-      // Agregar empleado a la celda
-      celda.empleados.push({ _id: empId, nombre: empNombre, cargo: empCargo });
-      if (celda.estado === 'vacio') celda.estado = 'normal';
-
-      // 2 turnos mismo día: avisar pero permitir
-      if (apariciones === 1) {
-        horToast('⚠ Doble turno: ' + empNombre + ' ya tiene otro turno este día', 'warning');
-      }
-
-      horRenderGrid();
+      horAsignarEmpleadoACelda(
+        e.dataTransfer.getData('empId'),
+        e.dataTransfer.getData('empNombre'),
+        e.dataTransfer.getData('empCargo'),
+        cell.dataset.turno,
+        parseInt(cell.dataset.dia, 10)
+      );
     });
   });
 }

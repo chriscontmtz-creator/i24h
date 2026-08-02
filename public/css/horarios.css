@@ -44,7 +44,13 @@ body {
   flex-direction: column;
   min-height: 100vh;
   position: relative;
+  /* Evita que un swipe hacia abajo cerca del tope de la página dispare
+     el pull-to-refresh nativo de Safari mientras se arrastra una tarjeta */
+  overscroll-behavior-y: contain;
 }
+
+/* Refuerzo: el ícono de agarre nunca debe generar rebote/pull-to-refresh */
+.emp-grip { touch-action: none; }
 
 /* ── Topbar ───────────────────────────────────────────────── */
 
@@ -1036,3 +1042,118 @@ body {
 ::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+
+
+/* =============================================================
+   MÓVIL (hasta 768px) — va al final para ganar sobre las reglas
+   de arriba a igual especificidad.
+   El topbar tenía todo en una sola fila sin wrap: se salía del
+   encuadre en pantallas angostas. Aquí lo dejamos apilable.
+   ============================================================= */
+@media (max-width: 768px) {
+  .hor-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 12px;
+    row-gap: 8px;
+  }
+  .hor-topbar-left,
+  .hor-topbar-right {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .hor-week-nav-label { min-width: 0; }
+  .hor-filters { flex-wrap: wrap; }
+
+  /* Editor: roster arriba, cuadrícula abajo (en vez de lado a lado) */
+  .editor-panel { flex-direction: column; }
+  .editor-wrap  { max-height: 92vh; }
+
+  .team-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    max-height: 220px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grid-col { min-width: 0; }
+
+  /* La tabla de turnos sigue con scroll horizontal propio (7 días
+     no caben en una pantalla angosta) — grid-table-wrap ya lo hace */
+}
+
+/* Tarjeta "fantasma" que sigue al dedo durante el drag táctil */
+.emp-card-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  width: 200px;
+  pointer-events: none;
+  opacity: .92;
+  transform: scale(1.03);
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+}
+
+/* Buscador por nombre, arriba de la lista del equipo */
+.team-col-buscar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+
+.team-col-buscar i { color: var(--text-3); font-size: 13px; flex-shrink: 0; }
+
+.team-col-buscar input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.team-col-buscar input::placeholder { color: var(--text-3); }
+
+/* El ícono de agarre es el único punto donde inicia el drag táctil
+   (ver horInitTouchDrag) — se agranda un poco el área de toque */
+.emp-grip {
+  padding: 6px;
+  margin: -6px -6px -6px 0;
+  cursor: grab;
+}
+
+/* Doble/triple turno: no depender solo del tinte de color (poco
+   perceptible en pantallas chicas) — agregar una marca de texto */
+.drop-chip--doble::before {
+  content: '2×';
+  font-weight: 800;
+  margin-right: 2px;
+}
+
+.drop-chip--conflicto::before {
+  content: '⚠';
+  font-weight: 800;
+  margin-right: 2px;
+}
+
+@media (max-width: 768px) {
+  /* Pie del editor (leyenda + botones) se salía del encuadre */
+  .editor-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .hor-legend { flex-wrap: wrap; row-gap: 6px; }
+  .editor-footer-actions { width: 100%; }
+  .editor-footer-actions button { flex: 1; }
+}

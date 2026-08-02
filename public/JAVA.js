@@ -213,6 +213,51 @@ document.getElementById('btn-ir-cliente')?.addEventListener('click', () => {
 
 
 // =============================================================
+//  REGISTRO DE CLIENTE
+//  Crea la cuenta con el código de acceso y deja al usuario logueado
+// =============================================================
+
+document.getElementById('btn-registrar-cliente')?.addEventListener('click', async () => {
+  const correo    = document.getElementById('reg-correo')?.value.trim();
+  const password  = document.getElementById('reg-password')?.value;
+  const password2 = document.getElementById('reg-password2')?.value;
+  const codigo    = document.getElementById('reg-codigo')?.value.trim();
+  const msgEl     = document.getElementById('reg-msg');
+  const btn       = document.getElementById('btn-registrar-cliente');
+
+  const mostrarRegMsg = (texto, tipo) => {
+    if (!msgEl) return;
+    msgEl.textContent   = texto;
+    msgEl.className     = 'error-msg' + (tipo === 'ok' ? ' success' : '');
+    msgEl.style.display = 'block';
+  };
+
+  if (!correo || !password || !password2 || !codigo) return mostrarRegMsg('Completa todos los campos.');
+  if (password.length < 6)  return mostrarRegMsg('La contraseña debe tener al menos 6 caracteres.');
+  if (password !== password2) return mostrarRegMsg('Las contraseñas no coinciden.');
+
+  btn.disabled = true;
+  try {
+    const respuesta = await fetch('/api/registro', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ correo, password, codigo }),
+    });
+    const datos = await respuesta.json();
+    if (!respuesta.ok) { mostrarRegMsg(datos.error || 'Error al crear la cuenta.'); btn.disabled = false; return; }
+
+    mostrarRegMsg('¡Cuenta creada! Redirigiendo…', 'ok');
+    localStorage.setItem('sesion', JSON.stringify(datos));
+    setTimeout(() => { window.location.href = '/cliente'; }, 800);
+  } catch (err) {
+    console.error('Error en registro:', err);
+    mostrarRegMsg('No se pudo conectar al servidor.');
+    btn.disabled = false;
+  }
+});
+
+
+// =============================================================
 //  BOTONES DEL HERO (parte superior de la página)
 //  Solo existen en el DOM cuando NO hay sesión activa
 // =============================================================
@@ -461,12 +506,27 @@ function pintarEstrellasSel(selector, n) {
   );
 }
 
-// Botón de Google Wallet — muestra las instrucciones (requiere servicio de cuenta en producción)
-document.getElementById('btn-wallet')?.addEventListener('click', () => {
-  const btn  = document.getElementById('btn-wallet');
-  const qrId = btn.dataset.qrid;
-  alert(`Tu ID de socio es: ${qrId}\n\nPara agregar tu tarjeta a Google Wallet en producción, el equipo de i24h activará esta función próximamente.`);
-});
+// Buscador del catálogo de precios (panel de cliente) — filtro puramente
+// visual en el cliente, sin llamadas al servidor.
+function filtrarCatalogo(texto) {
+  const q = texto.trim().toLowerCase();
+  let algunResultado = false;
+
+  document.querySelectorAll('[data-catalogo-cat]').forEach(bloqueCat => {
+    let algunoEnCategoria = false;
+    bloqueCat.querySelectorAll('[data-catalogo-fila]').forEach(fila => {
+      const coincide = fila.dataset.nombre.toLowerCase().includes(q);
+      fila.style.display = coincide ? '' : 'none';
+      if (coincide) algunoEnCategoria = true;
+    });
+    bloqueCat.style.display = algunoEnCategoria ? '' : 'none';
+    if (algunoEnCategoria) algunResultado = true;
+  });
+
+  const msgVacio = document.getElementById('catalogo-sin-resultados');
+  if (msgVacio) msgVacio.style.display = algunResultado ? 'none' : 'block';
+}
+window.filtrarCatalogo = filtrarCatalogo;
 
 // Al cargar la página consulta el servidor para saber si hay sesión activa.
 // Si la hay, aplica el dropdown sin pedirle al usuario que vuelva a loguearse.
