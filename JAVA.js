@@ -6,6 +6,41 @@
 
 
 // =============================================================
+//  MENÚ HAMBURGUESA (móvil)
+// =============================================================
+
+(function () {
+  var btn   = document.getElementById('nav-hamburger');
+  var menu  = document.getElementById('nav-links');
+  var ico   = document.getElementById('nav-hamburger-ico');
+  if (!btn || !menu) return;
+
+  function cerrarMenu() {
+    menu.classList.remove('nav-abierto');
+    btn.setAttribute('aria-expanded', 'false');
+    ico.className = 'ti ti-menu-2';
+  }
+
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var abierto = menu.classList.toggle('nav-abierto');
+    btn.setAttribute('aria-expanded', String(abierto));
+    ico.className = abierto ? 'ti ti-x' : 'ti ti-menu-2';
+  });
+
+  // Cierra al hacer clic fuera del menú
+  document.addEventListener('click', function (e) {
+    if (!menu.contains(e.target) && e.target !== btn) cerrarMenu();
+  });
+
+  // Cierra al hacer clic en un link del menú
+  menu.querySelectorAll('a').forEach(function (a) {
+    a.addEventListener('click', cerrarMenu);
+  });
+})();
+
+
+// =============================================================
 //  MODO OSCURO
 //  Cambia entre tema claro y oscuro al presionar el botón
 // =============================================================

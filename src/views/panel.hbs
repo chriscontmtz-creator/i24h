@@ -19,8 +19,11 @@
       <!-- PRINCIPAL -->
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Principal</span>
-        <button class="panel-nav-item active" data-seccion="dashboard" data-titulo="Dashboard">
+        <a href="/dashboard" class="panel-nav-item" style="text-decoration:none">
           <i class="ti ti-layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <button class="panel-nav-item active" data-seccion="dashboard" data-titulo="Panel">
+          <i class="ti ti-grid-dots"></i><span>Panel</span>
         </button>
         <button class="panel-nav-item" data-seccion="sucursales" data-titulo="Sucursales">
           <i class="ti ti-building-store"></i><span>Sucursales</span>
@@ -33,14 +36,14 @@
       <!-- OPERACIONES -->
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Operaciones</span>
+        <a href="/revisiones" class="panel-nav-item" style="text-decoration:none">
+          <i class="ti ti-clipboard-check"></i><span>Revisiones</span>
+        </a>
         <button class="panel-nav-item" data-seccion="bitacoras" data-titulo="Bitácoras">
           <i class="ti ti-notebook"></i><span>Bitácoras</span>
         </button>
         <button class="panel-nav-item" data-seccion="inventario" data-titulo="Inventario / Stock">
           <i class="ti ti-package"></i><span>Inventario / Stock</span>
-        </button>
-        <button class="panel-nav-item" data-seccion="limpieza" data-titulo="Limpieza">
-          <i class="ti ti-brush"></i><span>Limpieza</span>
         </button>
         <button class="panel-nav-item" data-seccion="reportes" data-titulo="Reportes depto.">
           <i class="ti ti-clipboard-list"></i><span>Reportes depto.</span>
@@ -54,43 +57,20 @@
         <a href="/empleados.html" class="panel-nav-item" style="text-decoration:none">
           <i class="ti ti-users"></i><span>Empleados</span>
         </a>
-        <button class="panel-nav-item" data-seccion="horarios" data-titulo="Horarios">
+        <a href="/horarios" class="panel-nav-item" style="text-decoration:none">
           <i class="ti ti-calendar-time"></i><span>Horarios</span>
-        </button>
-        <button class="panel-nav-item" data-seccion="nominas" data-titulo="Nóminas">
-          <i class="ti ti-receipt"></i><span>Nóminas</span>
-        </button>
-        <button class="panel-nav-item" data-seccion="desempeno" data-titulo="Desempeño">
-          <i class="ti ti-chart-bar"></i><span>Desempeño</span>
-        </button>
-      </div>
-
-      <!-- CLIENTES -->
-      <div class="panel-nav-grupo">
-        <span class="panel-nav-label">Clientes</span>
-        <button class="panel-nav-item" data-seccion="clientes" data-titulo="Clientes / Puntos">
-          <i class="ti ti-id-badge"></i><span>Clientes / puntos</span>
-        </button>
-        <button class="panel-nav-item" data-seccion="mapa" data-titulo="Mapa / Cotización">
-          <i class="ti ti-map-pin"></i><span>Mapa / cotización</span>
-        </button>
+        </a>
       </div>
 
       <!-- SISTEMA (solo admins) -->
       {{#if esAdmin}}
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Sistema</span>
+        <button class="panel-nav-action" onclick="window.abrirModalCorreccion()">
+          <i class="ti ti-pencil-dollar"></i><span>Corregir ventas</span>
+        </button>
         <button class="panel-nav-item" data-seccion="usuarios" data-titulo="Usuarios">
           <i class="ti ti-user-cog"></i><span>Usuarios</span>
-        </button>
-        <button class="panel-nav-item" data-seccion="auditoria" data-titulo="Auditoría">
-          <i class="ti ti-shield-check"></i><span>Auditoría</span>
-        </button>
-        <button class="panel-nav-item" data-seccion="comunicados" data-titulo="Comunicados">
-          <i class="ti ti-speakerphone"></i><span>Comunicados</span>
-        </button>
-        <button class="panel-nav-item" data-seccion="capacitacion" data-titulo="Capacitación">
-          <i class="ti ti-school"></i><span>Capacitación</span>
         </button>
         <button class="panel-nav-item" data-seccion="configuracion" data-titulo="Configuración">
           <i class="ti ti-settings"></i><span>Configuración</span>
@@ -107,13 +87,16 @@
       </a>
     </div>
 
+    <script>window.BIT_USUARIO = '{{usuario.nombre}}';</script>
+
     <!-- Tarjeta del usuario -->
-    <div class="panel-sidebar-usuario">
+    <div class="panel-sidebar-usuario" onclick="perfilAbrirModal()" title="Editar mi perfil" style="cursor:pointer">
       <div class="panel-sidebar-avatar">{{usuario.nombre.[0]}}</div>
       <div class="panel-sidebar-info">
         <p class="panel-sidebar-nombre">{{usuario.nombre}}</p>
         <p class="panel-sidebar-cargo">{{usuario.cargo}} · Todas</p>
       </div>
+      <i class="ti ti-pencil" style="font-size:13px;color:var(--texto-suave);flex-shrink:0;margin-left:auto"></i>
     </div>
 
   </aside>
@@ -155,80 +138,89 @@
            ====================================================== -->
       <div class="panel-seccion" id="sec-dashboard">
 
-        <!-- 4 Metric cards -->
+        <!-- ── Fila 1: 4 KPIs ──────────────────────────────── -->
         <div class="panel-metrics">
-          <div class="panel-metric-card">
-            <span class="panel-metric-label">Recaudación hoy</span>
-            <span class="panel-metric-valor">$0.00</span>
-            <span class="panel-metric-sub">Sin registros aún</span>
+          <div class="panel-metric-card dash-clickable" onclick="irSeccion('ventas','Ventas')">
+            <span class="panel-metric-label"><i class="ti ti-cash" style="font-size:.85rem"></i> Ventas 7 días</span>
+            <span class="panel-metric-valor" id="dash-vnt-total">—</span>
+            <span class="panel-metric-sub" id="dash-vnt-sub">Cargando…</span>
+          </div>
+          <div class="panel-metric-card dash-clickable" onclick="irSeccion('inventario','Inventario / Stock')">
+            <span class="panel-metric-label"><i class="ti ti-alert-triangle" style="font-size:.85rem"></i> Alertas de stock</span>
+            <span class="panel-metric-valor" id="dash-stk-cnt" style="color:#dc2626">—</span>
+            <span class="panel-metric-sub" id="dash-stk-sub">Cargando…</span>
           </div>
           <div class="panel-metric-card">
-            <span class="panel-metric-label">Tickets totales</span>
-            <span class="panel-metric-valor">0</span>
-            <span class="panel-metric-sub">Hoy</span>
+            <span class="panel-metric-label"><i class="ti ti-users" style="font-size:.85rem"></i> Empleados activos</span>
+            <span class="panel-metric-valor" id="dash-cnt-emp">—</span>
+            <span class="panel-metric-sub" id="dash-sub-emp">Cargando…</span>
           </div>
           <div class="panel-metric-card">
-            <span class="panel-metric-label">Impresiones</span>
-            <span class="panel-metric-valor">0</span>
-            <span class="panel-metric-sub">Desde CyberPlanet</span>
-          </div>
-          <div class="panel-metric-card">
-            <span class="panel-metric-label">Sucursales activas</span>
-            <span class="panel-metric-valor">0 / 0</span>
-            <span class="panel-metric-sub">En línea ahora</span>
+            <span class="panel-metric-label"><i class="ti ti-id-badge" style="font-size:.85rem"></i> Clientes</span>
+            <span class="panel-metric-valor" id="dash-cnt-cli">—</span>
+            <span class="panel-metric-sub" id="dash-sub-cli">Cargando…</span>
           </div>
         </div>
 
-        <!-- Grid de 2 columnas -->
-        <div class="panel-dash-grid">
+        <!-- ── Fila 2: ventas categorías | alertas stock | reportes ── -->
+        <div class="dash-grid-3">
 
-          <!-- Bitácora turno actual -->
+          <!-- Ventas por categoría -->
           <div class="panel-card">
-            <p class="panel-card-titulo">Bitácora turno actual</p>
-            <div class="tabla-contenedor">
-              <table class="tabla">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Esperado</th>
-                    <th>Conteo</th>
-                    <th>Diferencia</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Computadoras</td><td>0</td><td>0</td><td>0</td>
-                    <td><span class="panel-badge-ok">OK</span></td>
-                  </tr>
-                  <tr>
-                    <td>Impresiones</td><td>0</td><td>0</td><td>0</td>
-                    <td><span class="panel-badge-ok">OK</span></td>
-                  </tr>
-                  <tr>
-                    <td>Escáner</td><td>0</td><td>0</td><td>0</td>
-                    <td><span class="panel-badge-ok">OK</span></td>
-                  </tr>
-                  <tr>
-                    <td>Audífonos</td><td>0</td><td>0</td><td>0</td>
-                    <td><span class="panel-badge-ok">OK</span></td>
-                  </tr>
-                  <tr>
-                    <td>Sillas</td><td>0</td><td>0</td><td>0</td>
-                    <td><span class="panel-badge-ok">OK</span></td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="dash-card-hdr">
+              <p class="panel-card-titulo">Ventas por categoría</p>
+              <span class="dash-period-badge">7 días</span>
             </div>
-            <p class="panel-card-footer">0 diferencias detectadas</p>
+            <div id="dash-cat-wrap">
+              <div class="dash-empty"><i class="ti ti-loader-2"></i>Cargando…</div>
+            </div>
+            <p class="panel-card-footer" id="dash-vnt-footer">Top sucursal: —</p>
+          </div>
+
+          <!-- Alertas de stock -->
+          <div class="panel-card">
+            <div class="dash-card-hdr">
+              <p class="panel-card-titulo">Alertas de stock</p>
+              <button class="dash-link-btn" onclick="irSeccion('inventario','Inventario / Stock')">Ver todo</button>
+            </div>
+            <div id="dash-alertas-wrap">
+              <div class="dash-empty"><i class="ti ti-loader-2"></i>Cargando…</div>
+            </div>
           </div>
 
           <!-- Reportes recientes -->
           <div class="panel-card">
-            <p class="panel-card-titulo">Reportes recientes</p>
-            <div class="panel-reportes-vacio">
-              <i class="ti ti-report-off"></i>
-              <p>Sin reportes recientes</p>
+            <div class="dash-card-hdr">
+              <p class="panel-card-titulo">Reportes recientes</p>
+              <button class="dash-link-btn" onclick="irSeccion('reportes','Reportes depto.')">Ver todos</button>
+            </div>
+            <div id="dash-rpt-wrap">
+              <div class="dash-empty"><i class="ti ti-loader-2"></i>Cargando…</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Fila 3: top productos | ranking sucursales ── -->
+        <div class="panel-dash-grid">
+
+          <div class="panel-card">
+            <div class="dash-card-hdr">
+              <p class="panel-card-titulo">Top 7 productos · 7 días</p>
+              <span class="dash-period-badge">Unidades vendidas</span>
+            </div>
+            <div id="dash-top-wrap">
+              <div class="dash-empty"><i class="ti ti-loader-2"></i>Cargando…</div>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="dash-card-hdr">
+              <p class="panel-card-titulo">Ranking sucursales · 7 días</p>
+              <button class="dash-link-btn" onclick="irSeccion('ventas','Ventas')">Detalle</button>
+            </div>
+            <div id="dash-suc-wrap">
+              <div class="dash-empty"><i class="ti ti-loader-2"></i>Cargando…</div>
             </div>
           </div>
 
@@ -553,6 +545,14 @@
           <button class="vnt-export-btn" id="vnt-export-btn">
             <i class="ti ti-file-spreadsheet"></i> Exportar Excel
           </button>
+          {{#if esAdmin}}
+          <button
+            class="vnt-export-btn"
+            style="background:rgba(192,57,43,.15);border-color:rgba(192,57,43,.4);color:#f87171"
+            onclick="window.abrirModalCorreccion()">
+            <i class="ti ti-pencil-dollar"></i> Corregir ventas
+          </button>
+          {{/if}}
         </div>
 
         <!-- KPIs -->
@@ -634,6 +634,46 @@
           </div>
 
         </div>
+
+        <!-- ── Verificar ventas del sync ─────────────────────────────── -->
+        <p class="vnt-section-title" style="margin-top:28px">
+          <i class="ti ti-database"></i> Ventas registradas por el sync (CyberPlanet → MongoDB)
+        </p>
+        <div class="vnt-card" style="padding:16px 20px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+            <select class="vnt-select" id="tkt-sucursal">
+              <option value="Simón Bolívar">Simón Bolívar</option>
+              <option value="Insurgentes">Insurgentes</option>
+              <option value="Antígona">Antígona</option>
+              <option value="Lincoln Oxxo">Lincoln Oxxo</option>
+              <option value="Lincoln 2">Lincoln 2</option>
+              <option value="Ruiz Cortines">Ruiz Cortines</option>
+              <option value="Rodas">Rodas</option>
+              <option value="Cuauhtémoc">Cuauhtémoc</option>
+              <option value="Ordóñez">Ordóñez</option>
+            </select>
+            <input type="date" class="vnt-select" id="tkt-fecha" style="max-width:160px">
+            <button class="bit-btn-iniciar" id="btn-consultar-tickets" style="padding:7px 18px;font-size:.85rem">
+              <i class="ti ti-search"></i> Consultar
+            </button>
+            <span id="tkt-resumen" style="font-size:.85rem;color:var(--texto-suave)"></span>
+          </div>
+          <div class="vnt-tabla-outer" style="max-height:340px;overflow-y:auto">
+            <table class="vnt-tabla" id="tkt-tabla">
+              <thead>
+                <tr>
+                  <th>Producto / Servicio</th>
+                  <th style="text-align:right">Unidades</th>
+                  <th style="text-align:right">Importe $</th>
+                </tr>
+              </thead>
+              <tbody id="tkt-body">
+                <tr><td colspan="3" class="vnt-empty">Selecciona sucursal y fecha, luego presiona Consultar.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <div class="panel-seccion oculta" id="sec-bitacoras">
@@ -659,8 +699,8 @@
             <input type="date" class="bit-select" id="bit-fecha">
           </div>
           <div class="bit-meta-right">
-            <span class="bit-sync-note">
-              <i class="ti ti-clock"></i> Conteo individual · modo colaborativo próximamente
+            <span class="bit-sync-note" id="bit-sync-badge">
+              <i class="ti ti-clock"></i> Presiona "Iniciar conteo" para cargar el stock del corte anterior
             </span>
             <button class="bit-btn-iniciar" id="btn-iniciar-conteo">
               <i class="ti ti-clipboard-check"></i> Iniciar conteo
@@ -702,11 +742,39 @@
         <div class="bit-footer-bar" id="bit-footer">
           <span class="bit-footer-nota">
             <i class="ti ti-info-circle"></i>
-            Los datos de stock se extraerán de CyberPlanet automáticamente. Por ahora se muestran los valores de referencia.
+            El Esperado muestra el stock al iniciar el turno. Usa F3 en CyberPlanet para ver lo vendido durante el turno.
           </span>
           <button class="bit-btn-cerrar" id="btn-cerrar-bitacora">
             <i class="ti ti-lock"></i> Cerrar bitácora del turno
           </button>
+        </div>
+
+        <!-- Historial de bitácoras guardadas -->
+        <div class="bit-hist-wrap">
+          <p class="bit-hist-titulo"><i class="ti ti-history"></i> Bitácoras guardadas</p>
+          <div id="bit-historial-lista"><p class="bit-hist-vacio">Sin bitácoras guardadas aún.</p></div>
+        </div>
+
+        <!-- Modal detalle de bitácora -->
+        <div id="bit-det-overlay" class="bit-det-overlay bit-det--oculto" onclick="this.classList.add('bit-det--oculto')">
+          <div class="bit-det-modal" onclick="event.stopPropagation()">
+            <div class="bit-det-hdr">
+              <h3 id="bit-det-titulo">Detalle</h3>
+              <button onclick="document.getElementById('bit-det-overlay').classList.add('bit-det--oculto')">✕</button>
+            </div>
+            <div class="bit-det-scroll">
+              <table class="bit-det-tabla">
+                <thead><tr>
+                  <th>Categoría</th><th>Producto</th>
+                  <th style="text-align:right">Esperado</th>
+                  <th style="text-align:right">Conteo</th>
+                  <th style="text-align:right">Dif.</th>
+                  <th>Justificación</th>
+                </tr></thead>
+                <tbody id="bit-det-body"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -725,7 +793,7 @@
         <div class="inv-header-grid">
           <div>
             <label class="inv-field-lbl">Seleccionar sucursal</label>
-            <select class="inv-select">
+            <select class="inv-select" id="inv-sucursal">
               <option>Simón Bolívar</option>
               <option>Insurgentes</option>
               <option>Antígona</option>
@@ -821,33 +889,25 @@
           <div class="inv-download-card">
             <i class="ti ti-file-spreadsheet" style="font-size:28px;color:#3B6D11;"></i>
             <p>Limpieza</p>
-            <button class="inv-download-btn"><i class="ti ti-download"></i> Descargar</button>
+            <button class="inv-download-btn" onclick="descargarInventario('limpieza')"><i class="ti ti-download"></i> Descargar</button>
           </div>
           <div class="inv-download-card">
             <i class="ti ti-file-spreadsheet" style="font-size:28px;color:#378ADD;"></i>
             <p>Novedades</p>
-            <button class="inv-download-btn"><i class="ti ti-download"></i> Descargar</button>
+            <button class="inv-download-btn" onclick="descargarInventario('novedades')"><i class="ti ti-download"></i> Descargar</button>
           </div>
           <div class="inv-download-card">
             <i class="ti ti-file-spreadsheet" style="font-size:28px;color:#D4537E;"></i>
             <p>Papelería</p>
-            <button class="inv-download-btn"><i class="ti ti-download"></i> Descargar</button>
+            <button class="inv-download-btn" onclick="descargarInventario('papeleria')"><i class="ti ti-download"></i> Descargar</button>
           </div>
           <div class="inv-download-card">
             <i class="ti ti-file-spreadsheet" style="font-size:28px;color:#BA7517;"></i>
             <p>Snack</p>
-            <button class="inv-download-btn"><i class="ti ti-download"></i> Descargar</button>
+            <button class="inv-download-btn" onclick="descargarInventario('snack')"><i class="ti ti-download"></i> Descargar</button>
           </div>
         </div>
 
-      </div>
-
-      <div class="panel-seccion oculta" id="sec-limpieza">
-        <div class="panel-en-construccion">
-          <i class="ti ti-brush"></i>
-          <h2>Limpieza</h2>
-          <p>Esta sección está en construcción</p>
-        </div>
       </div>
 
       <div class="panel-seccion oculta" id="sec-reportes">
@@ -1078,42 +1138,18 @@
       </div>
 
       <div class="panel-seccion oculta" id="sec-horarios">
-        <div class="panel-en-construccion">
-          <i class="ti ti-calendar-time"></i>
-          <h2>Horarios</h2>
-          <p>Esta sección está en construcción</p>
-        </div>
-      </div>
-
-      <div class="panel-seccion oculta" id="sec-nominas">
-        <div class="panel-en-construccion">
-          <i class="ti ti-receipt"></i>
-          <h2>Nóminas</h2>
-          <p>Esta sección está en construcción</p>
-        </div>
-      </div>
-
-      <div class="panel-seccion oculta" id="sec-desempeno">
-        <div class="panel-en-construccion">
-          <i class="ti ti-chart-bar"></i>
-          <h2>Desempeño</h2>
-          <p>Esta sección está en construcción</p>
-        </div>
-      </div>
-
-      <div class="panel-seccion oculta" id="sec-clientes">
-        <div class="panel-en-construccion">
-          <i class="ti ti-id-badge"></i>
-          <h2>Clientes / Puntos</h2>
-          <p>Esta sección está en construcción</p>
-        </div>
-      </div>
-
-      <div class="panel-seccion oculta" id="sec-mapa">
-        <div class="panel-en-construccion">
-          <i class="ti ti-map-pin"></i>
-          <h2>Mapa / Cotización</h2>
-          <p>Esta sección está en construcción</p>
+        <div style="max-width:460px;margin:80px auto;text-align:center">
+          <div style="width:68px;height:68px;background:var(--fondo-alt);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:2.2rem;color:var(--acento)">
+            <i class="ti ti-calendar-time"></i>
+          </div>
+          <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:var(--texto)">Gestión de Horarios</h2>
+          <p style="color:var(--texto-suave);font-size:.88rem;margin-bottom:22px;line-height:1.6">
+            Crea, edita y publica horarios semanales por sucursal con drag &amp; drop.<br>
+            Se abre en su propia página.
+          </p>
+          <a href="/horarios" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:var(--acento);color:#fff;font-size:.9rem;font-weight:600;text-decoration:none;transition:background .2s" onmouseover="this.style.background='var(--acento-oscuro)'" onmouseout="this.style.background='var(--acento)'">
+            <i class="ti ti-external-link"></i> Abrir módulo de horarios
+          </a>
         </div>
       </div>
 
@@ -1182,17 +1218,17 @@
             <div id="usr-vista-emp">
               <table class="usr-tbl">
                 <colgroup>
-                  <col style="width:24%"><col style="width:13%"><col style="width:17%">
-                  <col style="width:11%"><col style="width:12%"><col style="width:16%"><col style="width:7%">
+                  <col style="width:21%"><col style="width:11%"><col style="width:7%"><col style="width:15%">
+                  <col style="width:10%"><col style="width:11%"><col style="width:18%"><col style="width:7%">
                 </colgroup>
                 <thead>
                   <tr>
-                    <th>Empleado</th><th>Cargo</th><th>Sucursal</th>
+                    <th>Empleado</th><th>Cargo</th><th>Turno</th><th>Sucursal</th>
                     <th>Registro</th><th>Últ. conexión</th><th>Estado</th><th></th>
                   </tr>
                 </thead>
                 <tbody id="usr-tbody-emp">
-                  <tr><td colspan="7" class="usr-empty">Cargando empleados…</td></tr>
+                  <tr><td colspan="8" class="usr-empty">Cargando empleados…</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1239,30 +1275,6 @@
 
         <!-- El drawer de nuevo empleado y el modal de edición están al final del documento (position:fixed) -->
 
-      </div>
-
-      <div class="panel-seccion oculta" id="sec-auditoria">
-        <div class="panel-en-construccion">
-          <i class="ti ti-shield-check"></i>
-          <h2>Auditoría</h2>
-          <p>Esta sección está en construcción</p>
-        </div>
-      </div>
-
-      <div class="panel-seccion oculta" id="sec-comunicados">
-        <div class="panel-en-construccion">
-          <i class="ti ti-speakerphone"></i>
-          <h2>Comunicados</h2>
-          <p>Esta sección está en construcción</p>
-        </div>
-      </div>
-
-      <div class="panel-seccion oculta" id="sec-capacitacion">
-        <div class="panel-en-construccion">
-          <i class="ti ti-school"></i>
-          <h2>Capacitación</h2>
-          <p>Esta sección está en construcción</p>
-        </div>
       </div>
 
       <div class="panel-seccion oculta" id="sec-configuracion">
@@ -1398,6 +1410,114 @@
 
 
 <!-- ============================================================
+     MODAL — Editar perfil propio (nombre + turno)
+     ============================================================ -->
+<div id="perfil-modal-bg" class="usr-em-bg" onclick="if(event.target===this)perfilCerrarModal()">
+  <div class="usr-em">
+    <div class="usr-em-head">
+      <div class="usr-em-ico"><i class="ti ti-user-circle" aria-hidden="true"></i></div>
+      <div>
+        <div class="usr-em-title">Mi perfil</div>
+        <div class="usr-em-sub" id="perfil-correo-sub"></div>
+      </div>
+    </div>
+    <div class="usr-em-body">
+      <label class="usr-field-lbl">Nombre completo</label>
+      <input class="usr-field-inp" type="text" id="perfil-nombre" placeholder="Tu nombre completo">
+      <label class="usr-field-lbl" style="margin-top:14px">Turno habitual</label>
+      <div class="perfil-turno-opts" id="perfil-turno-opts">
+        <button class="perfil-turno-btn" data-turno="">Sin turno</button>
+        <button class="perfil-turno-btn perfil-turno-t1" data-turno="T1">T1 · 07:00–15:00</button>
+        <button class="perfil-turno-btn perfil-turno-t2" data-turno="T2">T2 · 15:00–23:00</button>
+        <button class="perfil-turno-btn perfil-turno-t3" data-turno="T3">T3 · 23:00–07:00</button>
+      </div>
+      <p id="perfil-msg" style="display:none;font-size:.78rem;padding:8px 10px;border-radius:7px;margin-top:10px"></p>
+    </div>
+    <div class="usr-em-footer">
+      <button class="usr-btn-cancel" onclick="perfilCerrarModal()" style="flex:1">Cancelar</button>
+      <button class="usr-btn-save" onclick="perfilGuardar()" style="flex:2">
+        <i class="ti ti-check" aria-hidden="true"></i> Guardar cambios
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var perfilTurnoSel = null;
+
+  function perfilAbrirModal() {
+    fetch('/api/sesion').then(function(r) { return r.json(); }).then(function(u) {
+      if (!u) return;
+      var inp = document.getElementById('perfil-nombre');
+      var sub = document.getElementById('perfil-correo-sub');
+      var msg = document.getElementById('perfil-msg');
+      if (inp) inp.value = u.nombre || '';
+      if (sub) sub.textContent = u.correo || '';
+      if (msg) msg.style.display = 'none';
+      perfilTurnoSel = u.turno || null;
+      perfilActualizarBtns();
+      document.getElementById('perfil-modal-bg').classList.add('open');
+    }).catch(function() {});
+  }
+  window.perfilAbrirModal = perfilAbrirModal;
+
+  function perfilCerrarModal() {
+    document.getElementById('perfil-modal-bg').classList.remove('open');
+  }
+  window.perfilCerrarModal = perfilCerrarModal;
+
+  function perfilActualizarBtns() {
+    document.querySelectorAll('#perfil-turno-opts .perfil-turno-btn').forEach(function(btn) {
+      btn.classList.toggle('em-active', (btn.dataset.turno || null) === perfilTurnoSel);
+    });
+  }
+
+  document.querySelectorAll('#perfil-turno-opts .perfil-turno-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      perfilTurnoSel = btn.dataset.turno || null;
+      perfilActualizarBtns();
+    });
+  });
+
+  async function perfilGuardar() {
+    var nombre = (document.getElementById('perfil-nombre').value || '').trim();
+    var msg = document.getElementById('perfil-msg');
+    if (!nombre) {
+      msg.textContent = 'El nombre no puede estar vacío.';
+      msg.className = 'error-msg error';
+      msg.style.display = 'block';
+      return;
+    }
+    try {
+      var res = await fetch('/api/mi-perfil', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: nombre, turno: perfilTurnoSel }),
+      });
+      var datos = await res.json();
+      if (!res.ok) {
+        msg.textContent = datos.error || 'Error al guardar.';
+        msg.className = 'error-msg error';
+        msg.style.display = 'block';
+        return;
+      }
+      var elNom = document.querySelector('.panel-sidebar-nombre');
+      var elAv  = document.querySelector('.panel-sidebar-avatar');
+      if (elNom) elNom.textContent = datos.nombre;
+      if (elAv)  elAv.textContent  = (datos.nombre || '?')[0].toUpperCase();
+      perfilCerrarModal();
+    } catch(e) {
+      msg.textContent = 'Error de conexión.';
+      msg.className = 'error-msg error';
+      msg.style.display = 'block';
+    }
+  }
+  window.perfilGuardar = perfilGuardar;
+})();
+</script>
+
+<!-- ============================================================
      NAVEGACIÓN DEL SIDEBAR
      ============================================================ -->
 <script>
@@ -1410,6 +1530,7 @@
   const sucPill   = document.querySelector('.panel-suc-pill');
 
   function activarSeccion(id, nombre) {
+    if (!id) return;   // botones sin data-seccion (ej: abrir modal) no deben ocultar secciones
     items.forEach(function (i) { i.classList.remove('active'); });
     var item = document.querySelector('[data-seccion="' + id + '"]');
     if (item) item.classList.add('active');
@@ -1429,6 +1550,13 @@
     if (sucPill && sucursalActiva) {
       sucPill.innerHTML = '<i class="ti ti-building-store"></i> ' + sucursalActiva;
     }
+    if (id === 'bitacoras') {
+      if (sucursalActiva) {
+        var selSuc = document.getElementById('bit-sucursal');
+        if (selSuc) selSuc.value = sucursalActiva;
+      }
+      bitCargarHistorial(sucursalActiva || '');
+    }
   };
 
   items.forEach(function (item) {
@@ -1438,6 +1566,13 @@
       activarSeccion(item.dataset.seccion, item.dataset.titulo);
     });
   });
+
+  // Abrir sección desde URL ?s=nombre (ej: /panel?s=clientes)
+  var seccionUrl = new URLSearchParams(window.location.search).get('s');
+  if (seccionUrl && document.getElementById('sec-' + seccionUrl)) {
+    var btnUrl = document.querySelector('[data-seccion="' + seccionUrl + '"]');
+    activarSeccion(seccionUrl, btnUrl ? btnUrl.dataset.titulo : seccionUrl);
+  }
 })();
 
 
@@ -1447,84 +1582,124 @@
 //  Event delegation — evita conflictos con CSP y onclick inline
 // ============================================================
 
+// cyber = nombre exacto en Cyberplanet (lowercase). null = sin match en Cyber.
 const PRODUCTOS_BITACORA = [
   { cat: 'Papelería', icono: 'ti-notebook', items: [
-    { nombre: 'Tabloide adhesivo suelto', esperado: 152 },
-    { nombre: 'Tabloide couche suelto', esperado: 133 },
-    { nombre: 'Tabloide opalina suelto', esperado: 69 },
-    { nombre: 'Hoja adhesiva', esperado: 91 },
-    { nombre: 'Hoja couche', esperado: 72 },
-    { nombre: 'Hoja doble carta', esperado: 961 },
-    { nombre: 'Hoja opalina', esperado: 927 },
-    { nombre: 'Pluma negra', esperado: 41 },
-    { nombre: 'Pluma azul', esperado: 27 },
-    { nombre: 'Pluma roja', esperado: 39 },
-    { nombre: 'Sobre carta', esperado: 27 },
-    { nombre: 'Solicitud de empleo', esperado: 48 },
-    { nombre: 'CD', esperado: 10 },
-    { nombre: 'DVD', esperado: 20 },
-    { nombre: 'Arillo 1', esperado: 23 },
-    { nombre: 'Arillo 2', esperado: 45 },
-    { nombre: 'Arillo 3', esperado: 24 },
-    { nombre: 'Arillo 4', esperado: 26 },
-    { nombre: 'Arillo 5', esperado: 38 },
-    { nombre: 'Pasta negra', esperado: 63 },
-    { nombre: 'Pasta transparente', esperado: 89 },
-    { nombre: 'Pasta multicolor', esperado: 74 },
+    { nombre: 'Tabloide Adhesivo',      cyber: 'tabloide adhesivo',         esperado: 0 },
+    { nombre: 'Tabloide Opalina',       cyber: 'tabloide opalina',          esperado: 0 },
+    { nombre: 'Tabloide Couche',        cyber: 'tabloide couche',           esperado: 0 },
+    { nombre: 'Hoja Doble Carta',       cyber: 'doble carta',               esperado: 0 },
+    { nombre: 'Papel Oficio',           cyber: 'hoja oficio',               esperado: 0 },
+    { nombre: 'Papel Carta',            cyber: 'hoja carta',                esperado: 0 },
+    { nombre: 'Carta Adhesiva',         cyber: 'carta adhesiva',            esperado: 0 },
+    { nombre: 'Carta Couche',           cyber: 'carta couche',              esperado: 0 },
+    { nombre: 'Carta Opalina',          cyber: 'carta opalina',             esperado: 0 },
+    { nombre: 'Sobre Carta',            cyber: 'sobre carta',               esperado: 0 },
+    { nombre: 'Solicitud de Empleo',    cyber: 'solicitud de empleo',       esperado: 0 },
+    { nombre: 'Pluma Negra',            cyber: 'pluma negra',               esperado: 0 },
+    { nombre: 'Pluma Azul',             cyber: 'pluma azul',                esperado: 0 },
+    { nombre: 'Pluma Roja',             cyber: 'pluma roja',                esperado: 0 },
+    { nombre: 'CD-R Sony',              cyber: 'cd',                        esperado: 0 },
+    { nombre: 'DVD-R Sony',             cyber: 'dvd',                       esperado: 0 },
   ]},
-  { cat: 'Material', icono: 'ti-folder', items: [
-    { nombre: 'Cartulina', esperado: 12 },
-    { nombre: 'Legajo carta', esperado: 107 },
-    { nombre: 'Legajo carta color', esperado: 130 },
-    { nombre: 'Legajo costilla', esperado: 19 },
-    { nombre: 'Legajo oficio', esperado: 51 },
-    { nombre: 'Memoria USB 32gb', esperado: 9 },
+  { cat: 'Pastas y Arilos', icono: 'ti-folder', items: [
+    { nombre: 'Pasta Negra',            cyber: 'pasta negra',               esperado: 0 },
+    { nombre: 'Pasta Transparente',     cyber: 'pasta transparente',        esperado: 0 },
+    { nombre: 'Pasta Multicolor',       cyber: 'pasta multicolor',          esperado: 0 },
+    { nombre: 'Arillo #1 3/8"',         cyber: 'arillo 1',                  esperado: 0 },
+    { nombre: 'Arillo #2 1/2"',         cyber: 'arillo 2',                  esperado: 0 },
+    { nombre: 'Arillo #3 5/8"',         cyber: 'arillo 3',                  esperado: 0 },
+    { nombre: 'Arillo #4 7/8"',         cyber: 'arillo 4',                  esperado: 0 },
+    { nombre: 'Arillo #5 1"',           cyber: 'arillo 5',                  esperado: 0 },
+  ]},
+  { cat: 'Material', icono: 'ti-package', items: [
+    { nombre: 'Legajo Carta',           cyber: 'legajo carta',              esperado: 0 },
+    { nombre: 'Legajo Color',           cyber: 'legajo carta color',        esperado: 0 },
+    { nombre: 'Legajo Costilla',        cyber: 'legajo costilla',           esperado: 0 },
+    { nombre: 'Legajo Oficio',          cyber: 'legajo oficio',             esperado: 0 },
+    { nombre: 'Cartulina',              cyber: 'cartulina',                 esperado: 0 },
+    { nombre: 'USBs',                   cyber: 'memoria usb 32gb',          esperado: 0 },
   ]},
   { cat: 'Enmicados', icono: 'ti-id-badge', items: [
-    { nombre: 'Enmicado credencial', esperado: 21 },
-    { nombre: 'Enmicado carta', esperado: 112 },
-    { nombre: 'Enmicado oficio', esperado: 54 },
+    { nombre: 'Mica Credencial',        cyber: 'enmicado1 credencial',      esperado: 0 },
+    { nombre: 'Mica Carta',             cyber: 'enmicado2 carta',           esperado: 0 },
+    { nombre: 'Mica Oficio',            cyber: 'enmicado3 oficio',          esperado: 0 },
+  ]},
+  { cat: 'Consumibles', icono: 'ti-printer', items: [
+    { nombre: 'Rollos Térmicos',        cyber: 'rollo termico grande',      esperado: 0 },
+    { nombre: 'Rollos de Terminal',     cyber: 'rollo de terminal',         esperado: 0 },
+    { nombre: 'Plumón de Billetes',     cyber: 'plumon de billetes falso',  esperado: 0 },
+    { nombre: 'Clips',                  cyber: 'clips',                     esperado: 0 },
+    { nombre: 'Corrector',              cyber: 'corrector',                 esperado: 0 },
+    { nombre: 'Grapas',                 cyber: 'grapas',                    esperado: 0 },
+    { nombre: 'Sobres de Nómina',       cyber: 'sobre nomina',              esperado: 0 },
   ]},
   { cat: 'Novedades', icono: 'ti-gift', items: [
-    { nombre: 'Llavero Funko', esperado: 13 },
-    { nombre: 'Novedad rojo $20', esperado: 50 },
-    { nombre: 'Novedad azul $30', esperado: 79 },
-    { nombre: 'Novedad verde $40', esperado: 60 },
-    { nombre: 'Novedad morado $50', esperado: 3 },
-    { nombre: 'Novedad plateada $100', esperado: 5 },
-    { nombre: 'Novedad rosa $80', esperado: 9 },
-    { nombre: 'Novedad blanco $160', esperado: 0 },
-    { nombre: 'Novedad dorada $150', esperado: 0 },
-    { nombre: 'Novedad negra $350', esperado: 0 },
-    { nombre: 'Plumas figuras', esperado: 0 },
+    { nombre: 'Llavero Funko',          cyber: 'llavero funko',             esperado: 0 },
+    { nombre: 'Novedad Rojo $20',       cyber: 'novedades rojo 20',         esperado: 0 },
+    { nombre: 'Novedad Azul $30',       cyber: 'novedades azul 30',         esperado: 0 },
+    { nombre: 'Novedad Verde $40',      cyber: 'novedades verde 40',        esperado: 0 },
+    { nombre: 'Novedad Amarillo $60',   cyber: 'novedades amarillo 60',     esperado: 0 },
+    { nombre: 'Novedad Morado $50',     cyber: 'novedades morado 50',       esperado: 0 },
+    { nombre: 'Novedad Rosa $80',       cyber: 'novedades rosa 80',         esperado: 0 },
+    { nombre: 'Novedad Naranja $180',   cyber: 'novedades naranja 180',     esperado: 0 },
+    { nombre: 'Novedad Plateada $100',  cyber: 'novedades plateada 100',    esperado: 0 },
+    { nombre: 'Novedad Dorada $150',    cyber: 'novedades dorada 150',      esperado: 0 },
+    { nombre: 'Novedad Negra $350',     cyber: 'novedades negra',           esperado: 0 },
+    { nombre: 'Novedad Blanco $160',    cyber: 'novedades blanco 160',      esperado: 0 },
+    { nombre: 'Plumas Figuras',         cyber: 'plumas figuras',            esperado: 0 },
   ]},
   { cat: 'Snack', icono: 'ti-candy', items: [
-    { nombre: 'Agua 500ml', esperado: 24 },
-    { nombre: 'Chocolates varios', esperado: 26 },
-    { nombre: 'Coca Cola', esperado: 19 },
-    { nombre: 'Dulces varios', esperado: 16 },
-    { nombre: 'Duvalín', esperado: 25 },
-    { nombre: 'Frutsi / Pau Pau', esperado: 2 },
-    { nombre: 'Galleta varios', esperado: 33 },
-    { nombre: 'Gomitas varios', esperado: 5 },
-    { nombre: 'Mazapán Azteca', esperado: 9 },
-    { nombre: 'Paleta Payaso', esperado: 11 },
-    { nombre: 'Sabritas varios', esperado: 34 },
-    { nombre: 'Skwinkles varios', esperado: 5 },
-    { nombre: 'Trident varios', esperado: 10 },
-  ]},
-  { cat: 'Rollos y consumibles', icono: 'ti-printer', items: [
-    { nombre: 'Rollos térmicos', esperado: 30 },
-    { nombre: 'Rollos de terminal', esperado: 48 },
-    { nombre: 'Plumón de billetes falsos', esperado: 1 },
+    { nombre: 'Agua 500ml',             cyber: 'agua 500 ml',               esperado: 0 },
+    { nombre: 'Aguas de Sabor',         cyber: 'aguas de sabor',            esperado: 0 },
+    { nombre: 'Botana Variada',         cyber: 'botana variada',            esperado: 0 },
+    { nombre: 'Cacahuates Varios',      cyber: 'cacahuates varios',         esperado: 0 },
+    { nombre: 'Chocolate Kiss',         cyber: 'chocolate kiss',            esperado: 0 },
+    { nombre: 'Chocolates Varios',      cyber: 'chocolates varios',         esperado: 0 },
+    { nombre: 'Coca Cola',              cyber: 'coca cola',                 esperado: 0 },
+    { nombre: 'Dulces Varios',          cyber: 'dulces varios',             esperado: 0 },
+    { nombre: 'Duvalín',                cyber: 'duvalin',                   esperado: 0 },
+    { nombre: 'Frutsi / Pau Pau',       cyber: 'frutsi o pau pau varios',   esperado: 0 },
+    { nombre: 'Galleta Varios',         cyber: 'galleta varios',            esperado: 0 },
+    { nombre: 'Gatorade',               cyber: 'gatorade',                  esperado: 0 },
+    { nombre: 'Gomitas Varios',         cyber: 'gomitas varios',            esperado: 0 },
+    { nombre: 'Jugos Cartón',           cyber: 'jugos carton',              esperado: 0 },
+    { nombre: 'Leche Hersheys',         cyber: 'leche hersheys',            esperado: 0 },
+    { nombre: 'Mazapán Azteca',         cyber: 'mazapan azteca',            esperado: 0 },
+    { nombre: 'Mini Papitas',           cyber: 'mini papitas',              esperado: 0 },
+    { nombre: 'Mini Pastelitos',        cyber: 'mini pastelitos',           esperado: 0 },
+    { nombre: 'Monster',                cyber: 'monster',                   esperado: 0 },
+    { nombre: 'Paleta Payaso',          cyber: 'paleta payaso',             esperado: 0 },
+    { nombre: 'Papaen Bote',            cyber: 'papaen bote',               esperado: 0 },
+    { nombre: 'Sabritas Varios',        cyber: 'sabritas varios',           esperado: 0 },
+    { nombre: 'Skwinkles Varios',       cyber: 'skwinkles varios',          esperado: 0 },
+    { nombre: 'Trident Varios',         cyber: 'trident varios',            esperado: 0 },
+    { nombre: 'Zumba',                  cyber: 'zumba',                     esperado: 0 },
   ]},
 ];
 
 const CAUSAS_FALTA = ['Selecciona causa…','Merma / daño','Venta no registrada','Error conteo turno anterior','Robo o extravío','Surtido no aplicado','Otro'];
 const CAUSAS_SOBRA = ['Selecciona causa…','Error conteo turno anterior','Devolución no registrada','Material Encontrado','Otro'];
 
-var conteosBitacora = {};
+var conteosBitacora  = {};
 var bitacoraIniciada = false;
+
+function aplicarStockBitacora(productos) {
+  var mapa = {};
+  productos.forEach(function(p) {
+    mapa[p.nombre.toLowerCase().trim()] = p.stock;
+  });
+  PRODUCTOS_BITACORA.forEach(function(cat) {
+    cat.items.forEach(function(item) {
+      if (!item.cyber) return;
+      var val = mapa[item.cyber];
+      if (val !== undefined) {
+        item.esperado     = val;
+        item.stockInicial = val;
+      }
+    });
+  });
+}
 
 // ── render ──────────────────────────────────────────────────────────────
 
@@ -1684,11 +1859,42 @@ function actualizarResumen() {
 // ── iniciar / cerrar bitácora ─────────────────────────────────────────────
 
 document.getElementById('btn-iniciar-conteo')?.addEventListener('click', function() {
-  bitacoraIniciada = true;
-  this.innerHTML = '<i class="ti ti-check"></i> Conteo activo';
-  this.style.background = '#16a34a';
-  this.disabled = true;
-  renderBitacora();
+  var btn      = this;
+  var sucursal = document.getElementById('bit-sucursal')?.value || 'Simón Bolívar';
+
+  // Auto-rellenar fecha con hoy en hora México (UTC-6)
+  var hoyMx = new Date(Date.now() - 6 * 60 * 60 * 1000);
+  document.getElementById('bit-fecha').value = hoyMx.toISOString().split('T')[0];
+
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> Cargando corte…';
+  btn.disabled  = true;
+
+  fetch('/api/bitacora/snapshot-corte?sucursal=' + encodeURIComponent(sucursal))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var badge = document.getElementById('bit-sync-badge');
+      if (d.ok && d.snapshot && d.snapshot.productos.length) {
+        aplicarStockBitacora(d.snapshot.productos);
+        var hora = new Date(d.snapshot.fechaCorte).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        if (badge) badge.innerHTML =
+          '<i class="ti ti-circle-check" style="color:var(--exito)"></i> Stock del corte de ' +
+          d.snapshot.turnoQueEntrega + ' · ' + hora;
+      } else {
+        if (badge) badge.innerHTML =
+          '<i class="ti ti-alert-triangle" style="color:#f59e0b"></i> Sin snapshot disponible — ' +
+          'el turno anterior aún no hizo corte. Esperado = 0';
+      }
+    })
+    .catch(function() {
+      var badge = document.getElementById('bit-sync-badge');
+      if (badge) badge.innerHTML = '<i class="ti ti-wifi-off"></i> Sin conexión al servidor';
+    })
+    .finally(function() {
+      bitacoraIniciada = true;
+      btn.innerHTML = '<i class="ti ti-check"></i> Conteo activo';
+      btn.style.background = '#16a34a';
+      renderBitacora();
+    });
 });
 
 document.getElementById('btn-cerrar-bitacora')?.addEventListener('click', function() {
@@ -1697,10 +1903,182 @@ document.getElementById('btn-cerrar-bitacora')?.addEventListener('click', functi
     alert('Aún tienes ' + pendiente + ' productos sin contar. Completa el conteo antes de cerrar.');
     return;
   }
-  if (confirm('¿Confirmas que quieres cerrar la bitácora de este turno? No podrás modificarla después.')) {
-    alert('Bitácora cerrada. Los datos se guardarán cuando el sistema esté conectado a la base de datos.');
-  }
+  if (!confirm('¿Confirmas que quieres cerrar la bitácora de este turno? No podrás modificarla después.')) return;
+
+  // Recolectar datos
+  var sucursal = document.getElementById('bit-sucursal').value;
+  var turno    = document.getElementById('bit-turno').value;
+  var fecha    = document.getElementById('bit-fecha').value;
+  var prods    = [];
+
+  PRODUCTOS_BITACORA.forEach(function(cat, ci) {
+    cat.items.forEach(function(item, ii) {
+      var key    = ci + '_' + ii;
+      var estado = conteosBitacora[key] || {};
+      var val    = estado.valor !== null && estado.valor !== undefined ? estado.valor : item.esperado;
+      prods.push({
+        categoria:     cat.cat,
+        nombre:        item.nombre,
+        stockInicial:  item.stockInicial !== undefined ? item.stockInicial : item.esperado,
+        esperado:      item.esperado,
+        conteo:        val,
+        diferencia:    val - item.esperado,
+        justificacion: estado.justif || '',
+      });
+    });
+  });
+
+  var resumen = {
+    ok:        parseInt(document.getElementById('res-ok').textContent)        || 0,
+    falta:     parseInt(document.getElementById('res-falta').textContent)     || 0,
+    sobra:     parseInt(document.getElementById('res-sobra').textContent)     || 0,
+    sinContar: parseInt(document.getElementById('res-pendiente').textContent) || 0,
+  };
+
+  fetch('/api/bitacora/guardar', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ sucursal, turno, fecha, productos: prods, resumen, responsable: window.BIT_USUARIO || '' }),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      bitacoraIniciada = false;
+      document.getElementById('btn-iniciar-conteo').disabled = false;
+      document.getElementById('btn-iniciar-conteo').textContent = '✓ Bitácora guardada — Iniciar nuevo conteo';
+      document.getElementById('btn-cerrar-bitacora').style.display = 'none';
+      alert('Bitácora guardada correctamente.');
+      bitCargarHistorial(sucursal);
+    } else {
+      alert('Error al guardar: ' + (data.error || 'desconocido'));
+    }
+  })
+  .catch(function(err) {
+    alert('Error de red al guardar la bitácora: ' + err.message);
+  });
 });
+
+// ── bloqueo 15 min post-corte ─────────────────────────────────────────────
+(function() {
+  var CORTES_MIN = [7 * 60, 15 * 60, 23 * 60]; // 07:00, 15:00, 23:00 en minutos
+  var ESPERA    = 15;
+
+  function minutosMX() {
+    var ahora = new Date();
+    try {
+      var parts = new Intl.DateTimeFormat('es-MX', {
+        timeZone: 'America/Mexico_City',
+        hour: '2-digit', minute: '2-digit', hour12: false
+      }).formatToParts(ahora);
+      var h = parseInt(parts.find(function(p){ return p.type === 'hour'; }).value);
+      var m = parseInt(parts.find(function(p){ return p.type === 'minute'; }).value);
+      return h * 60 + m;
+    } catch(e) {
+      var mx = new Date(ahora.getTime() - 6 * 60 * 60 * 1000);
+      return mx.getUTCHours() * 60 + mx.getUTCMinutes();
+    }
+  }
+
+  function minutosRestantes() {
+    var actual = minutosMX();
+    for (var i = 0; i < CORTES_MIN.length; i++) {
+      var diff = actual - CORTES_MIN[i];
+      if (diff < 0) diff += 24 * 60;
+      if (diff >= 0 && diff < ESPERA) return ESPERA - diff;
+    }
+    return 0;
+  }
+
+  var btn   = document.getElementById('btn-iniciar-conteo');
+  var badge = document.getElementById('bit-sync-badge');
+  if (!btn) return;
+
+  function actualizarEstado() {
+    var restantes = minutosRestantes();
+    if (restantes > 0) {
+      btn.disabled = true;
+      if (badge) badge.innerHTML =
+        '<i class="ti ti-clock" style="color:#f59e0b"></i> ' +
+        'El sync aún puede estar cargando — espera <strong>' + restantes + ' min' +
+        (restantes === 1 ? 'uto' : 'utos') +
+        '</strong> para que el Esperado sea correcto';
+      return true;
+    }
+    return false;
+  }
+
+  if (actualizarEstado()) {
+    var iv = setInterval(function() {
+      if (!actualizarEstado()) {
+        clearInterval(iv);
+        btn.disabled = false;
+        if (badge) badge.innerHTML =
+          '<i class="ti ti-clock"></i> Presiona "Iniciar conteo" para cargar el stock del corte anterior';
+      }
+    }, 60 * 1000);
+  }
+})();
+
+// ── Historial de bitácoras ────────────────────────────────────────────────────
+
+function bitCargarHistorial(sucursal) {
+  var url = '/api/bitacora/lista?limit=15' + (sucursal ? '&sucursal=' + encodeURIComponent(sucursal) : '');
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) return;
+      var wrap = document.getElementById('bit-historial-lista');
+      if (!wrap) return;
+      if (data.docs.length === 0) {
+        wrap.innerHTML = '<p class="bit-hist-vacio">Sin bitácoras guardadas aún.</p>';
+        return;
+      }
+      wrap.innerHTML = data.docs.map(function(doc) {
+        var fecha = new Date(doc.fecha).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+        var cierre = new Date(doc.fechaCierre).toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
+        var ok    = doc.resumen ? doc.resumen.ok    : 0;
+        var falta = doc.resumen ? doc.resumen.falta : 0;
+        var sobra = doc.resumen ? doc.resumen.sobra : 0;
+        return '<div class="bit-hist-fila" onclick="bitVerDetalle(\'' + doc._id + '\')">' +
+          '<div class="bit-hist-info">' +
+            '<span class="bit-hist-fecha">' + fecha + ' · ' + doc.turno + '</span>' +
+            '<span class="bit-hist-suc">' + doc.sucursal + ' · Cerrada ' + cierre + ' · ' + (doc.responsable || 'Sin responsable') + '</span>' +
+          '</div>' +
+          '<div class="bit-hist-res">' +
+            '<span class="bit-pill-ok">✓ ' + ok + '</span>' +
+            '<span class="bit-pill-falta">↓ ' + falta + '</span>' +
+            '<span class="bit-pill-sobra">↑ ' + sobra + '</span>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    })
+    .catch(function() {});
+}
+
+function bitVerDetalle(id) {
+  fetch('/api/bitacora/' + id)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) return;
+      var doc  = data.doc;
+      var fecha = new Date(doc.fecha).toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+      var rows = doc.productos.map(function(p) {
+        var cls = p.diferencia === 0 ? 'bit-det-ok' : p.diferencia < 0 ? 'bit-det-falta' : 'bit-det-sobra';
+        return '<tr class="' + cls + '">' +
+          '<td>' + p.categoria + '</td>' +
+          '<td>' + p.nombre + '</td>' +
+          '<td style="text-align:right">' + p.esperado + '</td>' +
+          '<td style="text-align:right">' + p.conteo + '</td>' +
+          '<td style="text-align:right;font-weight:600">' + (p.diferencia > 0 ? '+' : '') + p.diferencia + '</td>' +
+          '<td>' + (p.justificacion || '—') + '</td>' +
+        '</tr>';
+      }).join('');
+      document.getElementById('bit-det-titulo').textContent = fecha + ' · ' + doc.turno + ' · ' + doc.sucursal;
+      document.getElementById('bit-det-body').innerHTML = rows;
+      document.getElementById('bit-det-overlay').classList.remove('bit-det--oculto');
+    })
+    .catch(function() {});
+}
 
 // ── arranque ──────────────────────────────────────────────────────────────
 
@@ -1950,11 +2328,15 @@ renderBitacora();
       const conn  = tiempoRelativo(e.ultimaConexion);
       const nom   = (e.nombre||e.correo).replace(/'/g,"\\'");
       const sucAct = JSON.stringify(e.sucursales||[]).replace(/"/g,'&quot;');
+      const turnoHtml = e.turno
+        ? '<span class="usr-turno-badge usr-turno-' + e.turno.toLowerCase() + '">' + e.turno + '</span>'
+        : '<span style="font-size:.72rem;color:var(--texto-suave)">—</span>';
       return '<tr>' +
         '<td><div class="usr-uinfo"><div class="usr-av usr-av-rojo">' + ini + '</div>' +
           '<div><div class="usr-uname">' + (e.nombre||'—') + '</div>' +
           '<div class="usr-ucorreo">' + e.correo + '</div></div></div></td>' +
         '<td><span class="usr-role-badge ' + (USR_ROL_CLASS[e.cargo]||'') + '">' + (USR_ROL_LABEL[e.cargo]||e.cargo) + '</span></td>' +
+        '<td>' + turnoHtml + '</td>' +
         '<td>' + ((e.sucursales||[]).length
           ? (e.sucursales||[]).map(function(s){ return '<span class="usr-suc-tag">' + s + '</span>'; }).join('')
           : '<span style="font-size:.72rem;color:var(--texto-suave)">—</span>') + '</td>' +
@@ -1971,6 +2353,7 @@ renderBitacora();
           '<div class="usr-menu-dd" id="usr-menu-e' + e._id + '">' +
             '<div class="usr-mitem" onclick="usrEditarCargo(\'' + e._id + '\',\'' + nom + '\',\'' + e.cargo + '\')"><i class="ti ti-briefcase" aria-hidden="true"></i> Editar cargo</div>' +
             '<div class="usr-mitem" onclick="usrCambiarSucursales(\'' + e._id + '\',\'' + nom + '\',' + JSON.stringify(e.sucursales||[]) + ')"><i class="ti ti-building-store" aria-hidden="true"></i> Cambiar sucursales</div>' +
+            '<div class="usr-mitem" onclick="usrEditarTurno(\'' + e._id + '\',\'' + nom + '\',\'' + (e.turno||'') + '\')"><i class="ti ti-clock" aria-hidden="true"></i> Editar turno</div>' +
             '<div class="usr-mitem" onclick="usrCambiarPassword(\'' + e._id + '\',\'' + nom + '\')"><i class="ti ti-lock" aria-hidden="true"></i> Cambiar contrase\xF1a</div>' +
             '<div class="usr-mitem danger" onclick="usrCerrarMenu();usrEliminarUsuario(\'' + e._id + '\',\'' + nom + '\')"><i class="ti ti-trash" aria-hidden="true"></i> Eliminar cuenta</div>' +
           '</div>' +
@@ -2251,6 +2634,49 @@ renderBitacora();
   }
   window.usrCambiarSucursales = usrCambiarSucursales;
 
+  // ── acción: editar turno (admin) ────────────────────────────────────────
+  function usrEditarTurno(id, nombre, turnoActual) {
+    usrCerrarMenu();
+    var turnoSel = turnoActual || null;
+    var OPTS = [
+      { val: null, label: 'Sin turno',        cls: '' },
+      { val: 'T1', label: 'T1 · 07:00–15:00', cls: 'perfil-turno-t1' },
+      { val: 'T2', label: 'T2 · 15:00–23:00', cls: 'perfil-turno-t2' },
+      { val: 'T3', label: 'T3 · 23:00–07:00', cls: 'perfil-turno-t3' },
+    ];
+    var btnsHtml = OPTS.map(function(o) {
+      var act = (turnoSel === o.val) ? ' em-active' : '';
+      return '<button class="perfil-turno-btn ' + o.cls + act + '" data-turno="' + (o.val||'') + '">' + o.label + '</button>';
+    }).join('');
+    usrAbrirEM({
+      icono: 'ti-clock',
+      titulo: 'Editar turno',
+      sub: nombre,
+      html: '<label class="usr-field-lbl">Turno habitual</label>' +
+            '<div class="perfil-turno-opts" id="usr-em-turno-opts">' + btnsHtml + '</div>',
+      accion: async function() {
+        var res = await fetch('/api/empleados/' + id + '/turno', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ turno: turnoSel }),
+        });
+        if (!res.ok) { var e = await res.json(); alert(e.error || 'Error al actualizar'); return; }
+        usrCerrarEM();
+        await usrCargarTodo();
+      },
+    });
+    setTimeout(function() {
+      document.querySelectorAll('#usr-em-turno-opts .perfil-turno-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          turnoSel = btn.dataset.turno || null;
+          document.querySelectorAll('#usr-em-turno-opts .perfil-turno-btn').forEach(function(b) { b.classList.remove('em-active'); });
+          btn.classList.add('em-active');
+        });
+      });
+    }, 0);
+  }
+  window.usrEditarTurno = usrEditarTurno;
+
   // ── acción: cambiar contraseña ──────────────────────────────────────────
   function usrCambiarPassword(id, nombre) {
     usrCerrarMenu();
@@ -2530,13 +2956,23 @@ renderBitacora();
   window.rptToggleStatus = function (btn) {
     var card   = btn.closest('.rpt-card');
     var isPend = card.dataset.status === 'pendiente';
-    card.dataset.status = isPend ? 'realizado' : 'pendiente';
+    var nuevoStatus = isPend ? 'realizado' : 'pendiente';
+    card.dataset.status = nuevoStatus;
     card.classList.toggle('done', !isPend);
-    btn.className = 'rpt-status-toggle ' + (isPend ? 'realizado' : 'pendiente');
+    btn.className = 'rpt-status-toggle ' + nuevoStatus;
     btn.innerHTML = isPend
       ? '<i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i> Realizado'
       : '<i class="ti ti-clock" style="font-size:11px" aria-hidden="true"></i> Pendiente';
     rptApplyFilters();
+    // Persistir en la API si el card tiene id guardado
+    var rptId = card.dataset.rptId;
+    if (rptId) {
+      fetch('/api/reportes/' + rptId + '/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nuevoStatus }),
+      }).catch(function () {});
+    }
   };
 
   window.rptCrearReporte = function () {
@@ -2604,6 +3040,24 @@ renderBitacora();
     document.getElementById('rpt-inp-marca').value = '';
 
     rptApplyFilters();
+
+    // Persistir en la API (guarda en datos/reportes.json)
+    var payload = {
+      sucursal:    suc,
+      dept:        dept,
+      descripcion: desc || 'Sin descripción.',
+      numImpresora: dept === 'imp' ? numVal : '',
+      marca:        dept === 'imp' ? document.getElementById('rpt-inp-marca')?.value.trim() || '' : '',
+      mensaje:      lines.join('\n'),
+    };
+    fetch('/api/reportes', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    }).then(function (r) { return r.json(); })
+      .then(function (saved) {
+        if (saved.id) card.dataset.rptId = saved.id;
+      }).catch(function () {});
   };
 
   window.rptCopiarMensaje = function () {
@@ -2912,4 +3366,509 @@ renderBitacora();
   }
 
 })();
+
+// =============================================================
+//  TICKETS DEL SYNC — verifica ventas reales desde CyberPlanet
+// =============================================================
+(function () {
+  var btnConsultar = document.getElementById('btn-consultar-tickets');
+  var tktFecha     = document.getElementById('tkt-fecha');
+  var tktSucursal  = document.getElementById('tkt-sucursal');
+  var tktBody      = document.getElementById('tkt-body');
+  var tktResumen   = document.getElementById('tkt-resumen');
+
+  // Pre-llenar con fecha de hoy en hora México
+  if (tktFecha) {
+    var hoyMx = new Date(Date.now() - 6 * 60 * 60 * 1000);
+    tktFecha.value = hoyMx.toISOString().split('T')[0];
+  }
+
+  function fmt(n) { return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+  function consultarTickets() {
+    if (!tktBody) return;
+    var suc   = tktSucursal ? tktSucursal.value : '';
+    var fecha = tktFecha    ? tktFecha.value    : '';
+
+    tktBody.innerHTML = '<tr><td colspan="3" class="vnt-empty">Consultando…</td></tr>';
+    if (tktResumen) tktResumen.textContent = '';
+
+    fetch('/api/tickets/dia?sucursal=' + encodeURIComponent(suc) + '&fecha=' + encodeURIComponent(fecha))
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d.ok) {
+          tktBody.innerHTML = '<tr><td colspan="3" class="vnt-empty" style="color:#f87171">Error: ' + (d.error || 'desconocido') + '</td></tr>';
+          return;
+        }
+        if (tktResumen) {
+          tktResumen.innerHTML = '<strong>' + d.numTickets + ' tickets</strong> · Total: <strong>' + fmt(d.total) + '</strong>';
+        }
+        if (!d.resumenProductos || d.resumenProductos.length === 0) {
+          tktBody.innerHTML = '<tr><td colspan="3" class="vnt-empty">Sin ventas registradas para esa fecha y sucursal.</td></tr>';
+          return;
+        }
+        tktBody.innerHTML = d.resumenProductos.map(function(p) {
+          return '<tr>' +
+            '<td>' + p.detalle + '</td>' +
+            '<td style="text-align:right">' + p.unidades + '</td>' +
+            '<td style="text-align:right">' + fmt(p.importe) + '</td>' +
+          '</tr>';
+        }).join('');
+      })
+      .catch(function(err) {
+        tktBody.innerHTML = '<tr><td colspan="3" class="vnt-empty" style="color:#f87171">Error de red: ' + err.message + '</td></tr>';
+      });
+  }
+
+  if (btnConsultar) btnConsultar.addEventListener('click', consultarTickets);
+})();
+
+// =============================================================
+//  DASHBOARD — carga datos de /api/resumen + /api/ventas + /api/ventas/alertas
+// =============================================================
+(function () {
+  var CAT_COLORS = { Novedades: '#c0392b', 'Papelería': '#e67e22', Snack: '#27ae60' };
+
+  function set(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+  function html(id, h)  { var el = document.getElementById(id); if (el) el.innerHTML  = h; }
+  function fmt(n) { return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 0 }); }
+
+  // ── Widgets ────────────────────────────────────────────────
+
+  function renderCategorias(ventasData) {
+    var cats = ventasData.porCategoria || {};
+    var total = Object.values(cats).reduce(function (s, v) { return s + v; }, 0) || 1;
+    var rows  = Object.keys(cats).map(function (cat) {
+      var val  = cats[cat] || 0;
+      var pct  = Math.round(val / total * 100);
+      var color = CAT_COLORS[cat] || '#888';
+      return '<div class="dash-cat-row">' +
+        '<span class="dash-cat-dot" style="background:' + color + '"></span>' +
+        '<span class="dash-cat-name">' + cat + '</span>' +
+        '<div class="dash-cat-bar-wrap"><div class="dash-cat-bar" style="width:' + pct + '%;background:' + color + '"></div></div>' +
+        '<span class="dash-cat-val">' + fmt(val) + '</span>' +
+      '</div>';
+    });
+
+    if (!rows.length) { html('dash-cat-wrap', '<div class="dash-empty"><i class="ti ti-chart-bar-off"></i>Sin datos</div>'); return; }
+    html('dash-cat-wrap', '<div style="display:flex;flex-direction:column;gap:10px">' + rows.join('') + '</div>');
+
+    var top = ventasData.topSucursal;
+    if (top) set('dash-vnt-footer', 'Mejor sucursal: ' + top.nombre + ' · ' + fmt(top.total));
+  }
+
+  function renderAlertas(alertas) {
+    if (!alertas || !alertas.length) {
+      html('dash-alertas-wrap', '<div class="dash-empty"><i class="ti ti-check"></i>Sin alertas de stock</div>');
+      return;
+    }
+    var items = alertas.slice(0, 5).map(function (a) {
+      return '<div class="dash-alerta-item">' +
+        '<div class="dash-alerta-ico ' + a.tipo + '">' +
+          (a.tipo === 'quiebre' ? '<i class="ti ti-alert-triangle"></i>' : '<i class="ti ti-clock-pause"></i>') +
+        '</div>' +
+        '<div class="dash-alerta-body">' +
+          '<div class="dash-alerta-prod">' + a.producto + '</div>' +
+          '<div class="dash-alerta-suc">' + a.sucursal + '</div>' +
+          '<div class="dash-alerta-msg ' + a.tipo + '">' + a.mensaje + '</div>' +
+        '</div>' +
+        '<div class="dash-alerta-stock ' + a.tipo + '">' + a.stock + ' uds</div>' +
+      '</div>';
+    });
+    html('dash-alertas-wrap', items.join(''));
+  }
+
+  function renderReportesRecientes(reportes) {
+    if (!reportes || !reportes.length) {
+      html('dash-rpt-wrap', '<div class="dash-empty"><i class="ti ti-report-off"></i>Sin reportes</div>');
+      return;
+    }
+    var items = reportes.slice(0, 5).map(function (r) {
+      var fecha = r.fecha ? new Date(r.fecha).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) : '';
+      return '<div class="dash-rpt-item">' +
+        '<span class="dash-rpt-dot ' + r.status + '"></span>' +
+        '<div class="dash-rpt-body">' +
+          '<div class="dash-rpt-desc">' + r.descripcion + '</div>' +
+          '<div class="dash-rpt-meta">' + r.sucursal + ' · ' + r.dept + ' · ' + fecha + '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    html('dash-rpt-wrap', items.join(''));
+  }
+
+  function renderTopProductos(productos) {
+    if (!productos || !productos.length) {
+      html('dash-top-wrap', '<div class="dash-empty"><i class="ti ti-package-off"></i>Sin datos</div>');
+      return;
+    }
+    var maxU = productos[0].unidades || 1;
+    var rows = productos.slice(0, 7).map(function (p, i) {
+      var pct = Math.round(p.unidades / maxU * 100);
+      return '<div class="dash-rank-row">' +
+        '<span class="dash-rank-num">' + (i + 1) + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="dash-rank-name">' + p.nombre + '</div>' +
+          '<div style="height:4px;background:var(--borde);border-radius:3px;margin-top:3px">' +
+            '<div style="height:100%;width:' + pct + '%;background:var(--acento);border-radius:3px"></div>' +
+          '</div>' +
+        '</div>' +
+        '<span class="dash-rank-cat">' + p.categoria + '</span>' +
+        '<span class="dash-rank-val">' + p.unidades + ' uds</span>' +
+      '</div>';
+    });
+    html('dash-top-wrap', rows.join(''));
+  }
+
+  function renderRankingSucursales(desglose) {
+    if (!desglose || !desglose.length) {
+      html('dash-suc-wrap', '<div class="dash-empty"><i class="ti ti-building-off"></i>Sin datos</div>');
+      return;
+    }
+    var sorted = desglose.slice().sort(function (a, b) { return b.total - a.total; });
+    var maxT   = sorted[0].total || 1;
+    var rows   = sorted.map(function (s, i) {
+      var pct = Math.round(s.total / maxT * 100);
+      var deltaSign = s.delta >= 0 ? '+' : '';
+      var deltaClass = s.delta >= 0 ? 'pos' : 'neg';
+      return '<div class="dash-rank-row">' +
+        '<span class="dash-rank-num">' + (i + 1) + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="dash-rank-name">' + s.nombre + '</div>' +
+          '<div style="height:4px;background:var(--borde);border-radius:3px;margin-top:3px">' +
+            '<div style="height:100%;width:' + pct + '%;background:#c0392b;border-radius:3px"></div>' +
+          '</div>' +
+        '</div>' +
+        '<span class="dash-rank-val">' + fmt(s.total) + '</span>' +
+        '<span class="dash-rank-delta ' + deltaClass + '">' + deltaSign + s.delta + '%</span>' +
+      '</div>';
+    });
+    html('dash-suc-wrap', rows.join(''));
+  }
+
+  // ── Carga principal ────────────────────────────────────────
+
+  async function dashCargar() {
+    var resultados = await Promise.allSettled([
+      fetch('/api/resumen').then(function (r) { return r.ok ? r.json() : null; }),
+      fetch('/api/ventas?periodo=7').then(function (r) { return r.ok ? r.json() : null; }),
+      fetch('/api/ventas/alertas').then(function (r) { return r.ok ? r.json() : null; }),
+      fetch('/api/ventas/top-productos?periodo=7').then(function (r) { return r.ok ? r.json() : null; }),
+      fetch('/api/reportes').then(function (r) { return r.ok ? r.json() : null; }),
+    ]);
+
+    var resumen  = resultados[0].value;
+    var ventas   = resultados[1].value;
+    var alertas  = resultados[2].value;
+    var tops     = resultados[3].value;
+    var reportes = resultados[4].value;
+
+    // KPI — resumen general
+    if (resumen) {
+      set('dash-cnt-emp', resumen.empleados);
+      set('dash-sub-emp', resumen.empleados === 1 ? '1 empleado activo' : (resumen.empleados || 0) + ' activos');
+      set('dash-cnt-cli', resumen.clientes);
+      set('dash-sub-cli', resumen.clientes + ' en el sistema');
+    }
+
+    // KPI — ventas 7d
+    if (ventas) {
+      set('dash-vnt-total', fmt(ventas.totalGeneral));
+      set('dash-vnt-sub', 'vs sem. ant.: ' + (ventas.deltaPromedio >= 0 ? '+' : '') + (ventas.deltaPromedio || 0) + '%');
+      renderCategorias(ventas);
+      renderRankingSucursales(ventas.desglose || []);
+    } else {
+      html('dash-cat-wrap', '<div class="dash-empty"><i class="ti ti-wifi-off"></i>Sin conexión</div>');
+    }
+
+    // KPI — alertas de stock
+    if (alertas) {
+      set('dash-stk-cnt', alertas.length);
+      set('dash-stk-sub', alertas.filter(function (a) { return a.tipo === 'quiebre'; }).length + ' quiebres · ' +
+                          alertas.filter(function (a) { return a.tipo === 'estancada'; }).length + ' estancadas');
+      renderAlertas(alertas);
+    }
+
+    // Widgets adicionales
+    renderTopProductos(tops);
+    renderReportesRecientes(reportes);
+  }
+
+  dashCargar();
+  document.querySelector('[data-seccion="dashboard"]')?.addEventListener('click', dashCargar);
+})();
+
+// =============================================================
+//  CLIENTES — lista real desde /api/clientes
+// =============================================================
+(function () {
+  var todosClientes = [];
+
+  function cliRenderTabla(lista) {
+    var tbody = document.getElementById('cli-tbody');
+    if (!tbody) return;
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--texto-suave);padding:32px">Sin clientes registrados</td></tr>';
+      return;
+    }
+    tbody.innerHTML = lista.map(function (c) {
+      var estado = c.activo
+        ? '<span class="panel-badge-ok">Activo</span>'
+        : '<span style="background:#3f1d1d;color:#f87171;font-size:.7rem;padding:2px 8px;border-radius:20px">Inactivo</span>';
+      var nombre = c.nombre || '—';
+      var canjes = (c.canjes || []).length;
+      return '<tr>' +
+        '<td><strong>' + nombre + '</strong></td>' +
+        '<td style="color:var(--texto-suave);font-size:.82rem">' + c.correo + '</td>' +
+        '<td style="font-weight:600;color:var(--acento)">' + (c.puntos || 0) + ' pts</td>' +
+        '<td style="color:var(--texto-suave)">' + canjes + '</td>' +
+        '<td>' + estado + '</td>' +
+        '<td><button class="usr-btn-accion" onclick="usrAjustarPuntos(\'' + c._id + '\',\'' + c.correo + '\',' + (c.puntos || 0) + ')" title="Ajustar puntos" style="padding:4px 8px;font-size:11px"><i class="ti ti-coin"></i> Puntos</button></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function cliActualizarStats(lista) {
+    var total  = lista.length;
+    var activos = lista.filter(function (c) { return c.activo; }).length;
+    var sumPts = lista.reduce(function (s, c) { return s + (c.puntos || 0); }, 0);
+    var prom   = total ? Math.round(sumPts / total) : 0;
+
+    var el;
+    el = document.getElementById('cli-cnt-total'); if (el) el.textContent = total;
+    el = document.getElementById('cli-cnt-pts');   if (el) el.textContent = prom;
+    el = document.getElementById('cli-cnt-act');   if (el) el.textContent = activos;
+    el = document.getElementById('cli-sub-act');   if (el) el.textContent = Math.round(activos / (total || 1) * 100) + '% del total';
+  }
+
+  async function cliCargar() {
+    try {
+      var resp = await fetch('/api/clientes');
+      if (!resp.ok) throw new Error();
+      todosClientes = await resp.json();
+      cliActualizarStats(todosClientes);
+      cliRenderTabla(todosClientes);
+    } catch (e) {
+      var tbody = document.getElementById('cli-tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#f87171;padding:32px">Error al cargar clientes</td></tr>';
+    }
+  }
+
+  window.cliBuscar = function (q) {
+    q = q.toLowerCase();
+    var filtrados = todosClientes.filter(function (c) {
+      return (c.nombre || '').toLowerCase().includes(q) || c.correo.toLowerCase().includes(q);
+    });
+    cliRenderTabla(filtrados);
+  };
+
+  // Carga cuando se activa la sección
+  document.querySelector('[data-seccion="clientes"]')?.addEventListener('click', cliCargar);
+})();
+
+// =============================================================
+//  AUDITORÍA — tabla del día desde /api/auditorias/hoy
+// =============================================================
+(function () {
+  function audRenderTabla(lista) {
+    var tbody = document.getElementById('aud-tbody');
+    if (!tbody) return;
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--texto-suave);padding:32px">Sin registros de auditoría hoy</td></tr>';
+      return;
+    }
+    tbody.innerHTML = lista.map(function (e) {
+      var a   = e.auditoria_hoy;
+      var cel = function (v) {
+        if (v === undefined || v === null) return '<td style="color:var(--texto-suave)">—</td>';
+        var color = v >= 8 ? '#16a34a' : v >= 5 ? '#d97706' : '#dc2626';
+        return '<td style="font-weight:600;color:' + color + '">' + v + '</td>';
+      };
+      var prom = a ? a.promedio : null;
+      var badgeAud = e.auditado_hoy
+        ? '<span class="panel-badge-ok" style="font-size:.7rem">Auditado</span>'
+        : '<span style="background:var(--fondo-alt);color:var(--texto-suave);font-size:.7rem;padding:2px 8px;border-radius:20px">Pendiente</span>';
+
+      return '<tr>' +
+        '<td><strong>' + e.nombre + '</strong></td>' +
+        '<td style="color:var(--texto-suave);font-size:.82rem">' + (e.sucursal || '—') + '</td>' +
+        cel(a && a.ventas) +
+        cel(a && a.actitud) +
+        cel(a && a.cumplimiento) +
+        cel(a && a.asistencia) +
+        cel(a && a.limpieza) +
+        cel(a && a.atencion_cliente) +
+        cel(a && a.eficiencia) +
+        (prom !== null ? '<td style="font-weight:700;color:var(--acento)">' + prom + '</td>' : '<td style="color:var(--texto-suave)">—</td>') +
+        '<td>' + badgeAud + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  window.audCargar = async function () {
+    var sub = document.getElementById('aud-sub');
+    if (sub) sub.textContent = 'Cargando…';
+    try {
+      var suc  = document.getElementById('aud-sel-suc')?.value || '';
+      var url  = '/api/auditorias/hoy' + (suc ? '?sucursal=' + encodeURIComponent(suc) : '');
+      var resp = await fetch(url);
+      if (!resp.ok) throw new Error();
+      var lista = await resp.json();
+      var aud   = lista.filter(function (e) { return e.auditado_hoy; }).length;
+      if (sub) sub.textContent = aud + ' de ' + lista.length + ' empleados auditados hoy';
+      audRenderTabla(lista);
+    } catch (e) {
+      var tbody = document.getElementById('aud-tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#f87171;padding:32px">Error al cargar auditorías</td></tr>';
+      if (sub) sub.textContent = 'Error al cargar';
+    }
+  };
+
+  // Carga cuando se activa la sección
+  document.querySelector('[data-seccion="auditoria"]')?.addEventListener('click', window.audCargar);
+})();
+
+// ── Inventario: descarga de Excel con stock actual ──────────────────────────
+function descargarInventario(categoria) {
+  const sucursal = document.getElementById('inv-sucursal')?.value;
+  if (!sucursal || sucursal === 'Todas las sucursales') {
+    alert('Selecciona una sucursal específica para descargar el inventario.');
+    return;
+  }
+  const fechaInput = document.getElementById('inv-fecha')?.value;
+  const hoy = new Date();
+  const fechaHoy = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  const fecha = fechaInput || fechaHoy;
+  const url = `/api/inventario/descargar?sucursal=${encodeURIComponent(sucursal)}&categoria=${categoria}&fecha=${fecha}`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 </script>
+
+{{!-- ============================================================
+     MODAL DE CORRECCIÓN DE VENTAS — solo visible para admins
+     ============================================================ --}}
+{{#if esAdmin}}
+<div id="mcor-overlay" class="mcor-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="mcor-titulo">
+  <div class="mcor-container">
+
+    <!-- ── Header ──────────────────────────────────────────── -->
+    <div class="mcor-header">
+      <div class="mcor-header-left">
+        <span class="mcor-badge">ADMIN</span>
+        <h2 id="mcor-titulo" class="mcor-titulo">
+          <i class="ti ti-pencil-dollar"></i> Corrección de Ventas
+        </h2>
+      </div>
+      <button class="mcor-close" id="mcor-close" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <!-- ── Filtros ──────────────────────────────────────────── -->
+    <div class="mcor-filtros">
+      <div class="mcor-filtro-grupo">
+        <label for="mcor-fecha">Fecha del día</label>
+        <input type="date" id="mcor-fecha" class="mcor-input">
+      </div>
+      <div class="mcor-filtro-grupo">
+        <label for="mcor-sucursal">Sucursal</label>
+        <select id="mcor-sucursal" class="mcor-input">
+          <option value="">— Selecciona —</option>
+          <option value="Simón Bolívar">Simón Bolívar</option>
+          <option value="Insurgentes">Insurgentes</option>
+          <option value="Antígona">Antígona</option>
+          <option value="Lincoln Oxxo">Lincoln Oxxo</option>
+          <option value="Lincoln 2">Lincoln 2</option>
+          <option value="Ruiz Cortines">Ruiz Cortines</option>
+          <option value="Rodas">Rodas</option>
+          <option value="Cuauhtémoc">Cuauhtémoc</option>
+          <option value="Ordóñez">Ordóñez</option>
+        </select>
+      </div>
+      <button class="mcor-btn-cargar" id="mcor-btn-cargar">
+        <i class="ti ti-search"></i> Cargar
+      </button>
+    </div>
+
+    <!-- ── Barra de acciones del registro (visible al cargar) ── -->
+    <div id="mcor-actions-bar" class="mcor-actions-bar hidden">
+      <div class="mcor-actions-left">
+        <span id="mcor-reg-badge" class="mcor-reg-badge"></span>
+        <span id="mcor-reg-info" class="mcor-reg-info"></span>
+      </div>
+      <button class="mcor-btn-agregar" id="mcor-btn-agregar" onclick="window.mcorMostrarFormAgregar()">
+        <i class="ti ti-plus"></i> Agregar ítem
+      </button>
+    </div>
+
+    <!-- ── Estado / alertas ─────────────────────────────────── -->
+    <div id="mcor-estado" class="mcor-estado hidden"></div>
+
+    <!-- ── Tabla de ítems ───────────────────────────────────── -->
+    <div class="mcor-tabla-wrap">
+      <table class="mcor-tabla" id="mcor-tabla">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th class="col-num">Unidades</th>
+            <th class="col-num">Precio unit.</th>
+            <th class="col-num">Subtotal</th>
+            <th style="width:80px;text-align:center">Guardar</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody id="mcor-tbody">
+          <tr><td colspan="7" class="mcor-fila-vacia">
+            Selecciona una fecha y sucursal para cargar las ventas.
+          </td></tr>
+        </tbody>
+        <!-- Fila formulario de nuevo ítem (oculta por defecto) -->
+        <tfoot id="mcor-add-form" class="hidden">
+          <tr class="mcor-add-row">
+            <td><input type="text"   id="mcor-add-nombre" class="mcor-inp mcor-inp-nombre" placeholder="Nombre del producto"></td>
+            <td>
+              <select id="mcor-add-cat" class="mcor-inp">
+                <option value="Novedades">Novedades</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Snack">Snack</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </td>
+            <td class="col-num"><input type="number" id="mcor-add-uds"    class="mcor-inp" min="0" step="1"    value="1"></td>
+            <td class="col-num"><input type="number" id="mcor-add-precio" class="mcor-inp" min="0" step="0.01" value="0"></td>
+            <td class="col-num" id="mcor-add-sub" style="font-weight:600;color:var(--acento)">$0.00</td>
+            <td style="text-align:center">
+              <button class="mcor-btn-row mcor-btn-ok" onclick="window.mcorSubmitAgregar()">
+                <i class="ti ti-check"></i> Guardar
+              </button>
+            </td>
+            <td style="text-align:center">
+              <button class="mcor-btn-del" onclick="window.mcorOcultarFormAgregar()" title="Cancelar">
+                <i class="ti ti-x"></i>
+              </button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- ── Historial de correcciones ───────────────────────── -->
+    <div id="mcor-historial" class="mcor-historial hidden"></div>
+
+    <!-- ── Footer ──────────────────────────────────────────── -->
+    <div class="mcor-footer">
+      <span class="mcor-footer-nota">
+        <i class="ti ti-shield-check"></i> Cambios registrados en historial de auditoría.
+      </span>
+      <div id="mcor-foot-total" class="mcor-footer-total">Total del día: <strong>—</strong></div>
+      <button class="mcor-btn-cerrar" id="mcor-btn-cerrar2">Cerrar</button>
+    </div>
+
+  </div>
+</div>
+
+{{/if}}

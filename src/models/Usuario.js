@@ -53,6 +53,13 @@ const UsuarioEsquema = new mongoose.Schema(
       default: [],
     },
 
+    // Turno habitual del empleado — lo configura él mismo desde su perfil
+    turno: {
+      type:    String,
+      enum:    ['T1', 'T2', 'T3', null],
+      default: null,
+    },
+
     // Fecha y hora del último inicio de sesión
     ultimaConexion: {
       type:    Date,

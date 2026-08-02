@@ -14,9 +14,12 @@
   <!-- Estilos del proyecto -->
   <link rel="stylesheet" href="/estilos.css">
 
-  {{!-- Bloque para hojas de estilo extra por página (opcional) --}}
+  {{!-- Hojas de estilo extra por página (hasta 2) --}}
   {{#if estiloExtra}}
     <link rel="stylesheet" href="/{{estiloExtra}}">
+  {{/if}}
+  {{#if estiloExtra2}}
+    <link rel="stylesheet" href="/{{estiloExtra2}}">
   {{/if}}
 </head>
 <body>
@@ -26,6 +29,11 @@
 
   <!-- Script principal -->
   <script src="/{{scriptPrincipal}}"></script>
+
+  {{!-- Script extra por página (opcional) --}}
+  {{#if scriptExtra}}
+    <script src="/{{scriptExtra}}"></script>
+  {{/if}}
 
 </body>
 </html>

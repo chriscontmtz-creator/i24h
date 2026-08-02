@@ -1,0 +1,17 @@
+[
+  { "nombre": "Hoja doble carta",       "categoria": "Papelería", "sucursal": "Simón Bolívar",  "unidades": 320, "precio": 2.5  },
+  { "nombre": "Tabloide couche suelto", "categoria": "Papelería", "sucursal": "Insurgentes",    "unidades": 280, "precio": 4.0  },
+  { "nombre": "Novedad rojo $20",       "categoria": "Novedades", "sucursal": "Antígona",        "unidades": 215, "precio": 20   },
+  { "nombre": "Hoja opalina",           "categoria": "Papelería", "sucursal": "Ruiz Cortines",   "unidades": 190, "precio": 3.5  },
+  { "nombre": "Pasta transparente",     "categoria": "Papelería", "sucursal": "Simón Bolívar",   "unidades": 175, "precio": 5.0  },
+  { "nombre": "Novedad azul $30",       "categoria": "Novedades", "sucursal": "Cuauhtémoc",      "unidades": 160, "precio": 30   },
+  { "nombre": "Sabritas varios",        "categoria": "Snack",     "sucursal": "Lincoln Oxxo",    "unidades": 155, "precio": 15   },
+  { "nombre": "Galleta varios",         "categoria": "Snack",     "sucursal": "Rodas",            "unidades": 142, "precio": 12   },
+  { "nombre": "Legajo carta",           "categoria": "Papelería", "sucursal": "Lincoln 2",        "unidades": 138, "precio": 6.0  },
+  { "nombre": "Coca Cola",              "categoria": "Snack",     "sucursal": "Ordóñez",          "unidades": 130, "precio": 18   },
+  { "nombre": "Novedad verde $40",      "categoria": "Novedades", "sucursal": "Insurgentes",      "unidades": 125, "precio": 40   },
+  { "nombre": "Pluma negra",            "categoria": "Papelería", "sucursal": "Antígona",         "unidades": 118, "precio": 3.0  },
+  { "nombre": "Agua 500ml",             "categoria": "Snack",     "sucursal": "Simón Bolívar",    "unidades": 115, "precio": 10   },
+  { "nombre": "Llavero Funko",          "categoria": "Novedades", "sucursal": "Ruiz Cortines",    "unidades":  98, "precio": 50   },
+  { "nombre": "Enmicado carta",         "categoria": "Papelería", "sucursal": "Cuauhtémoc",       "unidades":  90, "precio": 12   }
+]

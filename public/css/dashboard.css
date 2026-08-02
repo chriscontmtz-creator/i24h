@@ -1,0 +1,588 @@
+/* ============================================================
+   DASHBOARD — i24h  (variables propias, sobreescriben estilos.css)
+   ============================================================ */
+
+/* Variables del sistema de diseño */
+.dash-root {
+  --d-acento:      #D72638;
+  --d-acento-osc:  #B71E2E;
+  --d-sup:         #FFFFFF;
+  --d-sup-alt:     #F8F7F5;
+  --d-fondo:       #F1F0ED;
+  --d-fondo-alt:   #E8E7E3;
+  --d-texto:       #1A1A1A;
+  --d-tex-suave:   #6B6B6B;
+  --d-tex-muted:   #9A9A9A;
+  --d-borde:       #E0DFDB;
+  --d-borde-f:     #C8C7C3;
+  --d-radio:       8px;
+  --d-sombra:      0 1px 3px rgba(0,0,0,.06);
+  --d-t1:          #2E7D32;  --d-t1-bg: #EAF3DE;  --d-t1-txt: #27500A;
+  --d-t2:          #1565C0;  --d-t2-bg: #E6F1FB;  --d-t2-txt: #0C447C;
+  --d-t3:          #C62828;  --d-t3-bg: #FCEBEB;  --d-t3-txt: #791F1F;
+  --d-exito:       #2E7D32;  --d-exito-bg: #EAF3DE;
+  --d-alerta:      #E65100;  --d-alerta-bg: #FFF3E0;
+  --d-peligro:     #C62828;  --d-peligro-bg: #FCEBEB;
+  --d-info:        #1565C0;  --d-info-bg: #E6F1FB;
+}
+
+/* Dark mode */
+body.dark .dash-root, html.dark .dash-root {
+  --d-sup:       #1E1E1E;
+  --d-sup-alt:   #252525;
+  --d-fondo:     #141414;
+  --d-fondo-alt: #1A1A1A;
+  --d-texto:     #E8E8E8;
+  --d-tex-suave: #A0A0A0;
+  --d-tex-muted: #707070;
+  --d-borde:     #333333;
+  --d-borde-f:   #444444;
+  --d-sombra:    0 1px 3px rgba(0,0,0,.3);
+  --d-t1-bg:     #1B2E12;  --d-t1-txt: #A0D080;
+  --d-t2-bg:     #0F1F35;  --d-t2-txt: #80B8E8;
+  --d-t3-bg:     #2E1212;  --d-t3-txt: #E88080;
+  --d-exito-bg:  #1B2E12;
+  --d-alerta-bg: #2E1E0E;
+  --d-peligro-bg:#2E1212;
+  --d-info-bg:   #0F1F35;
+}
+
+/* ── Layout raíz ──────────────────────────────────────────── */
+.dash-root {
+  display: flex;
+  min-height: 100vh;
+  background: var(--d-fondo);
+  color: var(--d-texto);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.dash-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--d-sup);
+  border-right: 1px solid var(--d-borde);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.dash-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1rem 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--d-borde);
+}
+
+.dash-logo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--d-acento);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-logo-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--d-texto);
+}
+
+.dash-nav {
+  flex: 1;
+  padding: 12px 0;
+}
+
+.dash-nav-group {
+  padding: 8px 0;
+}
+
+.dash-nav-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--d-tex-muted);
+  padding: 4px 1.25rem;
+}
+
+.dash-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 1.25rem;
+  font-size: 13px;
+  color: var(--d-tex-suave);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: background .12s, color .12s;
+}
+
+.dash-nav-item:hover {
+  background: var(--d-fondo);
+  color: var(--d-texto);
+}
+
+.dash-nav-item--active {
+  background: #FCEBEB;
+  color: var(--d-acento);
+  border-left-color: var(--d-acento);
+  font-weight: 500;
+}
+
+body.dark .dash-nav-item--active {
+  background: #3D1F1F;
+}
+
+.dash-nav-item i { font-size: 17px; flex-shrink: 0; }
+
+.dash-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 1.25rem;
+  border-top: 1px solid var(--d-borde);
+  background: var(--d-sup-alt);
+}
+
+.dash-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--d-acento);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-user-name  { font-size: 13px; font-weight: 600; color: var(--d-texto); }
+.dash-user-role  { font-size: 11px; color: var(--d-tex-muted); text-transform: capitalize; }
+
+/* ── Main ─────────────────────────────────────────────────── */
+.dash-main {
+  flex: 1;
+  min-width: 0;
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+}
+
+/* ── Page header ──────────────────────────────────────────── */
+.dash-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  gap: 12px;
+}
+
+.dash-page-title {
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dash-page-sub {
+  font-size: 12px;
+  color: var(--d-tex-muted);
+  margin-top: 3px;
+}
+
+.dash-page-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Filtros ──────────────────────────────────────────────── */
+.dash-filtros {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: .75rem;
+}
+
+.dash-dias-semana {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.dash-dia-btn {
+  padding: 5px 13px;
+  border-radius: var(--d-radio);
+  border: 1px solid var(--d-borde-f);
+  background: var(--d-sup);
+  color: var(--d-texto);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .12s, border-color .12s;
+}
+.dash-dia-btn:hover       { background: var(--d-fondo-alt); }
+.dash-dia-btn--activo     { background: var(--d-acento); color: #fff; border-color: var(--d-acento); }
+
+/* ── Botones ──────────────────────────────────────────────── */
+.dash-btn-o {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--d-radio);
+  border: 1px solid var(--d-borde-f);
+  background: var(--d-sup);
+  color: var(--d-texto);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+  text-decoration: none;
+}
+
+.dash-btn-o:hover { background: var(--d-fondo-alt); border-color: var(--d-borde-f); }
+
+.dash-btn-p {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--d-radio);
+  border: none;
+  background: var(--d-acento);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.dash-btn-p:hover { background: var(--d-acento-osc); }
+
+/* ── Select ───────────────────────────────────────────────── */
+.dash-sel {
+  padding: 7px 12px;
+  border-radius: var(--d-radio);
+  border: 1px solid var(--d-borde);
+  background: var(--d-sup);
+  color: var(--d-texto);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dash-sel:focus { outline: none; border-color: var(--d-acento); }
+
+/* ── Pills ────────────────────────────────────────────────── */
+.dash-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dash-pill--acento  { background: var(--d-acento); color: #fff; }
+.dash-pill--exito   { background: var(--d-exito-bg); color: var(--d-exito); }
+.dash-pill--alerta  { background: var(--d-alerta-bg); color: var(--d-alerta); }
+.dash-pill--peligro { background: var(--d-peligro-bg); color: var(--d-peligro); }
+.dash-pill--info    { background: var(--d-info-bg); color: var(--d-info); }
+.dash-pill--neutral { background: var(--d-fondo-alt); color: var(--d-tex-suave); }
+
+/* ── Sección título ───────────────────────────────────────── */
+.dash-sec-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--d-texto);
+  margin: 1.5rem 0 .75rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-sec-titulo i { color: var(--d-acento); }
+
+/* ── Cards ────────────────────────────────────────────────── */
+.dash-card {
+  background: var(--d-sup);
+  border: 1px solid var(--d-borde);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: var(--d-sombra);
+}
+
+.dash-card-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.dash-card-titulo {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-card-titulo i { color: var(--d-acento); }
+
+.dash-link-btn {
+  font-size: 12px;
+  color: var(--d-acento);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity .12s;
+}
+
+.dash-link-btn:hover { opacity: .7; }
+
+/* ── KPIs ─────────────────────────────────────────────────── */
+.dash-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.dash-kpi {
+  background: var(--d-sup-alt);
+  border-radius: var(--d-radio);
+  padding: 1rem;
+  border: 1px solid var(--d-borde);
+}
+
+.dash-kpi-label {
+  font-size: 12px;
+  color: var(--d-tex-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.dash-kpi-valor {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--d-texto);
+  line-height: 1.2;
+}
+
+.dash-kpi-sub {
+  font-size: 11px;
+  color: var(--d-tex-muted);
+  margin-top: 4px;
+}
+
+/* ── Gráfica ──────────────────────────────────────────────── */
+.dash-chart-card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+}
+
+/* ── Turnos ───────────────────────────────────────────────── */
+.dash-turno-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.dash-turno-card {
+  padding: 14px 16px;
+  border-radius: var(--d-radio);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dash-turno-t1 { background: var(--d-t1-bg); }
+.dash-turno-t2 { background: var(--d-t2-bg); }
+.dash-turno-t3 { background: var(--d-t3-bg); }
+
+.dash-turno-lbl  { font-size: 13px; font-weight: 600; }
+.dash-turno-hora { font-size: 11px; margin-top: 2px; opacity: .75; }
+.dash-turno-val  { font-size: 20px; font-weight: 700; }
+.dash-sin-datos  { font-size: 13px !important; opacity: .5; }
+
+.dash-turno-t1 .dash-turno-lbl,
+.dash-turno-t1 .dash-turno-hora,
+.dash-turno-t1 .dash-turno-val { color: var(--d-t1-txt); }
+.dash-turno-t2 .dash-turno-lbl,
+.dash-turno-t2 .dash-turno-hora,
+.dash-turno-t2 .dash-turno-val { color: var(--d-t2-txt); }
+.dash-turno-t3 .dash-turno-lbl,
+.dash-turno-t3 .dash-turno-hora,
+.dash-turno-t3 .dash-turno-val { color: var(--d-t3-txt); }
+
+/* ── Grid de 2 columnas ───────────────────────────────────── */
+.dash-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* ── Top productos ────────────────────────────────────────── */
+.dash-prod-fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--d-borde);
+}
+
+.dash-prod-fila:last-child { border-bottom: none; }
+
+.dash-prod-info  { flex: 1; min-width: 0; }
+.dash-prod-nombre { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-prod-cat   { font-size: 11px; color: var(--d-tex-muted); }
+.dash-prod-uds   { font-size: 12px; color: var(--d-tex-suave); min-width: 55px; text-align: right; }
+.dash-prod-monto { font-size: 13px; font-weight: 600; min-width: 70px; text-align: right; }
+
+/* ── Barras horizontales ──────────────────────────────────── */
+.dash-barra-fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.dash-barra-label {
+  font-size: 12px;
+  color: var(--d-tex-suave);
+  min-width: 90px;
+  text-align: right;
+}
+
+.dash-barra-track {
+  flex: 1;
+  height: 22px;
+  background: var(--d-fondo-alt);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dash-barra-fill {
+  height: 100%;
+  background: var(--d-acento);
+  border-radius: 4px;
+  transition: width .4s ease;
+}
+
+.dash-barra-valor {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 70px;
+  text-align: right;
+}
+
+/* ── Inventario de material ───────────────────────────────── */
+.dash-inv-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.dash-inv-scroll {
+  overflow-y: auto;
+  max-height: 420px;
+  margin-top: 10px;
+  border-radius: var(--d-radio);
+  border: 1px solid var(--d-borde);
+}
+
+.dash-inv-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dash-inv-tabla thead tr {
+  position: sticky;
+  top: 0;
+  background: var(--d-fondo-alt);
+  z-index: 1;
+}
+
+.dash-inv-tabla th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--d-tex-muted);
+  border-bottom: 1px solid var(--d-borde);
+}
+
+.dash-inv-tabla td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--d-borde);
+  vertical-align: middle;
+}
+
+.dash-inv-tabla tbody tr:last-child td { border-bottom: none; }
+
+.dash-inv-row--agotado { background: var(--d-peligro-bg); }
+.dash-inv-row--bajo    { background: var(--d-alerta-bg); }
+
+.dash-inv-tabla tbody tr:hover { background: var(--d-fondo-alt); }
+.dash-inv-row--agotado:hover   { background: var(--d-peligro-bg); }
+.dash-inv-row--bajo:hover      { background: var(--d-alerta-bg); }
+
+.dash-inv-nombre    { font-weight: 500; color: var(--d-texto); }
+.dash-inv-num       { text-align: right; color: var(--d-tex-suave); white-space: nowrap; }
+.dash-inv-stock-val { font-weight: 700; color: var(--d-texto); }
+.dash-inv-estado    { text-align: center; white-space: nowrap; }
+
+/* ── Revisiones pendientes ────────────────────────────────── */
+.dash-rev-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--d-borde);
+  gap: 12px;
+}
+
+.dash-rev-fila:last-child { border-bottom: none; }
+.dash-rev-info { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dash-rev-suc  { font-size: 13px; font-weight: 600; }
+.dash-rev-det  { font-size: 12px; color: var(--d-tex-muted); }
+.dash-rev-dif  { font-size: 13px; font-weight: 600; color: var(--d-peligro); }
+
+/* ── Estado vacío ─────────────────────────────────────────── */
+.dash-empty-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 0;
+  color: var(--d-tex-muted);
+  font-size: 13px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .dash-sidebar { display: none; }
+  .dash-main    { padding: 1rem; }
+  .dash-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-grid-2   { grid-template-columns: 1fr; }
+  .dash-turno-grid { grid-template-columns: 1fr; }
+}

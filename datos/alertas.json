@@ -1,0 +1,8 @@
+[
+  { "tipo": "quiebre",   "producto": "Novedad rojo $20",  "sucursal": "Antígona",       "stock":  3, "vendidos7": 215, "mensaje": "Alto movimiento con stock crítico" },
+  { "tipo": "quiebre",   "producto": "Sabritas varios",   "sucursal": "Lincoln Oxxo",   "stock":  5, "vendidos7": 155, "mensaje": "Alto movimiento con stock crítico" },
+  { "tipo": "quiebre",   "producto": "Agua 500ml",        "sucursal": "Simón Bolívar",  "stock":  8, "vendidos7": 115, "mensaje": "Alto movimiento con stock bajo"    },
+  { "tipo": "estancada", "producto": "Novedad negra $350","sucursal": "Insurgentes",    "stock": 12, "vendidos7":   0, "mensaje": "Sin ventas en 7 días"              },
+  { "tipo": "estancada", "producto": "Memoria USB 32gb",  "sucursal": "Cuauhtémoc",     "stock":  9, "vendidos7":   1, "mensaje": "Stock alto, baja rotación"         },
+  { "tipo": "estancada", "producto": "Llavero Funko",     "sucursal": "Ordóñez",        "stock": 14, "vendidos7":   2, "mensaje": "Stock alto, baja rotación"         }
+]

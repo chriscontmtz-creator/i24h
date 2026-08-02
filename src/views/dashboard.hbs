@@ -1,0 +1,373 @@
+<div class="dash-root">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SIDEBAR
+       ═══════════════════════════════════════════════════════════ -->
+  <aside class="dash-sidebar">
+    <div class="dash-logo">
+      <span class="dash-logo-mark">i24h</span>
+      <span class="dash-logo-label">Dashboard</span>
+    </div>
+
+    <nav class="dash-nav">
+      <div class="dash-nav-group">
+        <span class="dash-nav-label">Principal</span>
+        <a href="/dashboard" class="dash-nav-item dash-nav-item--active">
+          <i class="ti ti-layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a href="/panel" class="dash-nav-item">
+          <i class="ti ti-grid-dots"></i><span>Panel</span>
+        </a>
+      </div>
+      <div class="dash-nav-group">
+        <span class="dash-nav-label">Operaciones</span>
+        <a href="/revisiones" class="dash-nav-item">
+          <i class="ti ti-clipboard-check"></i><span>Revisiones</span>
+        </a>
+        <a href="/horarios" class="dash-nav-item">
+          <i class="ti ti-calendar-time"></i><span>Horarios</span>
+        </a>
+      </div>
+      <div class="dash-nav-group">
+        <span class="dash-nav-label">Sistema</span>
+        <a href="/" class="dash-nav-item">
+          <i class="ti ti-home"></i><span>Inicio</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="dash-sidebar-user">
+      <div class="dash-user-avatar">{{usuario.nombre.[0]}}</div>
+      <div class="dash-user-info">
+        <p class="dash-user-name">{{usuario.nombre}}</p>
+        <p class="dash-user-role">{{usuario.cargo}}</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════════════════════ -->
+  <main class="dash-main">
+
+    <!-- ── Header ───────────────────────────────────────────── -->
+    <div class="dash-page-header">
+      <div>
+        <h1 class="dash-page-title">
+          Dashboard
+          <span class="dash-pill dash-pill--acento">{{labelPeriodo}}</span>
+        </h1>
+        <p class="dash-page-sub">{{labelFechas}} · Sync: {{fechaSync}}</p>
+      </div>
+      <div class="dash-page-actions">
+        <button class="dash-btn-o" onclick="window.location.href='/dashboard?sucursal={{sucursalActiva}}&periodo={{periodoActivo}}&turno={{turnoActivo}}'">
+          <i class="ti ti-refresh"></i> Actualizar
+        </button>
+        <button class="dash-btn-o" id="dash-dark-btn">
+          <i class="ti ti-moon" id="dash-dark-ico"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Filtros ───────────────────────────────────────────── -->
+    <form class="dash-filtros" method="get" action="/dashboard">
+      <input type="hidden" name="dia" value="{{diaFiltro}}">
+      <select class="dash-sel" name="sucursal" onchange="this.form.submit()">
+        <option value="todas">Todas las sucursales</option>
+        {{#each sucursales}}
+          <option value="{{nombre}}" {{#if activa}}selected{{/if}}>{{nombre}}</option>
+        {{/each}}
+      </select>
+      <select class="dash-sel" name="periodo" onchange="this.form.submit()">
+        <option value="hoy"       {{#if periodoHoy}}selected{{/if}}>Hoy</option>
+        <option value="semana"    {{#if periodoSemana}}selected{{/if}}>Esta semana</option>
+        <option value="mes"       {{#if periodoMes}}selected{{/if}}>Este mes</option>
+        <option value="mes-pasado"{{#if periodoMesPasado}}selected{{/if}}>Mes pasado</option>
+        <option value="semestre"  {{#if periodoSemestre}}selected{{/if}}>Últimos 6 meses</option>
+      </select>
+      <select class="dash-sel" name="turno" onchange="this.form.submit()">
+        <option value="todos"  {{#if turnoTodos}}selected{{/if}}>Todos los turnos</option>
+        <option value="Turno1" {{#if turnoT1}}selected{{/if}}>Turno 1</option>
+        <option value="Turno2" {{#if turnoT2}}selected{{/if}}>Turno 2</option>
+        <option value="Turno3" {{#if turnoT3}}selected{{/if}}>Turno 3</option>
+      </select>
+    </form>
+
+    <!-- ── Días de la semana (solo visible en "Esta semana") ──── -->
+    {{#if periodoSemana}}
+    <div class="dash-dias-semana">
+      <a href="/dashboard?sucursal={{sucursalActiva}}&periodo=semana&turno={{turnoActivo}}&dia=todos"
+         class="dash-dia-btn{{#unless diaActivo}} dash-dia-btn--activo{{/unless}}">Todos</a>
+      {{#each diasSemana}}
+      <a href="/dashboard?sucursal={{../sucursalActiva}}&periodo=semana&turno={{../turnoActivo}}&dia={{fecha}}"
+         class="dash-dia-btn{{#if activo}} dash-dia-btn--activo{{/if}}">{{nombre}}</a>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    <!-- ── 4 KPIs ────────────────────────────────────────────── -->
+    <div class="dash-kpi-grid">
+      <div class="dash-kpi">
+        <div class="dash-kpi-label"><i class="ti ti-cash"></i> Venta total</div>
+        <div class="dash-kpi-valor">{{ventaTotalFmt}}</div>
+        <div class="dash-kpi-sub">{{labelPeriodo}}</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label"><i class="ti ti-receipt"></i> Tickets</div>
+        <div class="dash-kpi-valor">{{totalTickets}}</div>
+        <div class="dash-kpi-sub">{{labelFechas}}</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label"><i class="ti ti-users"></i> Empleados activos</div>
+        <div class="dash-kpi-valor">{{empleadosCount}}</div>
+        <div class="dash-kpi-sub">En todas las sucursales</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label"><i class="ti ti-building-store"></i> Sucursal</div>
+        <div class="dash-kpi-valor" style="font-size:1rem">{{sucursalActiva}}</div>
+        <div class="dash-kpi-sub">Filtro activo</div>
+      </div>
+    </div>
+
+    <!-- ── Gráfica de ventas diarias ─────────────────────────── -->
+    <p class="dash-sec-titulo"><i class="ti ti-chart-bar"></i> Venta diaria</p>
+    <div class="dash-card dash-chart-card">
+      <canvas id="chartVentas" height="220"></canvas>
+    </div>
+
+    <!-- ── Turnos ────────────────────────────────────────────── -->
+    <p class="dash-sec-titulo"><i class="ti ti-clock"></i> Recaudación por turno (promedio diario)</p>
+    <div class="dash-turno-grid">
+      {{#if hayTurnos}}
+        <div class="dash-turno-card dash-turno-t1">
+          <div><div class="dash-turno-lbl">{{turnosData.T1.label}}</div><div class="dash-turno-hora">Turno 1 · 7:00 – 3:30</div></div>
+          <div class="dash-turno-val">{{turnosData.T1.promedio}}</div>
+        </div>
+        <div class="dash-turno-card dash-turno-t2">
+          <div><div class="dash-turno-lbl">{{turnosData.T2.label}}</div><div class="dash-turno-hora">Turno 2 · 2:00 – 10:30</div></div>
+          <div class="dash-turno-val">{{turnosData.T2.promedio}}</div>
+        </div>
+        <div class="dash-turno-card dash-turno-t3">
+          <div><div class="dash-turno-lbl">{{turnosData.T3.label}}</div><div class="dash-turno-hora">Turno 3 · 10:00 – 7:00</div></div>
+          <div class="dash-turno-val">{{turnosData.T3.promedio}}</div>
+        </div>
+      {{else}}
+        <div class="dash-turno-card dash-turno-t1">
+          <div><div class="dash-turno-lbl">Turno 1</div><div class="dash-turno-hora">7:00 am – 3:30 pm</div></div>
+          <div class="dash-turno-val dash-sin-datos">Sin datos</div>
+        </div>
+        <div class="dash-turno-card dash-turno-t2">
+          <div><div class="dash-turno-lbl">Turno 2</div><div class="dash-turno-hora">2:00 pm – 10:30 pm</div></div>
+          <div class="dash-turno-val dash-sin-datos">Sin datos</div>
+        </div>
+        <div class="dash-turno-card dash-turno-t3">
+          <div><div class="dash-turno-lbl">Turno 3</div><div class="dash-turno-hora">10:00 pm – 7:00 am</div></div>
+          <div class="dash-turno-val dash-sin-datos">Sin datos</div>
+        </div>
+      {{/if}}
+    </div>
+
+    <!-- ── Grid 2 col: Productos + Concepto ──────────────────── -->
+    <div class="dash-grid-2">
+
+      <!-- Top productos -->
+      <div class="dash-card">
+        <div class="dash-card-hdr">
+          <p class="dash-card-titulo"><i class="ti ti-star"></i> Top productos (unidades)</p>
+          <a href="/panel" class="dash-link-btn">Ver ventas</a>
+        </div>
+        {{#if hayProductos}}
+          {{#each topProductos}}
+            <div class="dash-prod-fila">
+              <div class="dash-prod-info">
+                <div class="dash-prod-nombre">{{nombre}}</div>
+              </div>
+              <div class="dash-prod-uds">{{unidades}} uds</div>
+              <div class="dash-prod-monto">{{montoFmt}}</div>
+            </div>
+          {{/each}}
+        {{else}}
+          <div class="dash-empty-state"><i class="ti ti-package-off"></i> Sin registros en el período</div>
+        {{/if}}
+      </div>
+
+      <!-- Venta por concepto -->
+      <div class="dash-card">
+        <div class="dash-card-hdr">
+          <p class="dash-card-titulo"><i class="ti ti-chart-pie"></i> Venta por categoría</p>
+        </div>
+        {{#if hayCategorias}}
+          {{#each ventaCategoria}}
+            <div class="dash-barra-fila">
+              <div class="dash-barra-label">{{categoria}}</div>
+              <div class="dash-barra-track">
+                <div class="dash-barra-fill" style="width:{{barWidth}}%"></div>
+              </div>
+              <div class="dash-barra-valor">{{totalFmt}}</div>
+            </div>
+          {{/each}}
+        {{else}}
+          <div class="dash-empty-state"><i class="ti ti-chart-off"></i> Sin datos de ventas</div>
+        {{/if}}
+      </div>
+    </div>
+
+    <!-- ── Inventario de material (tabla completa) ───────────── -->
+    <div class="dash-card" style="margin-bottom:1.5rem">
+      <div class="dash-card-hdr">
+        <p class="dash-card-titulo"><i class="ti ti-package"></i> Inventario de material</p>
+        <div class="dash-inv-badges">
+          <span class="dash-pill dash-pill--exito">{{stockResumen.ok}} OK</span>
+          {{#if stockResumen.bajos}}<span class="dash-pill dash-pill--alerta">{{stockResumen.bajos}} Bajos</span>{{/if}}
+          {{#if stockResumen.agotados}}<span class="dash-pill dash-pill--peligro">{{stockResumen.agotados}} Agotados</span>{{/if}}
+        </div>
+      </div>
+      {{#if hayStock}}
+        <div class="dash-inv-scroll">
+          <table class="dash-inv-tabla">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th class="dash-inv-num">Precio</th>
+                <th class="dash-inv-num">Stock</th>
+                <th class="dash-inv-num">Mínimo</th>
+                <th class="dash-inv-estado">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each stockProductos}}
+                <tr class="dash-inv-row {{rowClase}}">
+                  <td class="dash-inv-nombre">{{nombre}}</td>
+                  <td class="dash-inv-num">${{precio}}</td>
+                  <td class="dash-inv-num dash-inv-stock-val">{{stock}}</td>
+                  <td class="dash-inv-num">{{minimo}}</td>
+                  <td class="dash-inv-estado">
+                    <span class="dash-pill dash-pill--{{estadoClase}}">{{estadoLabel}}</span>
+                  </td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      {{else}}
+        <div class="dash-empty-state"><i class="ti ti-package-off"></i> Sin datos de inventario — sincroniza primero</div>
+      {{/if}}
+    </div>
+
+    <!-- ── Revisiones pendientes ──────────────────────────────── -->
+    <div class="dash-card" style="margin-bottom:2rem">
+      <div class="dash-card-hdr">
+        <p class="dash-card-titulo"><i class="ti ti-clipboard-check"></i> Revisiones pendientes / cobrables</p>
+        <a href="/revisiones" class="dash-link-btn">Ver todas</a>
+      </div>
+      {{#if hayRevisiones}}
+        {{#each revisionesPend}}
+          <div class="dash-rev-fila">
+            <div class="dash-rev-info">
+              <span class="dash-pill {{#if esCobrable}}dash-pill--peligro{{else}}dash-pill--alerta{{/if}}">
+                {{#if esCobrable}}Cobrable{{else}}Pendiente{{/if}}
+              </span>
+              <span class="dash-rev-suc">{{sucursal}}</span>
+              <span class="dash-rev-det">Caja #{{ncaja}} · {{turno}}</span>
+            </div>
+            <span class="dash-rev-dif">Dif: {{diferenciaTotal}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="dash-empty-state"><i class="ti ti-circle-check"></i> Sin revisiones pendientes</div>
+      {{/if}}
+    </div>
+
+    <!-- ── Verificar ventas del sync ──────────────────────────── -->
+    <div class="dash-card" style="margin-bottom:2rem">
+      <div class="dash-card-hdr">
+        <p class="dash-card-titulo"><i class="ti ti-database"></i> Ventas registradas por el sync</p>
+        <span style="font-size:.75rem;color:var(--dash-texto-suave)">Directo desde MongoDB · sin filtro de caja</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <select class="dash-sel" id="dtkt-suc" style="min-width:160px">
+          {{#each sucursales}}
+            <option value="{{nombre}}" {{#if activa}}selected{{/if}}>{{nombre}}</option>
+          {{/each}}
+        </select>
+        <input type="date" class="dash-sel" id="dtkt-fecha" style="max-width:155px">
+        <button class="dash-btn-o" id="dtkt-btn" style="gap:6px">
+          <i class="ti ti-search"></i> Consultar
+        </button>
+        <span id="dtkt-resumen" style="font-size:.82rem;color:var(--dash-texto-suave)"></span>
+      </div>
+      <div style="overflow-x:auto;max-height:320px;overflow-y:auto">
+        <table class="dash-inv-tabla" id="dtkt-tabla" style="width:100%">
+          <thead>
+            <tr>
+              <th style="text-align:left">Producto / Servicio</th>
+              <th style="text-align:right">Unidades</th>
+              <th style="text-align:right">Importe</th>
+            </tr>
+          </thead>
+          <tbody id="dtkt-body">
+            <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--dash-texto-suave)">Selecciona sucursal y fecha, luego presiona Consultar.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Datos para Chart.js (embebidos en el HTML, leídos por dashboard.js) -->
+<script>window.DASH_DATA = {{{dashJson}}};</script>
+<!-- Chart.js — debe cargarse ANTES de dashboard.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+(function () {
+  var btn     = document.getElementById('dtkt-btn');
+  var sucSel  = document.getElementById('dtkt-suc');
+  var fechaIn = document.getElementById('dtkt-fecha');
+  var body    = document.getElementById('dtkt-body');
+  var resumen = document.getElementById('dtkt-resumen');
+
+  // Pre-llenar con hoy en hora México
+  var hoyMx = new Date(Date.now() - 6 * 60 * 60 * 1000);
+  if (fechaIn) fechaIn.value = hoyMx.toISOString().split('T')[0];
+
+  function fmt(n) {
+    return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function consultar() {
+    if (!body) return;
+    var suc   = sucSel  ? sucSel.value   : '';
+    var fecha = fechaIn ? fechaIn.value  : '';
+    body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px">Consultando…</td></tr>';
+    if (resumen) resumen.textContent = '';
+
+    fetch('/api/tickets/dia?sucursal=' + encodeURIComponent(suc) + '&fecha=' + encodeURIComponent(fecha))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ok) {
+          body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:#f87171">Error: ' + (d.error || 'desconocido') + '</td></tr>';
+          return;
+        }
+        if (resumen) resumen.innerHTML = '<strong>' + d.numTickets + ' tickets</strong> · Total: <strong>' + fmt(d.total) + '</strong>';
+        if (!d.resumenProductos || d.resumenProductos.length === 0) {
+          body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--dash-texto-suave)">Sin ventas registradas para esa fecha y sucursal.</td></tr>';
+          return;
+        }
+        body.innerHTML = d.resumenProductos.map(function (p) {
+          return '<tr>' +
+            '<td>' + p.detalle + '</td>' +
+            '<td style="text-align:right">' + p.unidades + '</td>' +
+            '<td style="text-align:right">' + fmt(p.importe) + '</td>' +
+            '</tr>';
+        }).join('');
+      })
+      .catch(function (err) {
+        body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:#f87171">Error de red: ' + err.message + '</td></tr>';
+      });
+  }
+
+  if (btn) btn.addEventListener('click', consultar);
+})();
+</script>

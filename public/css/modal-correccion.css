@@ -1,0 +1,503 @@
+/* ================================================================
+   Modal de corrección de ventas — admin / coordinador
+   Dark mode permanente usando variables del sistema i24h
+   ================================================================ */
+
+/* ── Overlay ─────────────────────────────────────────────────── */
+.mcor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.80);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  padding: 1rem;
+  animation: mcorFadeIn .16s ease;
+}
+
+.mcor-overlay.hidden { display: none; }
+
+@keyframes mcorFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Contenedor ──────────────────────────────────────────────── */
+.mcor-container {
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 920px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 80px rgba(0,0,0,.75);
+  animation: mcorSlideUp .2s ease;
+  overflow: hidden;
+}
+
+@keyframes mcorSlideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.mcor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  background: var(--fondo-alt);
+  border-bottom: 1px solid var(--borde);
+  flex-shrink: 0;
+}
+
+.mcor-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mcor-badge {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--acento);
+  background: rgba(192,57,43,.13);
+  border: 1px solid rgba(192,57,43,.35);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.mcor-titulo {
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--texto);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mcor-close {
+  background: none;
+  border: none;
+  color: var(--texto-suave);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 5px;
+  transition: color .15s, background .15s;
+}
+
+.mcor-close:hover {
+  color: var(--texto);
+  background: var(--borde);
+}
+
+/* ── Filtros ─────────────────────────────────────────────────── */
+.mcor-filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--borde);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.mcor-filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mcor-filtro-grupo label {
+  font-size: .67rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.mcor-input {
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  color: var(--texto);
+  font-size: .84rem;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color .15s;
+  height: 34px;
+}
+
+.mcor-input:focus { border-color: var(--acento); }
+select.mcor-input { min-width: 155px; cursor: pointer; }
+
+.mcor-btn-cargar {
+  background: var(--acento);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0 18px;
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.mcor-btn-cargar:hover { opacity: .82; }
+
+/* ── Barra de acciones ───────────────────────────────────────── */
+.mcor-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 18px;
+  background: rgba(192,57,43,.06);
+  border-bottom: 1px solid var(--borde);
+  flex-shrink: 0;
+}
+
+.mcor-actions-bar.hidden { display: none; }
+
+.mcor-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .78rem;
+}
+
+/* Badge orig/corregido */
+.mcor-reg-badge {
+  font-size: .63rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: .05em;
+}
+
+.mcor-reg-badge.orig {
+  background: rgba(39,174,96,.15);
+  color: #4ade80;
+  border: 1px solid rgba(39,174,96,.3);
+}
+
+.mcor-reg-badge.correg {
+  background: rgba(217,119,6,.15);
+  color: #fbbf24;
+  border: 1px solid rgba(217,119,6,.3);
+}
+
+.mcor-reg-info { color: var(--texto-suave); }
+
+.mcor-btn-agregar {
+  background: transparent;
+  border: 1px solid var(--acento);
+  color: var(--acento);
+  border-radius: 6px;
+  padding: 4px 14px;
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mcor-btn-agregar:hover {
+  background: var(--acento);
+  color: #fff;
+}
+
+/* ── Estado / alertas ────────────────────────────────────────── */
+.mcor-estado {
+  padding: 6px 18px;
+  font-size: .8rem;
+  font-weight: 500;
+  flex-shrink: 0;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.mcor-estado.hidden { display: none; }
+.mcor-estado.error   { color: #f87171; background: rgba(248,113,113,.07); }
+.mcor-estado.success { color: #4ade80; background: rgba(74,222,128,.07); }
+.mcor-estado.loading { color: var(--texto-suave); }
+
+/* ── Tabla ───────────────────────────────────────────────────── */
+.mcor-tabla-wrap {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.mcor-tabla-wrap::-webkit-scrollbar       { width: 5px; }
+.mcor-tabla-wrap::-webkit-scrollbar-track { background: transparent; }
+.mcor-tabla-wrap::-webkit-scrollbar-thumb { background: var(--borde); border-radius: 3px; }
+
+.mcor-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+
+.mcor-tabla thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--fondo-alt);
+  padding: 8px 12px;
+  text-align: left;
+  font-size: .67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--texto-suave);
+  border-bottom: 1px solid var(--borde);
+}
+
+.mcor-tabla .col-num { text-align: right; }
+
+.mcor-tabla tbody tr {
+  border-bottom: 1px solid rgba(51,51,51,.7);
+  transition: background .1s;
+}
+
+.mcor-tabla tbody tr:hover { background: rgba(255,255,255,.025); }
+
+.mcor-tabla td {
+  padding: 7px 12px;
+  color: var(--texto);
+  vertical-align: middle;
+}
+
+.mcor-tabla td.col-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.mcor-fila-vacia {
+  text-align: center !important;
+  color: var(--texto-suave) !important;
+  padding: 36px !important;
+  font-size: .85rem;
+}
+
+/* ── Inputs inline de edición ────────────────────────────────── */
+.mcor-inp {
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  color: var(--texto);
+  font-size: .82rem;
+  padding: 3px 7px;
+  width: 78px;
+  text-align: right;
+  outline: none;
+  transition: border-color .15s;
+  height: 28px;
+}
+
+.mcor-inp:focus       { border-color: var(--acento); }
+.mcor-inp.modificado  { border-color: #d97706; background: rgba(217,119,6,.09); }
+.mcor-inp-nombre      { width: 100%; text-align: left; }
+
+.mcor-subtotal-cell { font-variant-numeric: tabular-nums; }
+.mcor-subtotal-cell.modificado { color: #d97706; font-weight: 600; }
+
+/* ── Botón guardar por fila ──────────────────────────────────── */
+.mcor-btn-row {
+  background: transparent;
+  border: 1px solid var(--borde);
+  color: var(--texto-suave);
+  border-radius: 4px;
+  padding: 3px 9px;
+  font-size: .73rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.mcor-btn-row:hover:not(:disabled) {
+  border-color: var(--acento);
+  color: var(--acento);
+}
+
+.mcor-btn-row:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+
+/* Variante verde para agregar */
+.mcor-btn-ok {
+  border-color: #16a34a;
+  color: #4ade80;
+}
+
+.mcor-btn-ok:hover {
+  background: #16a34a;
+  color: #fff;
+  border-color: #16a34a;
+}
+
+/* ── Botón eliminar ──────────────────────────────────────────── */
+.mcor-btn-del {
+  background: transparent;
+  border: 1px solid var(--borde);
+  color: var(--texto-suave);
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mcor-btn-del:hover {
+  border-color: #dc2626;
+  color: #f87171;
+  background: rgba(220,38,38,.08);
+}
+
+/* ── Botón crear registro (estado vacío) ─────────────────────── */
+.mcor-btn-crear {
+  background: var(--acento);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 18px;
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mcor-btn-crear:hover { opacity: .82; }
+
+/* ── Fila del formulario agregar ítem ────────────────────────── */
+.mcor-add-row {
+  background: rgba(192,57,43,.04);
+  border-top: 2px dashed rgba(192,57,43,.3) !important;
+}
+
+.mcor-add-row td { padding: 8px 12px; }
+
+/* ── Historial timeline ──────────────────────────────────────── */
+.mcor-historial {
+  border-top: 1px solid var(--borde);
+  padding: 0 18px 10px;
+  flex-shrink: 0;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+.mcor-historial.hidden { display: none; }
+
+.mcor-historial::-webkit-scrollbar       { width: 4px; }
+.mcor-historial::-webkit-scrollbar-thumb { background: var(--borde); border-radius: 3px; }
+
+.mcor-hist-titulo {
+  font-size: .67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--texto-suave);
+  padding: 8px 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mcor-hist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 3px 0 3px 12px;
+  font-size: .75rem;
+  color: var(--texto-suave);
+  border-left: 2px solid var(--borde);
+  margin-left: 4px;
+  position: relative;
+}
+
+.mcor-hist-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--acento);
+  flex-shrink: 0;
+  position: absolute;
+  left: -5px;
+  top: 6px;
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.mcor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 18px;
+  border-top: 1px solid var(--borde);
+  flex-shrink: 0;
+  background: var(--fondo-alt);
+  flex-wrap: wrap;
+}
+
+.mcor-footer-nota {
+  font-size: .7rem;
+  color: var(--texto-suave);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mcor-footer-total {
+  font-size: .85rem;
+  color: var(--texto-suave);
+}
+
+.mcor-footer-total strong { color: var(--texto); font-size: .95rem; }
+
+.mcor-btn-cerrar {
+  background: transparent;
+  border: 1px solid var(--borde);
+  color: var(--texto-suave);
+  border-radius: 6px;
+  padding: 5px 16px;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.mcor-btn-cerrar:hover {
+  border-color: var(--texto-suave);
+  color: var(--texto);
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .mcor-filtros     { flex-direction: column; align-items: stretch; }
+  .mcor-btn-cargar  { width: 100%; justify-content: center; }
+  .mcor-container   { max-height: 96vh; border-radius: 8px; }
+  .mcor-footer      { flex-direction: column; align-items: stretch; gap: 8px; }
+}

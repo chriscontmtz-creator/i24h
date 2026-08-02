@@ -5,7 +5,7 @@
 
 import dotenv   from 'dotenv';
 import mongoose from 'mongoose';
-import Usuario  from '../models/Usuario.js';
+import Usuario  from '../src/models/Usuario.js';
 
 dotenv.config();
 

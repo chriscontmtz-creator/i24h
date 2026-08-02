@@ -1,0 +1,478 @@
+<div class="rev-root">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TOPBAR
+       ═══════════════════════════════════════════════════════════ -->
+  <header class="rev-topbar">
+    <div class="rev-topbar-left">
+      <a href="/dashboard" class="rev-btn-o rev-btn-icon" title="Volver al dashboard">
+        <i class="ti ti-arrow-left"></i>
+      </a>
+      <div class="rev-topbar-title">
+        <i class="ti ti-clipboard-check"></i> Revisiones
+      </div>
+    </div>
+    <div class="rev-topbar-right">
+      <select class="rev-sel" id="rev-periodo-sel" onchange="revCambiarPeriodo()">
+        <option value="hoy"          {{#if (eq periodoActivo 'hoy')}}selected{{/if}}>Hoy</option>
+        <option value="semana"       {{#if (eq periodoActivo 'semana')}}selected{{/if}}>Esta semana</option>
+        <option value="mes_actual"   {{#unless periodoActivo}}selected{{else}}{{#if (eq periodoActivo 'mes_actual')}}selected{{/if}}{{/unless}}>Este mes</option>
+        <option value="mes_anterior" {{#if (eq periodoActivo 'mes_anterior')}}selected{{/if}}>Mes anterior</option>
+        <option value="personalizado" {{#if (eq periodoActivo 'personalizado')}}selected{{/if}}>Personalizado…</option>
+      </select>
+      <div id="rev-rango-custom" class="rev-rango-custom {{#unless (eq periodoActivo 'personalizado')}}rev-rango--oculto{{/unless}}">
+        <input class="rev-sel rev-date-input" type="date" id="rev-desde" value="{{desdeActivo}}" onchange="revFiltrar()">
+        <span style="color:var(--r-tex-muted);font-size:12px">→</span>
+        <input class="rev-sel rev-date-input" type="date" id="rev-hasta" value="{{hastaActivo}}" onchange="revFiltrar()">
+      </div>
+      <select class="rev-sel" id="rev-suc-sel" onchange="revFiltrar()">
+        <option value="todas" {{#unless sucursalActiva}}selected{{/unless}}>Todas las sucursales</option>
+        {{#each sucursales}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
+      <button class="rev-btn-o" id="rev-dark-btn"><i class="ti ti-moon" id="rev-dark-ico"></i></button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       DÍAS DE LA SEMANA (solo visible con periodo = "Esta semana")
+       ═══════════════════════════════════════════════════════════ -->
+  {{#if (eq periodoActivo 'semana')}}
+  <div class="rev-dias-semana">
+    <button class="rev-dia-btn{{#unless diaActivo}} rev-dia-btn--activo{{/unless}}" onclick="revCambiarDia('todos')">Todos</button>
+    {{#each diasSemana}}
+      <button class="rev-dia-btn{{#if activo}} rev-dia-btn--activo{{/if}}" onclick="revCambiarDia('{{fecha}}')">{{nombre}}</button>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TABS
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="rev-tabs">
+    <button class="rev-tab rev-tab--active" id="tab-contadores" onclick="revCambiarTab('contadores')">
+      <i class="ti ti-clipboard-check"></i> Revisiones por turno
+    </button>
+    <button class="rev-tab" id="tab-impresoras" onclick="revCambiarTab('impresoras')">
+      <i class="ti ti-printer"></i> Contadores de impresora
+    </button>
+    <button class="rev-tab" id="tab-resumen" onclick="revCambiarTab('resumen')">
+      <i class="ti ti-cash-register"></i> Resumen de caja
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PANEL: BITÁCORAS POR TURNO
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="rev-panel" id="panel-contadores">
+    <div class="rev-filtros">
+      <select class="rev-sel" id="fil-turno" onchange="revFiltrar()">
+        <option value="todos">Todos los turnos</option>
+        <option value="Turno1">Turno 1</option>
+        <option value="Turno2">Turno 2</option>
+        <option value="Turno3">Turno 3</option>
+      </select>
+    </div>
+
+    {{#if hayBitacoras}}
+      <div class="bit-cards">
+        {{#each bitacoras}}
+          <div class="bit-card" id="bit-card-{{idStr}}">
+            <!-- Cabecera -->
+            <div class="bit-card-hdr">
+              <span class="bit-badge {{#if esT1}}bit-badge--t1{{else if esT2}}bit-badge--t2{{else}}bit-badge--t3{{/if}}">
+                {{turnoCorto}}
+              </span>
+              <div class="bit-card-meta">
+                <span class="bit-card-titulo">{{sucursal}} · {{fechaFmt}}</span>
+                <span class="bit-card-sub">{{responsable}} · {{horaFmt}}</span>
+              </div>
+              <div class="bit-card-res">
+                <span class="bit-res-ok"><i class="ti ti-check"></i> {{resumen.ok}}</span>
+                {{#if resumen.falta}}<span class="bit-res-falta"><i class="ti ti-arrow-down"></i> {{resumen.falta}}</span>{{/if}}
+                {{#if resumen.sobra}}<span class="bit-res-sobra"><i class="ti ti-arrow-up"></i> {{resumen.sobra}}</span>{{/if}}
+              </div>
+              <button
+                class="bit-estado-btn {{#if esRevisado}}bit-estado--revisado{{else}}bit-estado--pendiente{{/if}}"
+                onclick="bitToggleEstado('{{idStr}}', '{{estado}}')"
+                id="bit-estado-{{idStr}}">
+                {{#if esRevisado}}
+                  <i class="ti ti-circle-check"></i> Revisado
+                {{else}}
+                  <i class="ti ti-clock"></i> Pendiente
+                {{/if}}
+              </button>
+            </div>
+
+            <!-- Productos con diferencia -->
+            {{#if tieneConDif}}
+              {{#each categorias}}
+                {{#if hayConDif}}
+                  <div class="bit-cat-label">{{nombre}}</div>
+                  <table class="bit-tabla">
+                    <thead>
+                      <tr>
+                        <th>Producto</th>
+                        <th>Esperado</th>
+                        <th>Conteo</th>
+                        <th>Dif.</th>
+                        <th>Justificación</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{#each conDif}}
+                        <tr class="{{#if esFaltante}}bit-fila-falta{{else}}bit-fila-sobra{{/if}}">
+                          <td>{{nombre}}</td>
+                          <td class="bit-num">{{esperado}}</td>
+                          <td class="bit-num">{{conteo}}</td>
+                          <td class="bit-num bit-dif">{{difFmt}}</td>
+                          <td class="bit-just">{{justificacion}}</td>
+                        </tr>
+                      {{/each}}
+                    </tbody>
+                  </table>
+                {{/if}}
+              {{/each}}
+            {{else}}
+              <div class="bit-card-ok"><i class="ti ti-circle-check"></i> Sin diferencias en este turno</div>
+            {{/if}}
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="rev-empty">
+        <i class="ti ti-clipboard-x"></i>
+        <p>Sin bitácoras en este período</p>
+        <p class="rev-empty-sub">Las bitácoras se registran desde el panel del turno</p>
+      </div>
+    {{/if}}
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PANEL: CONTADORES DE IMPRESORA
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="rev-panel rev-panel--oculto" id="panel-impresoras">
+    <div class="rev-filtros">
+      <select class="rev-sel" id="fil-turno-imp" onchange="revFiltrar()">
+        <option value="todos">Todos los turnos</option>
+        <option value="Turno1">Turno 1</option>
+        <option value="Turno2">Turno 2</option>
+        <option value="Turno3">Turno 3</option>
+      </select>
+      <span class="rev-imp-hint"><i class="ti ti-info-circle"></i> Diferencia de páginas por turno (lectura final − lectura anterior)</span>
+    </div>
+
+    {{#if hayContadores}}
+      <div class="revimp-list">
+        {{#each contadores}}
+          <div class="revimp-card">
+            <div class="revimp-card-hdr">
+              <span class="revimp-nombre">{{nombre}}</span>
+              {{#if ip}}<span class="revimp-ip">{{ip}}</span>{{/if}}
+              <span class="revimp-caja">Caja #{{ncaja}} · {{turno}}</span>
+              <span class="revimp-fecha">{{fechaFmt}}</span>
+            </div>
+            <div class="revimp-grid">
+              <div class="revimp-grupo">
+                <div class="revimp-grupo-lbl"><i class="ti ti-copy"></i> Copia</div>
+                <div class="revimp-fila"><span class="revimp-lbl">Negro</span><span class="revimp-val">+{{copiarNegro}}</span></div>
+                <div class="revimp-fila"><span class="revimp-lbl">Negro grande</span><span class="revimp-val">+{{copiarNegroG}}</span></div>
+                <div class="revimp-fila"><span class="revimp-lbl">Color</span><span class="revimp-val">+{{copiarColor}}</span></div>
+                <div class="revimp-fila"><span class="revimp-lbl">Color grande</span><span class="revimp-val">+{{copiarColorG}}</span></div>
+              </div>
+              <div class="revimp-grupo">
+                <div class="revimp-grupo-lbl"><i class="ti ti-printer"></i> Impresión</div>
+                <div class="revimp-fila"><span class="revimp-lbl">Negro</span><span class="revimp-val">+{{imprimirNegro}}</span></div>
+                <div class="revimp-fila"><span class="revimp-lbl">Negro grande</span><span class="revimp-val">+{{imprimirNegroG}}</span></div>
+                <div class="revimp-fila"><span class="revimp-lbl">Color</span><span class="revimp-val">+{{imprimirColor}}</span></div>
+                <div class="revimp-fila"><span class="revimp-lbl">Color grande</span><span class="revimp-val">+{{imprimirColorG}}</span></div>
+              </div>
+              <div class="revimp-grupo">
+                <div class="revimp-grupo-lbl"><i class="ti ti-scan"></i> Escáner / Papel</div>
+                <div class="revimp-fila"><span class="revimp-lbl">Escáner total</span><span class="revimp-val">+{{escanerTotal}}</span></div>
+                <div class="revimp-fila"><span class="revimp-lbl">Escáner grande</span><span class="revimp-val">+{{escanerGrande}}</span></div>
+                <div class="revimp-fila"><span class="revimp-lbl">11×17 (doble carta)</span><span class="revimp-val">+{{dobleCarta}}</span></div>
+                <div class="revimp-fila"><span class="revimp-lbl">Tabloide (otros)</span><span class="revimp-val">+{{tabloide}}</span></div>
+              </div>
+            </div>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="rev-empty">
+        <i class="ti ti-printer-off"></i>
+        <p>Sin lecturas de impresora en el período</p>
+        <p class="rev-empty-sub">Las lecturas se registran automáticamente al ejecutar el sync</p>
+      </div>
+    {{/if}}
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PANEL: RESUMEN DE CAJA
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="rev-panel rev-panel--oculto" id="panel-resumen">
+    <div class="rev-filtros">
+      <select class="rev-sel" id="fil-turno-res" onchange="revFiltrar()">
+        <option value="todos">Todos los turnos</option>
+        <option value="Turno1">Turno 1</option>
+        <option value="Turno2">Turno 2</option>
+        <option value="Turno3">Turno 3</option>
+      </select>
+    </div>
+
+    {{#if hayResumenCaja}}
+      <div class="rc-cards">
+        {{#each resumenCaja}}
+          <div class="rc-card" id="rc-card-{{idStr}}" data-cobradas="{{totalCobradas}}" data-contador="{{totalContador}}">
+
+            <!-- CABECERA -->
+            <div class="rc-card-hdr">
+              <span class="bit-badge {{#if esT1}}bit-badge--t1{{else if esT2}}bit-badge--t2{{else}}bit-badge--t3{{/if}}">
+                {{turnoCorto}}
+              </span>
+              <div class="rc-card-meta">
+                <span class="rc-card-titulo">Caja #{{ncaja}} · {{fechaFmt}}</span>
+                <span class="rc-card-sub">{{operador}} · {{horaApertura}} → {{horaCierre}}</span>
+              </div>
+              <div class="rc-card-total">
+                <span class="rc-total-importe">{{totalImporteFmt}}</span>
+                <span class="rc-total-sub">{{totalTickets}} tickets</span>
+              </div>
+            </div>
+
+            {{#if sinContador}}
+              <div class="rc-sin-contador"><i class="ti ti-alert-triangle"></i> Sin lectura de contadores para esta caja</div>
+            {{/if}}
+
+            <!-- CUERPO: dos columnas -->
+            <div class="rc-body">
+
+              <!-- COLUMNA IZQUIERDA: COPIAS -->
+              <div class="rc-seccion">
+                <div class="rc-sec-titulo"><i class="ti ti-copy"></i> Copias</div>
+                <table class="rc-tabla">
+                  <thead>
+                    <tr><th>Tipo</th><th>Cobradas</th><th>Contador</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>BYN</td>
+                      <td class="rc-num">{{copBYNcob}}</td>
+                      <td class="rc-num rc-cnt">{{copBYNcnt}}</td>
+                    </tr>
+                    <tr>
+                      <td>INE</td>
+                      <td class="rc-num">{{copINEcob}}</td>
+                      <td class="rc-num rc-cnt rc-cnt-sub">—</td>
+                    </tr>
+                    <tr>
+                      <td>Color</td>
+                      <td class="rc-num">{{copColorCob}}</td>
+                      <td class="rc-num rc-cnt">{{copColorCnt}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- COLUMNA DERECHA: IMPRESIONES -->
+              <div class="rc-seccion">
+                <div class="rc-sec-titulo"><i class="ti ti-printer"></i> Impresiones</div>
+                <table class="rc-tabla">
+                  <thead>
+                    <tr><th>Tipo</th><th>Cobradas</th><th>Contador</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>BYN</td>
+                      <td class="rc-num">{{impreBYNcob}}</td>
+                      <td class="rc-num rc-cnt">{{impreBYNcnt}}</td>
+                    </tr>
+                    <tr>
+                      <td>Color</td>
+                      <td class="rc-num">{{impreColorCob}}</td>
+                      <td class="rc-num rc-cnt">{{impreColorCnt}}</td>
+                    </tr>
+                    {{#if tabloideCnt}}
+                    <tr class="rc-fila-sub">
+                      <td>Tabloides</td>
+                      <td class="rc-num">—</td>
+                      <td class="rc-num rc-cnt">{{tabloideCnt}}</td>
+                    </tr>
+                    {{/if}}
+                    {{#if dobCartaCnt}}
+                    <tr class="rc-fila-sub">
+                      <td>Doble carta</td>
+                      <td class="rc-num">—</td>
+                      <td class="rc-num rc-cnt">{{dobCartaCnt}}</td>
+                    </tr>
+                    {{/if}}
+                  </tbody>
+                </table>
+              </div>
+
+            </div><!-- /rc-body -->
+
+            <!-- SCANNER -->
+            <div class="rc-scanner-row">
+              <span class="rc-scanner-label"><i class="ti ti-scan"></i> Escáner</span>
+              <span>Cobrados: <strong>{{scannerCob}}</strong></span>
+              <span>Contador: <strong>{{escanerCnt}}</strong></span>
+              <span class="rc-dif-badge {{#if difScannerOk}}rc-dif-ok{{else if difScannerMal}}rc-dif-mal{{else}}rc-dif-warn{{/if}}">
+                Dif: {{difScannerFmt}}
+              </span>
+            </div>
+
+            <!-- TOTALES Y MERMA -->
+            <div class="rc-totales">
+              <div class="rc-totales-grid">
+                <div class="rc-tot-item">
+                  <span class="rc-tot-label">Total cobradas</span>
+                  <span class="rc-tot-val">{{totalCobradas}}</span>
+                </div>
+                <div class="rc-tot-item">
+                  <span class="rc-tot-label">Total contador</span>
+                  <span class="rc-tot-val">{{totalContador}}</span>
+                </div>
+                <div class="rc-tot-item rc-tot-merma">
+                  <label class="rc-tot-label" for="merma-{{idStr}}">Merma</label>
+                  <input
+                    class="rc-merma-input"
+                    id="merma-{{idStr}}"
+                    type="number"
+                    min="0"
+                    value="{{merma}}"
+                    placeholder="0"
+                    onchange="rcGuardarMerma('{{idStr}}', this.value)"
+                  >
+                </div>
+                <div class="rc-tot-item rc-tot-dif">
+                  <span class="rc-tot-label">Diferencia</span>
+                  <span class="rc-dif-badge rc-dif-grande {{#if difOk}}rc-dif-ok{{else if difMal}}rc-dif-mal{{else}}rc-dif-warn{{/if}}"
+                        id="rc-dif-{{idStr}}">
+                    {{difFmt}}
+                  </span>
+                </div>
+              </div>
+              <div class="rc-merma-nota-wrap">
+                <input
+                  class="rc-merma-nota"
+                  id="merma-nota-{{idStr}}"
+                  type="text"
+                  placeholder="Notas de merma (ej: 8 hojas de corte + 2 errores)"
+                  value="{{mermaNotas}}"
+                  onchange="rcGuardarMerma('{{idStr}}', document.getElementById('merma-{{idStr}}').value, this.value)"
+                >
+              </div>
+            </div>
+
+          </div><!-- /rc-card -->
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="rev-empty">
+        <i class="ti ti-cash-register"></i>
+        <p>Sin cajas cerradas en este período</p>
+        <p class="rev-empty-sub">Los datos se sincronizan desde CyberPlanet al cerrar cada turno</p>
+      </div>
+    {{/if}}
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MODAL DE DETALLE DE REVISIÓN
+       ═══════════════════════════════════════════════════════════ -->
+  <div id="rev-modal-overlay" class="rev-modal-overlay rev-modal--oculto" onclick="revCerrarModal()">
+    <div class="rev-modal" onclick="event.stopPropagation()">
+      <div class="rev-modal-hdr">
+        <h2 class="rev-modal-titulo" id="rev-modal-titulo">Detalle de revisión</h2>
+        <button class="rev-btn-o rev-btn-icon" onclick="revCerrarModal()"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="rev-modal-body" id="rev-modal-body">
+        <div class="rev-empty"><i class="ti ti-loader-2"></i><p>Cargando…</p></div>
+      </div>
+      <div class="rev-modal-footer">
+        <button class="rev-btn-o" onclick="revCerrarModal()">Cerrar</button>
+        <button class="rev-btn-p" id="rev-btn-aprobar" onclick="revAprobar()">
+          <i class="ti ti-check"></i> Aprobar revisión
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="rev-toast" class="rev-toast">
+    <i id="rev-toast-ico" class="ti ti-check"></i>
+    <span id="rev-toast-msg">—</span>
+  </div>
+
+  <!-- Datos para JS -->
+  <script>
+    window.REV_SUCURSAL = '{{sucursalActiva}}';
+    window.REV_USUARIO  = '{{usuario.nombre}}';
+    window.REV_TURNO    = '{{turnoActivo}}';
+    window.REV_ESTADO   = '{{estadoActivo}}';
+    window.REV_TAB      = '{{tabActivo}}';
+    window.REV_PERIODO  = '{{periodoActivo}}';
+    window.REV_DIA      = '{{diaFiltro}}';
+
+    function rcGuardarMerma(id, mermaVal, notaVal) {
+      var merma = parseInt(mermaVal) || 0;
+      var nota  = notaVal !== undefined
+        ? notaVal
+        : (document.getElementById('merma-nota-' + id) || {}).value || '';
+      fetch('/revisiones/api/caja/' + id + '/merma', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ merma: merma, mermaNotas: nota }),
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d.ok) return;
+        // Recalcular diferencia en cliente
+        var card = document.getElementById('rc-card-' + id);
+        if (!card) return;
+        var cobEl  = card.querySelector('.rc-tot-cobradas');
+        var cntEl  = card.querySelector('.rc-tot-contador');
+        var difEl  = document.getElementById('rc-dif-' + id);
+        if (!difEl) return;
+        var cob = parseInt(card.dataset.cobradas) || 0;
+        var cnt = parseInt(card.dataset.contador) || 0;
+        var dif = (cob + merma) - cnt;
+        var sign = dif > 0 ? '+' : '';
+        difEl.textContent = sign + dif;
+        difEl.className = 'rc-dif-badge rc-dif-grande ' +
+          (dif >= 0 ? 'rc-dif-ok' : (dif < -5 ? 'rc-dif-mal' : 'rc-dif-warn'));
+      })
+      .catch(function() {});
+    }
+
+    function bitToggleEstado(id, estadoActual) {
+      var nuevo = estadoActual === 'revisado' ? 'pendiente' : 'revisado';
+      var btn   = document.getElementById('bit-estado-' + id);
+      if (btn) btn.disabled = true;
+
+      fetch('/revisiones/api/bitacora/' + id + '/estado', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ estado: nuevo }),
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d.ok) { alert('Error: ' + d.error); if (btn) btn.disabled = false; return; }
+        if (!btn) return;
+        btn.disabled = false;
+        btn.dataset.estado = d.estado;
+        if (d.estado === 'revisado') {
+          btn.className = 'bit-estado-btn bit-estado--revisado';
+          btn.innerHTML = '<i class="ti ti-circle-check"></i> Revisado';
+          btn.setAttribute('onclick', "bitToggleEstado('" + id + "', 'revisado')");
+        } else {
+          btn.className = 'bit-estado-btn bit-estado--pendiente';
+          btn.innerHTML = '<i class="ti ti-clock"></i> Pendiente';
+          btn.setAttribute('onclick', "bitToggleEstado('" + id + "', 'pendiente')");
+        }
+      })
+      .catch(function() { if (btn) btn.disabled = false; alert('Error de red'); });
+    }
+  </script>
+</div>

@@ -1,0 +1,257 @@
+<div class="hor-shell">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECCIÓN A — Topbar fija
+       ═══════════════════════════════════════════════════════════ -->
+  <header class="hor-topbar">
+    <div class="hor-topbar-left">
+
+      <a href="/panel" class="hor-btn hor-btn-icon" title="Volver al panel">
+        <i class="ti ti-arrow-left"></i>
+      </a>
+
+      <div class="hor-topbar-title">
+        <i class="ti ti-calendar-time"></i>
+        Horarios
+      </div>
+
+      <div class="hor-week-pill" id="hor-week-pill">Semana ...</div>
+
+      <div class="hor-week-nav">
+        <button class="hor-btn hor-btn-icon" id="hor-prev-week" title="Semana anterior">
+          <i class="ti ti-chevron-left"></i>
+        </button>
+        <span class="hor-week-nav-label" id="hor-week-label">—</span>
+        <button class="hor-btn hor-btn-icon" id="hor-next-week" title="Semana siguiente">
+          <i class="ti ti-chevron-right"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <div class="hor-topbar-right">
+
+      <div class="hor-filters">
+        <select class="hor-select" id="hor-suc-filter" onchange="horFilterSucursal(this.value)">
+          <option value="todas">Todas las sucursales</option>
+          <option value="Simón Bolívar">Simón Bolívar</option>
+          <option value="Insurgentes">Insurgentes</option>
+          <option value="Antígona">Antígona</option>
+          <option value="Lincoln Oxxo">Lincoln Oxxo</option>
+          <option value="Lincoln 2">Lincoln 2</option>
+          <option value="Ruiz Cortines">Ruiz Cortines</option>
+          <option value="Rodas">Rodas</option>
+          <option value="Cuauhtémoc">Cuauhtémoc</option>
+          <option value="Ordóñez">Ordóñez</option>
+        </select>
+      </div>
+
+      <button class="hor-btn hor-btn-outline" id="hor-btn-copiar" onclick="horCopiarSemana()">
+        <i class="ti ti-copy"></i>
+        Copiar sem. anterior
+      </button>
+
+      <button class="hor-btn hor-btn-red" id="hor-btn-publicar" onclick="horPublicarActivo()">
+        <i class="ti ti-send"></i>
+        Publicar horario
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECCIÓN B — Vista semanal por sucursal (renderizada por JS)
+       ═══════════════════════════════════════════════════════════ -->
+  <main class="hor-content">
+
+    <div id="hor-conflict-bar" class="conflict-bar">
+      <i class="ti ti-alert-triangle"></i>
+      <span id="hor-conflict-msg">Hay conflictos en el horario activo</span>
+    </div>
+
+    <!-- Bloque de vista (Section B) — renderizado por servidor + reemplazado por JS al navegar -->
+    <div id="hor-view-wrap" class="hor-view-wrap fade-in">
+      {{#each sucursales}}
+        {{#with (lookup ../horariosPorSucursal this)}}
+          <div class="suc-block" data-sucursal="{{../this}}">
+            <div class="suc-header">
+              <div class="suc-header-left">
+                <span class="suc-dot"></span>
+                <span class="suc-name">{{../this}}</span>
+                {{#if esPublicado}}
+                  <span class="badge-ok">Confirmado</span>
+                {{else}}
+                  <span class="badge-pend">Borrador</span>
+                {{/if}}
+              </div>
+              <button class="hor-btn hor-btn-outline" onclick="horOpenEditor('{{../this}}')">
+                <i class="ti ti-edit"></i> Editar
+              </button>
+            </div>
+            <div class="suc-table-wrap">
+            <table class="sched-table">
+              <thead>
+                <tr>
+                  <th style="width:52px"></th>
+                  <th>Vie</th><th>Sáb</th><th>Dom</th>
+                  <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="turno-label turno-label--t1">T1</span></td>
+                  {{#each turnos.T1}}
+                    <td><div class="chip-list">{{#each empleados}}<div class="chip chip--normal"><span class="chip-text">{{nombre}}</span></div>{{/each}}
+                    {{#if indicacion}}<div class="chip-indicacion">{{indicacion}}</div>{{/if}}</div></td>
+                  {{/each}}
+                </tr>
+                <tr>
+                  <td><span class="turno-label turno-label--t2">T2</span></td>
+                  {{#each turnos.T2}}
+                    <td><div class="chip-list">{{#each empleados}}<div class="chip chip--normal"><span class="chip-text">{{nombre}}</span></div>{{/each}}
+                    {{#if indicacion}}<div class="chip-indicacion">{{indicacion}}</div>{{/if}}</div></td>
+                  {{/each}}
+                </tr>
+                <tr>
+                  <td><span class="turno-label turno-label--t3">T3</span></td>
+                  {{#each turnos.T3}}
+                    <td><div class="chip-list">{{#each empleados}}<div class="chip chip--normal"><span class="chip-text">{{nombre}}</span></div>{{/each}}
+                    {{#if indicacion}}<div class="chip-indicacion">{{indicacion}}</div>{{/if}}</div></td>
+                  {{/each}}
+                </tr>
+              </tbody>
+            </table>
+            </div>
+          </div>
+        {{else}}
+          <div class="suc-block" data-sucursal="{{this}}">
+            <div class="suc-header">
+              <div class="suc-header-left">
+                <span class="suc-dot"></span>
+                <span class="suc-name">{{this}}</span>
+                <span class="badge-pend">Sin horario</span>
+              </div>
+              <button class="hor-btn hor-btn-outline" onclick="horOpenEditor('{{this}}')">
+                <i class="ti ti-edit"></i> Editar
+              </button>
+            </div>
+            <div class="hor-empty"><i class="ti ti-calendar-off"></i><p>Sin horario esta semana</p></div>
+          </div>
+        {{/with}}
+      {{/each}}
+    </div>
+
+    <!-- Editor (Section C) — oculto por defecto -->
+    <div id="hor-editor" class="editor-wrap" style="display:none">
+      <div class="editor-panel">
+
+        <!-- Panel izquierdo: roster del equipo -->
+        <aside class="team-col">
+          <div class="team-col-header">
+            <div class="team-col-title">Equipo</div>
+            <div class="team-col-suc" id="hor-editor-suc-label">—</div>
+          </div>
+          <div class="team-list" id="hor-team-list">
+            <!-- Cargado por JS al abrir el editor -->
+          </div>
+        </aside>
+
+        <!-- Panel derecho: cuadrícula de turnos -->
+        <div class="grid-col">
+          <div class="grid-header">
+            <span class="grid-header-title" id="hor-grid-title">Turno semanal</span>
+            <div class="grid-header-actions">
+              <button class="hor-btn hor-btn-icon" onclick="horCloseEditor()" title="Cerrar editor">
+                <i class="ti ti-x"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid-table-wrap">
+            <table class="sched-table" id="hor-grid-table">
+              <colgroup>
+                <col style="width:44px">
+                <col><col><col><col><col><col><col>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="tc2"></th>
+                  <th>Vie</th>
+                  <th>Sáb</th>
+                  <th>Dom</th>
+                  <th>Lun</th>
+                  <th>Mar</th>
+                  <th>Mié</th>
+                  <th>Jue</th>
+                </tr>
+              </thead>
+              <tbody id="hor-grid-body">
+                <!-- Celdas generadas por JS → horRenderGrid() -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="editor-footer">
+            <div class="hor-legend">
+              <span class="hor-legend-item">
+                <span class="hor-legend-dot" style="background:var(--border-2)"></span>Normal
+              </span>
+              <span class="hor-legend-item">
+                <span class="hor-legend-dot" style="background:var(--amber)"></span>Doble turno
+              </span>
+              <span class="hor-legend-item">
+                <span class="hor-legend-dot" style="background:var(--red)"></span>Triple (bloqueado)
+              </span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="hor-btn hor-btn-outline" onclick="horSaveGrid()">
+                <i class="ti ti-device-floppy"></i> Guardar borrador
+              </button>
+              <button class="hor-btn hor-btn-red" onclick="horPublishActive()">
+                <i class="ti ti-send"></i> Confirmar y publicar
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Modal de indicación (posición absoluta dentro de .hor-shell)
+       ═══════════════════════════════════════════════════════════ -->
+  <div id="indicacion-modal" class="indicacion-modal" style="display:none">
+    <div class="indicacion-modal-title">Indicación para el turno</div>
+
+    <div class="indicacion-tipos">
+      <button class="indicacion-tipo-btn" data-texto="Llegada temprana">Llegada temprana</button>
+      <button class="indicacion-tipo-btn" data-texto="Salida temprana">Salida temprana</button>
+      <button class="indicacion-tipo-btn" data-texto="Cobertura">Cobertura</button>
+      <button class="indicacion-tipo-btn" data-texto="">Nota libre</button>
+    </div>
+
+    <textarea class="indicacion-input" id="indicacion-text"
+      rows="2" placeholder="Ej: Llega 1hr antes / Sale a las 3pm / Cubre T2 al final"></textarea>
+
+    <div class="indicacion-actions">
+      <button class="hor-btn hor-btn-outline" onclick="horCloseIndicacion()">Cancelar</button>
+      <button class="hor-btn hor-btn-red" onclick="horSaveIndicacion()">Guardar</button>
+    </div>
+  </div>
+
+  <!-- Toast de notificaciones -->
+  <div id="hor-toast" class="toast">
+    <i id="hor-toast-icon" class="ti ti-check"></i>
+    <span id="hor-toast-msg">—</span>
+  </div>
+
+</div>
+
+<!-- Datos del servidor inyectados para que horarios.js los lea -->
+<script>
+window.HOR_DATA    = {{{horDataJson}}};
+window.HOR_SEMANA  = '{{semanaActual}}';
+window.HOR_SUCURSAL = '{{sucursalActiva}}';
+</script>

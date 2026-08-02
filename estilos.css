@@ -940,6 +940,24 @@ body.dark .error-msg.success { background: #052e16; color: #86efac; }
    ============================================================= */
 
 /* Tablet (pantallas medianas hasta 1024px) */
+/* ── Hamburguesa (solo visible en móvil) ─────────────────────── */
+.nav-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: var(--fondo-alt);
+  color: var(--texto);
+  cursor: pointer;
+  font-size: 1.15rem;
+  transition: background .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.nav-hamburger:hover { background: var(--borde); }
+
 @media (max-width: 1024px) {
   .hero-text h1 { font-size: 1.7rem; }
   .cards        { grid-template-columns: repeat(2, 1fr); }
@@ -949,10 +967,56 @@ body.dark .error-msg.success { background: #052e16; color: #86efac; }
 /* Móvil (pantallas pequeñas hasta 768px) */
 @media (max-width: 768px) {
 
-  /* Oculta los links del menú en móvil */
-  .nav-links a { display: none; }
-  .badge-24    { display: none; }
-  .nav         { flex-wrap: wrap; gap: 8px; }
+  /* Muestra el botón hamburguesa */
+  .nav-hamburger { display: flex; }
+
+  /* El nav se vuelve envolvente para que el dropdown ocupe fila propia */
+  .nav { flex-wrap: wrap; align-items: center; gap: 0; }
+
+  /* Dropdown: oculto por defecto, fila completa debajo del topbar */
+  .nav-links {
+    display: none;
+    order: 10;
+    width: 100%;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid var(--borde);
+    padding: 6px 0 10px;
+    margin-top: 10px;
+    animation: slideDown .18s ease;
+  }
+
+  /* Cuando está abierto */
+  .nav-links.nav-abierto { display: flex; }
+
+  /* Links en columna, tamaño cómodo para dedos */
+  .nav-links a {
+    display: flex !important;
+    padding: 12px 6px;
+    border-radius: 6px;
+    font-size: .95rem;
+    border-bottom: 1px solid var(--borde);
+  }
+  .nav-links a:last-of-type { border-bottom: none; }
+
+  /* Badge y toggle al final del menú */
+  .badge-24 { display: inline-flex; margin: 6px 0 2px; }
+
+  .nav-links .toggle-btn {
+    justify-content: flex-start;
+    padding: 10px 6px;
+    border: none;
+    border-top: 1px solid var(--borde);
+    border-radius: 0;
+    background: none;
+    margin-top: 4px;
+    width: 100%;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   /* Hero se apila verticalmente */
   .hero {
@@ -990,6 +1054,8 @@ body.dark .error-msg.success { background: #052e16; color: #86efac; }
   .sec.alt { margin: 0 -14px; padding: 36px 14px; }
   .hero-text h1 { font-size: 1.25rem; }
   .comment-form, .login-box, .qr-access-card { padding: 18px; }
+  /* Oculta el subtítulo del logo para que no choque con el botón hamburguesa */
+  .logo span { display: none; }
 }
 
 
@@ -1300,6 +1366,37 @@ body.dark .error-msg.success { background: #052e16; color: #86efac; }
   flex-shrink: 0;
 }
 
+/* Botón de acción en nav (abre modal, no navega a sección) */
+.panel-nav-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 14px;
+  border: none;
+  border-left: 3px solid rgba(192,57,43,.4);
+  background: rgba(192,57,43,.06);
+  color: #f87171;
+  font-size: .83rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: color .15s, background .15s, border-color .15s;
+  border-radius: 0 4px 4px 0;
+  margin: 2px 0;
+}
+
+.panel-nav-action:hover {
+  background: rgba(192,57,43,.14);
+  color: #fca5a5;
+  border-left-color: var(--acento);
+}
+
+.panel-nav-action i {
+  font-size: .95rem;
+  flex-shrink: 0;
+}
+
 .panel-badge {
   margin-left: auto;
   background: var(--acento);
@@ -1580,6 +1677,233 @@ body.dark  .panel-badge-ok {
 
 .panel-reportes-vacio i  { font-size: 2rem; }
 .panel-reportes-vacio p  { font-size: .85rem; margin: 0; }
+
+
+/* ─── DASHBOARD WIDGETS ─────────────────────────────────────── */
+
+/* Grid de 3 columnas para la fila central del dashboard */
+.dash-grid-3 {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 0.9fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+/* Cabecera de card con título + botón/badge */
+.dash-card-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.dash-period-badge {
+  font-size: .65rem;
+  font-weight: 600;
+  background: var(--fondo-alt);
+  color: var(--texto-suave);
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--borde);
+}
+
+.dash-link-btn {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--acento);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.dash-link-btn:hover { opacity: .75; }
+
+/* Métrica clickeable */
+.panel-metric-card.dash-clickable {
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+.panel-metric-card.dash-clickable:hover {
+  background: var(--borde);
+  transform: translateY(-1px);
+}
+
+/* ── Barras de categoría (Ventas) ── */
+.dash-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .8rem;
+}
+
+.dash-cat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dash-cat-name {
+  width: 72px;
+  color: var(--texto-suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.dash-cat-bar-wrap {
+  flex: 1;
+  background: var(--fondo-alt);
+  border-radius: 4px;
+  height: 7px;
+  overflow: hidden;
+}
+
+.dash-cat-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .4s ease;
+}
+
+.dash-cat-val {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--texto);
+  min-width: 52px;
+  text-align: right;
+}
+
+.dash-cat-delta {
+  font-size: .7rem;
+  min-width: 38px;
+  text-align: right;
+}
+
+.dash-cat-delta.pos { color: #16a34a; }
+.dash-cat-delta.neg { color: #dc2626; }
+
+/* ── Alertas de stock ── */
+.dash-alerta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borde);
+  font-size: .8rem;
+}
+
+.dash-alerta-item:last-child { border-bottom: none; }
+
+.dash-alerta-ico {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.dash-alerta-ico.quiebre  { background: #3f1d1d; color: #f87171; }
+.dash-alerta-ico.estancada{ background: #2d1a06; color: #fbbf24; }
+
+.dash-alerta-body { flex: 1; min-width: 0; }
+.dash-alerta-prod {
+  font-weight: 600;
+  color: var(--texto);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-alerta-suc { color: var(--texto-suave); font-size: .72rem; margin-top: 1px; }
+.dash-alerta-msg { font-size: .7rem; margin-top: 2px; }
+.dash-alerta-msg.quiebre  { color: #f87171; }
+.dash-alerta-msg.estancada{ color: #fbbf24; }
+
+.dash-alerta-stock {
+  font-size: .75rem;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: right;
+  align-self: center;
+}
+.dash-alerta-stock.quiebre  { color: #f87171; }
+.dash-alerta-stock.estancada{ color: #fbbf24; }
+
+/* ── Reportes recientes ── */
+.dash-rpt-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--borde);
+  font-size: .8rem;
+}
+.dash-rpt-item:last-child { border-bottom: none; }
+
+.dash-rpt-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.dash-rpt-dot.pendiente { background: #d97706; }
+.dash-rpt-dot.realizado { background: #16a34a; }
+
+.dash-rpt-body { flex: 1; min-width: 0; }
+.dash-rpt-desc {
+  color: var(--texto);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-rpt-meta { color: var(--texto-suave); font-size: .72rem; margin-top: 1px; }
+
+/* ── Top productos / ranking sucursales ── */
+.dash-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--borde);
+  font-size: .8rem;
+}
+.dash-rank-row:last-child { border-bottom: none; }
+
+.dash-rank-num {
+  width: 18px;
+  text-align: center;
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  flex-shrink: 0;
+}
+.dash-rank-name { flex: 1; min-width: 0; color: var(--texto); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-rank-cat  { font-size: .7rem; color: var(--texto-suave); }
+.dash-rank-val  { font-size: .78rem; font-weight: 700; color: var(--texto); min-width: 56px; text-align: right; }
+.dash-rank-delta { font-size: .7rem; min-width: 42px; text-align: right; }
+.dash-rank-delta.pos { color: #16a34a; }
+.dash-rank-delta.neg { color: #dc2626; }
+
+/* ── Empty state genérico ── */
+.dash-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 0;
+  color: var(--texto-suave);
+  gap: 6px;
+  font-size: .82rem;
+}
+.dash-empty i { font-size: 1.8rem; opacity: .4; }
 
 
 /* --- SECCIONES EN CONSTRUCCIÓN --- */
@@ -2057,6 +2381,49 @@ html.dark .bit-badge-sobra { background: #1c1007; color: #fbbf24; }
 }
 
 .bit-btn-cerrar:hover { background: var(--acento-oscuro); }
+
+/* ── Historial de bitácoras ─────────────────────────── */
+.bit-hist-wrap    { margin-top: 24px; padding: 0 4px; }
+.bit-hist-titulo  { font-size: 13px; font-weight: 600; color: var(--texto-secundario); margin-bottom: 10px; }
+.bit-hist-vacio   { font-size: 13px; color: var(--texto-secundario); padding: 12px 0; }
+.bit-hist-fila    {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-radius: 8px; cursor: pointer;
+  background: var(--fondo-card); border: 1px solid var(--borde);
+  margin-bottom: 6px; transition: background .15s;
+}
+.bit-hist-fila:hover  { background: var(--fondo-hover); }
+.bit-hist-info    { display: flex; flex-direction: column; gap: 2px; }
+.bit-hist-fecha   { font-size: 13px; font-weight: 600; color: var(--texto); }
+.bit-hist-suc     { font-size: 11px; color: var(--texto-secundario); }
+.bit-hist-res     { display: flex; gap: 6px; }
+.bit-pill-ok      { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: #1a3a1a; color: #4caf50; }
+.bit-pill-falta   { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: #3a1a1a; color: #f44336; }
+.bit-pill-sobra   { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: #2a2a1a; color: #ff9800; }
+
+/* ── Modal detalle bitácora ─────────────────────────── */
+.bit-det-overlay  {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+}
+.bit-det--oculto  { display: none !important; }
+.bit-det-modal    {
+  background: var(--fondo-card); border-radius: 12px; width: 90%; max-width: 860px;
+  max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+}
+.bit-det-hdr      {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--borde);
+}
+.bit-det-hdr h3   { font-size: 15px; font-weight: 600; margin: 0; }
+.bit-det-hdr button { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--texto-secundario); }
+.bit-det-scroll   { overflow-y: auto; padding: 16px 20px; }
+.bit-det-tabla    { width: 100%; border-collapse: collapse; font-size: 12px; }
+.bit-det-tabla th { text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--borde); color: var(--texto-secundario); }
+.bit-det-tabla td { padding: 5px 8px; border-bottom: 1px solid var(--borde); }
+.bit-det-ok   td:nth-child(5) { color: #4caf50; }
+.bit-det-falta td:nth-child(5) { color: #f44336; }
+.bit-det-sobra td:nth-child(5) { color: #ff9800; }
 
 
 /* =============================================================
@@ -4254,3 +4621,60 @@ body.dark .vnt-alerta-warning .vnt-alerta-tag { background: #1c1007; color: #fbb
   .vnt-kpis        { grid-template-columns: repeat(2, 1fr); }
   .vnt-export-btn  { margin-left: 0; }
 }
+
+/* ── Turno badges (tabla de usuarios) ─────────────────────────── */
+.usr-turno-badge {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+.usr-turno-t1 { background: rgba(124,185,232,.15); border-color: rgba(124,185,232,.4); color: #7cb9e8; }
+.usr-turno-t2 { background: rgba(176,127,220,.15); border-color: rgba(176,127,220,.4); color: #b07fdc; }
+.usr-turno-t3 { background: rgba(240,140, 90,.15); border-color: rgba(240,140, 90,.4); color: #f08c5a; }
+
+/* ── Botones de selección de turno (modal perfil) ─────────────── */
+.perfil-turno-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.perfil-turno-btn {
+  flex: 1;
+  min-width: 110px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: var(--fondo-alt);
+  color: var(--texto-suave);
+  font-size: .8rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.perfil-turno-btn:hover { background: var(--superficie); color: var(--texto); }
+.perfil-turno-btn.em-active {
+  color: var(--texto);
+  font-weight: 700;
+  border-color: currentColor;
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+.perfil-turno-t1        { color: #7cb9e8; }
+.perfil-turno-t1:hover  { background: rgba(124,185,232,.12); }
+.perfil-turno-t1.em-active { background: rgba(124,185,232,.18); }
+.perfil-turno-t2        { color: #b07fdc; }
+.perfil-turno-t2:hover  { background: rgba(176,127,220,.12); }
+.perfil-turno-t2.em-active { background: rgba(176,127,220,.18); }
+.perfil-turno-t3        { color: #f08c5a; }
+.perfil-turno-t3:hover  { background: rgba(240,140,90,.12); }
+.perfil-turno-t3.em-active { background: rgba(240,140,90,.18); }
+
+/* Sidebar — hover sutil en la tarjeta del usuario */
+.panel-sidebar-usuario:hover { background: var(--fondo-alt); }

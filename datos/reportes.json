@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1782682683800,
+    "sucursal": "Simón Bolívar",
+    "dept": "imp",
+    "descripcion": "Test persistencia",
+    "numImpresora": "",
+    "marca": "",
+    "mensaje": "",
+    "status": "pendiente",
+    "fecha": "2026-06-28T21:38:03.800Z",
+    "creadoPor": "Admin"
+  },
+  {
+    "id": 1783028847891,
+    "sucursal": "Ruiz Cortines",
+    "dept": "imp",
+    "descripcion": "gtfrdr",
+    "numImpresora": "75657575",
+    "marca": "",
+    "mensaje": "Ruiz Cortines\n02/07/2026\nJueves\n\nREPORTE\n\nImpresoras\n\nygftf\n\nNo. Impresora\n75657575\n\ngtfrdr\n\n@Monitoreo",
+    "status": "pendiente",
+    "fecha": "2026-07-02T21:47:27.891Z",
+    "creadoPor": "Admin"
+  },
+  {
+    "id": 1783029436833,
+    "sucursal": "Ruiz Cortines",
+    "dept": "bodega",
+    "descripcion": "no hay planis",
+    "numImpresora": "",
+    "marca": "",
+    "mensaje": "Ruiz Cortines\n02/07/2026\nJueves\n\nREPORTE\n\nBodega\n\nno hay planis\n\n@Monitoreo",
+    "status": "pendiente",
+    "fecha": "2026-07-02T21:57:16.833Z",
+    "creadoPor": "Admin"
+  },
+  {
+    "id": 1783398736972,
+    "sucursal": "Simón Bolívar",
+    "dept": "imp",
+    "descripcion": "EEEE",
+    "numImpresora": "EXE",
+    "marca": "",
+    "mensaje": "Simón Bolívar\n06/07/2026\nLunes\n\nREPORTE\n\nImpresoras\n\nEEEE\n\nNo. Impresora\nEXE\n\nEEEE\n\n@Monitoreo",
+    "status": "pendiente",
+    "fecha": "2026-07-07T04:32:16.972Z",
+    "creadoPor": "Admin"
+  }
+]

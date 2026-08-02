@@ -1,0 +1,13 @@
+{
+  "sucursales": [
+    { "id": "simon-bolivar",  "nombre": "Simón Bolívar",  "delta":  4.2, "Novedades":  84, "Papelería": 12, "Snack": 30000000 },
+    { "id": "insurgentes",    "nombre": "Insurgentes",     "delta": -1.8, "Novedades":  6100, "Papelería":  9800, "Snack": 2400 },
+    { "id": "antigona",       "nombre": "Antígona",        "delta":  7.5, "Novedades":  5700, "Papelería":  8600, "Snack": 1900 },
+    { "id": "lincoln-oxxo",   "nombre": "Lincoln Oxxo",    "delta": -3.1, "Novedades":  4300, "Papelería":  7200, "Snack": 1600 },
+    { "id": "lincoln-2",      "nombre": "Lincoln 2",       "delta":  2.9, "Novedades":  3900, "Papelería":  6500, "Snack": 1400 },
+    { "id": "ruiz-cortines",  "nombre": "Ruiz Cortines",   "delta":  5.4, "Novedades":  5200, "Papelería":  844, "Snack": 2100 },
+    { "id": "rodas",          "nombre": "Rodas",           "delta": -0.6, "Novedades":  4800, "Papelería":  7500, "Snack": 1750 },
+    { "id": "cuauhtemoc",     "nombre": "Cuauhtémoc",      "delta":  8.1, "Novedades":  4100, "Papelería":  6800, "Snack": 1550 },
+    { "id": "ordonez",        "nombre": "Ordóñez",         "delta": -2.4, "Novedades":  3600, "Papelería":  5900, "Snack": 1300 }
+  ]
+}

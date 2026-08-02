@@ -8,11 +8,11 @@
         <span>Internet 24 Horas · Nuevo Leon</span>
       </div>
       <div class="nav-links">
-        <a href="#">Inicio</a>
-        <a href="#">Servicios</a>
-        <a href="#">Productos</a>
-        <a href="#">Sucursales</a>
-        <a href="#">Cotizaciones</a>
+        <a href="#root">Inicio</a>
+        <a href="#sec-servicios">Servicios</a>
+        <a href="#sec-productos">Productos</a>
+        <a href="#sec-beneficios">Sucursales</a>
+        <a href="#sec-servicios">Cotizaciones</a>
         <span class="badge-24"><i class="ti ti-moon" aria-hidden="true"></i> Abierto 24/7</span>
 
         <!-- Botón modo oscuro -->
@@ -116,7 +116,7 @@
     </div>
 
     <!-- SERVICIOS -->
-    <div class="sec alt">
+    <div class="sec alt" id="sec-servicios">
       <p class="sec-lbl">Nuestros servicios</p>
       <div class="cards">
         <div class="card">
@@ -143,7 +143,7 @@
     </div>
 
     <!-- PRODUCTOS -->
-    <div class="sec">
+    <div class="sec" id="sec-productos">
       <p class="sec-lbl">Productos disponibles</p>
       <div class="prod-grid">
         <div class="prod-card">
@@ -165,7 +165,7 @@
     </div>
 
     <!-- BENEFICIOS -->
-    <div class="sec alt">
+    <div class="sec alt" id="sec-beneficios">
       <p class="sec-lbl">¿Por qué ser socio i24h?</p>
       <div class="benefit-grid">
         <div class="benefit-row">
@@ -254,21 +254,21 @@
         </a>
 
         {{#if esEncargado}}
-        <a href="/panel#clientes" class="quickbar-item">
+        <a href="/panel?s=clientes" class="quickbar-item">
           <i class="ti ti-users" aria-hidden="true"></i>
           <span>Ver clientes</span>
         </a>
         {{/if}}
 
         {{#if esLider}}
-        <a href="/panel#empleados" class="quickbar-item">
+        <a href="/panel?s=empleados" class="quickbar-item">
           <i class="ti ti-id-badge" aria-hidden="true"></i>
           <span>Gestionar empleados</span>
         </a>
         {{/if}}
 
         {{#if esAdmin}}
-        <a href="/panel#codigos" class="quickbar-item quickbar-item--admin">
+        <a href="/panel?s=usuarios" class="quickbar-item quickbar-item--admin">
           <i class="ti ti-key" aria-hidden="true"></i>
           <span>Generar códigos</span>
         </a>
