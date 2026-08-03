@@ -1512,6 +1512,25 @@
 </div>
 
 <script>
+function escHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+// Para valores insertados dentro de un onclick="...('valor')" — string JS
+// entre comillas simples, anidado en un atributo HTML entre comillas dobles.
+function escJs(str) {
+  return String(str == null ? '' : str)
+    .replace(/\\/g, '\\\\')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, "\\'");
+}
+</script>
+
+<script>
 (function() {
   var perfilTurnoSel = null;
 
@@ -2412,19 +2431,19 @@ renderBitacora();
       const ini   = ((e.nombre||e.correo||'?').split(' ').map(function(w){return w[0];}).join('').toUpperCase()).slice(0,2);
       const fecha = e.fechaCreacion ? new Date(e.fechaCreacion).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
       const conn  = tiempoRelativo(e.ultimaConexion);
-      const nom   = (e.nombre||e.correo).replace(/'/g,"\\'");
+      const nom   = escJs(e.nombre||e.correo);
       const sucAct = JSON.stringify(e.sucursales||[]).replace(/"/g,'&quot;');
       const turnoHtml = e.turno
         ? '<span class="usr-turno-badge usr-turno-' + e.turno.toLowerCase() + '">' + e.turno + '</span>'
         : '<span style="font-size:.72rem;color:var(--texto-suave)">—</span>';
       return '<tr>' +
         '<td><div class="usr-uinfo"><div class="usr-av usr-av-rojo">' + ini + '</div>' +
-          '<div><div class="usr-uname">' + (e.nombre||'—') + '</div>' +
-          '<div class="usr-ucorreo">' + e.correo + '</div></div></div></td>' +
+          '<div><div class="usr-uname">' + escHtml(e.nombre||'—') + '</div>' +
+          '<div class="usr-ucorreo">' + escHtml(e.correo) + '</div></div></div></td>' +
         '<td><span class="usr-role-badge ' + (USR_ROL_CLASS[e.cargo]||'') + '">' + (USR_ROL_LABEL[e.cargo]||e.cargo) + '</span></td>' +
         '<td>' + turnoHtml + '</td>' +
         '<td>' + ((e.sucursales||[]).length
-          ? (e.sucursales||[]).map(function(s){ return '<span class="usr-suc-tag">' + s + '</span>'; }).join('')
+          ? (e.sucursales||[]).map(function(s){ return '<span class="usr-suc-tag">' + escHtml(s) + '</span>'; }).join('')
           : '<span style="font-size:.72rem;color:var(--texto-suave)">—</span>') + '</td>' +
         '<td style="font-size:.72rem;color:var(--texto-suave)">' + fecha + '</td>' +
         '<td style="font-size:.72rem;color:var(--texto-suave)">' + conn + '</td>' +
@@ -2456,10 +2475,10 @@ renderBitacora();
     tb.innerHTML = lista.map(function(c) {
       const ini   = (c.correo||'?').slice(0,2).toUpperCase();
       const fecha = c.fechaCreacion ? new Date(c.fechaCreacion).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
-      const corr  = c.correo.replace(/'/g,"\\'");
+      const corr  = escJs(c.correo);
       return '<tr>' +
         '<td><div class="usr-uinfo"><div class="usr-av usr-av-azul">' + ini + '</div>' +
-          '<div><div class="usr-uname">' + c.correo + '</div>' +
+          '<div><div class="usr-uname">' + escHtml(c.correo) + '</div>' +
           '<div class="usr-ucorreo">ID: ' + ((c._id||'').slice(-6)) + '</div></div></div></td>' +
         '<td><span style="font-size:.85rem;font-weight:600;color:var(--texto)">' + (c.puntos||0) + '</span>' +
           '<span style="font-size:.7rem;color:var(--texto-suave)"> pts</span></td>' +
@@ -2492,13 +2511,13 @@ renderBitacora();
     el.innerHTML = lista.map(function(c) {
       const fechaStr = c.fecha ? new Date(c.fecha).toLocaleDateString('es-MX') : '—';
       const metaStr  = c.usado
-        ? 'Usado por <strong>' + (c.usadoPor||'—') + '</strong> · ' + fechaStr
-        : 'Creado por ' + (c.creadoPor||'—') + ' · ' + fechaStr;
+        ? 'Usado por <strong>' + escHtml(c.usadoPor||'—') + '</strong> · ' + fechaStr
+        : 'Creado por ' + escHtml(c.creadoPor||'—') + ' · ' + fechaStr;
       return '<div class="usr-code-card">' +
         '<div class="usr-code-status-ico ' + (c.usado?'used':'disp') + '">' +
           '<i class="ti ' + (c.usado?'ti-check':'ti-key') + '" aria-hidden="true"></i>' +
         '</div>' +
-        '<span class="usr-code-val">' + c.codigo + '</span>' +
+        '<span class="usr-code-val">' + escHtml(c.codigo) + '</span>' +
         '<div class="usr-code-meta">' +
           '<span class="' + (c.usado?'usr-cu-si':'usr-cu-no') + '">' + (c.usado?'Usado':'Disponible') + '</span>' +
           '<span>' + metaStr + '</span>' +
@@ -2992,18 +3011,18 @@ renderBitacora();
     cont.innerHTML = promoLista.map(function (p) {
       var estado = promoEstado(p);
       return '<div class="promo-card">' +
-        (p.imagenUrl ? '<img class="promo-card-img" src="' + p.imagenUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
+        (p.imagenUrl ? '<img class="promo-card-img" src="' + escHtml(p.imagenUrl) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
         '<div class="promo-card-body">' +
           '<div class="promo-card-hdr">' +
-            '<p class="promo-card-titulo">' + p.titulo + '</p>' +
+            '<p class="promo-card-titulo">' + escHtml(p.titulo) + '</p>' +
             '<span class="promo-badge ' + estado.cls + '">' + estado.txt + '</span>' +
           '</div>' +
-          '<p class="promo-card-desc">' + p.descripcion + '</p>' +
-          (p.beneficio ? '<span class="promo-card-beneficio"><i class="ti ti-gift"></i> ' + p.beneficio + '</span>' : '') +
+          '<p class="promo-card-desc">' + escHtml(p.descripcion) + '</p>' +
+          (p.beneficio ? '<span class="promo-card-beneficio"><i class="ti ti-gift"></i> ' + escHtml(p.beneficio) + '</span>' : '') +
           '<p class="promo-card-vigencia"><i class="ti ti-calendar"></i> ' + promoFmtFecha(p.fechaInicio) + ' — ' + promoFmtFecha(p.fechaFin) + '</p>' +
           '<div class="promo-card-acciones">' +
-            '<button class="btn-o btn-sm" onclick="promoEditar(\'' + p._id + '\')"><i class="ti ti-edit"></i> Editar</button>' +
-            '<button class="btn-o btn-sm" onclick="promoEliminar(\'' + p._id + '\')"><i class="ti ti-trash"></i> Eliminar</button>' +
+            '<button class="btn-o btn-sm" onclick="promoEditar(\'' + escJs(p._id) + '\')"><i class="ti ti-edit"></i> Editar</button>' +
+            '<button class="btn-o btn-sm" onclick="promoEliminar(\'' + escJs(p._id) + '\')"><i class="ti ti-trash"></i> Eliminar</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -3808,8 +3827,8 @@ renderBitacora();
       return '<div class="dash-rpt-item">' +
         '<span class="dash-rpt-dot ' + r.status + '"></span>' +
         '<div class="dash-rpt-body">' +
-          '<div class="dash-rpt-desc">' + r.descripcion + '</div>' +
-          '<div class="dash-rpt-meta">' + r.sucursal + ' · ' + r.dept + ' · ' + fecha + '</div>' +
+          '<div class="dash-rpt-desc">' + escHtml(r.descripcion) + '</div>' +
+          '<div class="dash-rpt-meta">' + escHtml(r.sucursal) + ' · ' + escHtml(r.dept) + ' · ' + fecha + '</div>' +
         '</div>' +
       '</div>';
     });

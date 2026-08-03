@@ -49,6 +49,13 @@ iniciarCronCortes();
 
 const app = express();
 
+// Render (como Heroku) pone un proxy/load balancer enfrente que termina el
+// TLS y reenvía por HTTP interno agregando X-Forwarded-*. Sin esto, Express
+// no confía en esos headers: express-rate-limit no puede identificar la IP
+// real del cliente (confirmado en logs: ERR_ERL_UNEXPECTED_X_FORWARDED_FOR)
+// y req.secure/req.protocol quedan mal detectados detrás del proxy.
+app.set('trust proxy', 1);
+
 // =============================================================
 //  MOTOR DE PLANTILLAS — Handlebars  (vistas en src/views/)
 // =============================================================
