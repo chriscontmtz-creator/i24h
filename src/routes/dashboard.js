@@ -296,6 +296,7 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
       estiloExtra:     'css/dashboard.css',
       scriptPrincipal: 'js/dashboard.js',
       usuario:         req.session.usuario,
+      esAdmin:         ['admin', 'coordinador'].includes(req.session.usuario.cargo),
       sucursalActiva:  sucursalDisplay,
       periodoActivo:   periodo,
       turnoActivo:     turnoFiltro,

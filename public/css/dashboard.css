@@ -547,6 +547,68 @@ body.dark .dash-nav-item--active {
 .dash-inv-row--agotado:hover   { background: var(--d-peligro-bg); }
 .dash-inv-row--bajo:hover      { background: var(--d-alerta-bg); }
 
+/* ── Tabs (Venta sin material/snack/novedades + Tickets I24H) ──────── */
+.dash-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--d-borde);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.dash-tab-btn {
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  color: var(--d-tex-suave);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transform: translateY(1px);
+}
+
+.dash-tab-btn:hover { color: var(--d-texto); }
+
+.dash-tab-btn--activo {
+  color: var(--d-acento);
+  border-bottom-color: var(--d-acento);
+}
+
+.dash-tab-panel--oculto { display: none; }
+
+.dash-ajuste-fila {
+  font-size: 12px;
+  color: var(--d-tex-suave);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.dash-tacha-btn {
+  border: none;
+  background: none;
+  color: var(--d-peligro);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.dash-ajuste-confirm {
+  font-size: 12px;
+  color: var(--d-peligro);
+}
+
+.dash-ajuste-confirm button {
+  border: 1px solid var(--d-borde-f);
+  background: var(--d-sup);
+  border-radius: 4px;
+  padding: 1px 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
 .dash-inv-nombre    { font-weight: 500; color: var(--d-texto); }
 .dash-inv-num       { text-align: right; color: var(--d-tex-suave); white-space: nowrap; }
 .dash-inv-stock-val { font-weight: 700; color: var(--d-texto); }

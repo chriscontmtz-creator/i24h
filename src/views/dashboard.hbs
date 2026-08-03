@@ -284,42 +284,83 @@
       {{/if}}
     </div>
 
-    <!-- ── Verificar ventas del sync ──────────────────────────── -->
+    <!-- ── Tabs: Venta sin material/snack/novedades + Tickets I24H ──── -->
     <div class="dash-card" style="margin-bottom:2rem">
-      <div class="dash-card-hdr">
-        <p class="dash-card-titulo"><i class="ti ti-database"></i> Ventas registradas por el sync</p>
-        <span style="font-size:.75rem;color:var(--dash-texto-suave)">Directo desde MongoDB · sin filtro de caja</span>
+      <div class="dash-tabs">
+        <button type="button" class="dash-tab-btn dash-tab-btn--activo" data-tab="mat">VENTA SIN MATERIAL SNACK Y NOVEDADES</button>
+        <button type="button" class="dash-tab-btn" data-tab="tkt">Tickets I24H</button>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
-        <select class="dash-sel" id="dtkt-suc" style="min-width:160px">
-          {{#each sucursales}}
-            <option value="{{nombre}}" {{#if activa}}selected{{/if}}>{{nombre}}</option>
-          {{/each}}
-        </select>
-        <input type="date" class="dash-sel" id="dtkt-fecha" style="max-width:155px">
-        <button class="dash-btn-o" id="dtkt-btn" style="gap:6px">
-          <i class="ti ti-search"></i> Consultar
-        </button>
-        <span id="dtkt-resumen" style="font-size:.82rem;color:var(--dash-texto-suave)"></span>
+
+      <!-- Tab: venta sin material/snack/novedades -->
+      <div class="dash-tab-panel" id="tab-mat">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <select class="dash-sel" id="mat-suc" style="min-width:160px">
+            {{#each sucursales}}
+              <option value="{{nombre}}" {{#if activa}}selected{{/if}}>{{nombre}}</option>
+            {{/each}}
+          </select>
+          <input type="date" class="dash-sel" id="mat-fecha" style="max-width:155px">
+          <button class="dash-btn-o" id="mat-btn" style="gap:6px">
+            <i class="ti ti-search"></i> Consultar
+          </button>
+          <span id="mat-resumen" style="font-size:.82rem;color:var(--d-tex-suave)"></span>
+        </div>
+        <div style="overflow-x:auto;max-height:320px;overflow-y:auto">
+          <table class="dash-inv-tabla" id="mat-tabla" style="width:100%">
+            <thead>
+              <tr>
+                <th style="text-align:left">Caja / Turno</th>
+                <th style="text-align:left">Producto</th>
+                <th style="text-align:right">Unidades</th>
+                <th style="text-align:right">Importe</th>
+              </tr>
+            </thead>
+            <tbody id="mat-body">
+              <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--d-tex-suave)">Selecciona sucursal y fecha, luego presiona Consultar.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div style="overflow-x:auto;max-height:320px;overflow-y:auto">
-        <table class="dash-inv-tabla" id="dtkt-tabla" style="width:100%">
-          <thead>
-            <tr>
-              <th style="text-align:left">Producto / Servicio</th>
-              <th style="text-align:right">Unidades</th>
-              <th style="text-align:right">Importe</th>
-            </tr>
-          </thead>
-          <tbody id="dtkt-body">
-            <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--dash-texto-suave)">Selecciona sucursal y fecha, luego presiona Consultar.</td></tr>
-          </tbody>
-        </table>
+
+      <!-- Tab: Tickets I24H -->
+      <div class="dash-tab-panel dash-tab-panel--oculto" id="tab-tkt">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <select class="dash-sel" id="tkt-suc" style="min-width:160px">
+            {{#each sucursales}}
+              <option value="{{nombre}}" {{#if activa}}selected{{/if}}>{{nombre}}</option>
+            {{/each}}
+          </select>
+          <input type="date" class="dash-sel" id="tkt-fecha" style="max-width:155px">
+          <button class="dash-btn-o" id="tkt-btn" style="gap:6px">
+            <i class="ti ti-search"></i> Buscar
+          </button>
+          <input type="text" class="dash-sel" id="tkt-filtro" placeholder="Filtrar por # de ticket" style="max-width:180px" disabled>
+          <span id="tkt-resumen" style="font-size:.82rem;color:var(--d-tex-suave)"></span>
+        </div>
+        <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
+          <table class="dash-inv-tabla" id="tkt-tabla" style="width:100%">
+            <thead>
+              <tr>
+                <th style="text-align:left">Ticket #</th>
+                <th style="text-align:left">Turno</th>
+                <th style="text-align:left">Hora</th>
+                <th style="text-align:right">Importe</th>
+                <th style="text-align:right">Descontado</th>
+                <th style="text-align:left">{{#if esAdmin}}Ajuste{{/if}}</th>
+              </tr>
+            </thead>
+            <tbody id="tkt-body">
+              <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--d-tex-suave)">Selecciona sucursal y fecha, luego presiona Buscar.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
   </main>
 </div>
+
+<script>window.DASH_ES_ADMIN = {{#if esAdmin}}true{{else}}false{{/if}};</script>
 
 <!-- Datos para Chart.js (embebidos en el HTML, leídos por dashboard.js) -->
 <script>window.DASH_DATA = {{{dashJson}}};</script>
@@ -328,52 +369,279 @@
 
 <script>
 (function () {
-  var btn     = document.getElementById('dtkt-btn');
-  var sucSel  = document.getElementById('dtkt-suc');
-  var fechaIn = document.getElementById('dtkt-fecha');
-  var body    = document.getElementById('dtkt-body');
-  var resumen = document.getElementById('dtkt-resumen');
-
-  // Pre-llenar con hoy en hora México
-  var hoyMx = new Date(Date.now() - 6 * 60 * 60 * 1000);
-  if (fechaIn) fechaIn.value = hoyMx.toISOString().split('T')[0];
+  var hoyMx = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   function fmt(n) {
     return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
-
-  function consultar() {
-    if (!body) return;
-    var suc   = sucSel  ? sucSel.value   : '';
-    var fecha = fechaIn ? fechaIn.value  : '';
-    body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px">Consultando…</td></tr>';
-    if (resumen) resumen.textContent = '';
-
-    fetch('/api/tickets/dia?sucursal=' + encodeURIComponent(suc) + '&fecha=' + encodeURIComponent(fecha))
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        if (!d.ok) {
-          body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:#f87171">Error: ' + (d.error || 'desconocido') + '</td></tr>';
-          return;
-        }
-        if (resumen) resumen.innerHTML = '<strong>' + d.numTickets + ' tickets</strong> · Total: <strong>' + fmt(d.total) + '</strong>';
-        if (!d.resumenProductos || d.resumenProductos.length === 0) {
-          body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--dash-texto-suave)">Sin ventas registradas para esa fecha y sucursal.</td></tr>';
-          return;
-        }
-        body.innerHTML = d.resumenProductos.map(function (p) {
-          return '<tr>' +
-            '<td>' + p.detalle + '</td>' +
-            '<td style="text-align:right">' + p.unidades + '</td>' +
-            '<td style="text-align:right">' + fmt(p.importe) + '</td>' +
-            '</tr>';
-        }).join('');
-      })
-      .catch(function (err) {
-        body.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:#f87171">Error de red: ' + err.message + '</td></tr>';
-      });
+  function clear(node) { while (node && node.firstChild) node.removeChild(node.firstChild); }
+  function el(tag, opts) {
+    var e = document.createElement(tag);
+    opts = opts || {};
+    if (opts.text != null) e.textContent = opts.text;
+    if (opts.className) e.className = opts.className;
+    if (opts.style) e.setAttribute('style', opts.style);
+    if (opts.attrs) Object.keys(opts.attrs).forEach(function (k) { e.setAttribute(k, opts.attrs[k]); });
+    if (opts.dataset) Object.keys(opts.dataset).forEach(function (k) { e.dataset[k] = opts.dataset[k]; });
+    (opts.children || []).forEach(function (c) { if (c) e.appendChild(c); });
+    return e;
+  }
+  function td(content, style) {
+    var d = document.createElement('td');
+    if (style) d.setAttribute('style', style);
+    if (content instanceof Node) d.appendChild(content);
+    else d.textContent = content == null ? '' : String(content);
+    return d;
+  }
+  function msgRow(body, text, colspan, color) {
+    clear(body);
+    var d = td(text, 'text-align:center;padding:20px' + (color ? ';color:' + color : ''));
+    d.colSpan = colspan;
+    body.appendChild(el('tr', { children: [d] }));
   }
 
-  if (btn) btn.addEventListener('click', consultar);
+  // ── Tabs ──────────────────────────────────────────────────────────
+  var tabBtns   = document.querySelectorAll('.dash-tab-btn');
+  var tabPanels = { mat: document.getElementById('tab-mat'), tkt: document.getElementById('tab-tkt') };
+  tabBtns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      tabBtns.forEach(function (x) { x.classList.remove('dash-tab-btn--activo'); });
+      b.classList.add('dash-tab-btn--activo');
+      Object.keys(tabPanels).forEach(function (k) {
+        tabPanels[k].classList.toggle('dash-tab-panel--oculto', k !== b.dataset.tab);
+      });
+    });
+  });
+
+  // ── Tab: Venta sin material, snack y novedades ──────────────────────
+  (function () {
+    var btn     = document.getElementById('mat-btn');
+    var sucSel  = document.getElementById('mat-suc');
+    var fechaIn = document.getElementById('mat-fecha');
+    var body    = document.getElementById('mat-body');
+    var resumen = document.getElementById('mat-resumen');
+    if (fechaIn) fechaIn.value = hoyMx;
+
+    function consultar() {
+      if (!body) return;
+      var suc = sucSel ? sucSel.value : '', fecha = fechaIn ? fechaIn.value : '';
+      msgRow(body, 'Consultando…', 4);
+      if (resumen) clear(resumen);
+
+      fetch('/api/material/resumen?sucursal=' + encodeURIComponent(suc) + '&fecha=' + encodeURIComponent(fecha))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d.ok) { msgRow(body, 'Error: ' + (d.error || 'desconocido'), 4, '#f87171'); return; }
+          if (resumen) {
+            clear(resumen);
+            resumen.appendChild(el('strong', { text: 'Total excluido: ' }));
+            resumen.appendChild(document.createTextNode(fmt(d.totalMaterial)));
+          }
+          if (!d.filas || d.filas.length === 0) {
+            msgRow(body, 'Sin ventas de material/snack/novedades para esa fecha y sucursal.', 4, 'var(--d-tex-suave)');
+            return;
+          }
+          clear(body);
+          d.filas.forEach(function (g) {
+            body.appendChild(el('tr', {
+              style: 'font-weight:600;background:var(--d-fondo-alt)',
+              children: [
+                td('Caja ' + (g.ncaja != null ? g.ncaja : '—') + ' · ' + (g.turno || '—')),
+                td(''),
+                td(g.unidades + ' uds', 'text-align:right'),
+                td(fmt(g.importe), 'text-align:right'),
+              ],
+            }));
+            (g.productos || []).forEach(function (p) {
+              body.appendChild(el('tr', { children: [td(''), td(p.nombre), td(''), td(fmt(p.importe), 'text-align:right')] }));
+            });
+          });
+        })
+        .catch(function (err) { msgRow(body, 'Error de red: ' + err.message, 4, '#f87171'); });
+    }
+    if (btn) btn.addEventListener('click', consultar);
+  })();
+
+  // ── Tab: Tickets I24H ───────────────────────────────────────────────
+  (function () {
+    var btn      = document.getElementById('tkt-btn');
+    var sucSel   = document.getElementById('tkt-suc');
+    var fechaIn  = document.getElementById('tkt-fecha');
+    var filtroIn = document.getElementById('tkt-filtro');
+    var body     = document.getElementById('tkt-body');
+    var resumen  = document.getElementById('tkt-resumen');
+    var esAdmin  = window.DASH_ES_ADMIN === true;
+    var cache    = [];
+    var sucursalActual = '';
+
+    if (fechaIn) fechaIn.value = hoyMx;
+
+    function ajusteFila(a) {
+      var confirmSpan = el('span', {
+        className: 'dash-ajuste-confirm', style: 'display:none',
+        children: [
+          document.createTextNode('¿Seguro? '),
+          el('button', { text: 'Sí', attrs: { type: 'button' }, dataset: { action: 'del-yes', id: a._id, nticket: '' } }),
+          document.createTextNode(' '),
+          el('button', { text: 'No', attrs: { type: 'button' }, dataset: { action: 'del-no' } }),
+        ],
+      });
+      var children = [el('span', { text: fmt(a.montoDescontado) + ' — ' + a.motivo })];
+      if (esAdmin) {
+        var trashIcon = el('i', { className: 'ti ti-trash' });
+        var delBtn = el('button', {
+          className: 'dash-tacha-btn', attrs: { type: 'button', title: 'Eliminar ajuste' },
+          dataset: { action: 'del-ask', id: a._id }, children: [trashIcon],
+        });
+        children.push(document.createTextNode(' '), delBtn, confirmSpan);
+      }
+      return el('div', { className: 'dash-ajuste-fila', dataset: { ajusteId: a._id }, children: children });
+    }
+
+    function accionCell(t) {
+      var container = el('div', { children: (t.ajustes || []).map(ajusteFila) });
+      if (esAdmin) {
+        var toggleBtn = el('button', {
+          text: 'Descontar', className: 'dash-btn-o', style: 'font-size:12px;padding:4px 10px',
+          attrs: { type: 'button' }, dataset: { action: 'toggle-form', nticket: t.nticket },
+        });
+        var montoIn  = el('input', { attrs: { type: 'number', min: '0.01', step: '0.01', placeholder: 'Monto' }, className: 'dash-sel', style: 'width:100px', dataset: {} });
+        montoIn.id = 'monto-' + t.nticket;
+        var motivoIn = el('input', { attrs: { type: 'text', maxlength: '300', placeholder: 'Motivo' }, className: 'dash-sel', style: 'width:180px' });
+        motivoIn.id = 'motivo-' + t.nticket;
+        var aplicarBtn = el('button', {
+          text: 'Aplicar', className: 'dash-btn-p', style: 'font-size:12px;padding:4px 10px',
+          attrs: { type: 'button' }, dataset: { action: 'aplicar', nticket: t.nticket },
+        });
+        var errDiv = el('div', { className: 'dash-ajuste-error', style: 'color:#f87171;font-size:12px;margin-top:4px' });
+        errDiv.id = 'err-' + t.nticket;
+        var form = el('div', {
+          className: 'dash-ajuste-form', style: 'display:none;margin-top:8px',
+          children: [montoIn, motivoIn, aplicarBtn, errDiv],
+        });
+        form.id = 'form-' + t.nticket;
+        container.appendChild(toggleBtn);
+        container.appendChild(form);
+      }
+      return container;
+    }
+
+    function ticketRow(t) {
+      var ntCell = document.createElement('td');
+      ntCell.appendChild(document.createTextNode(String(t.nticket) + ' '));
+      if (t.ncaja != null) ntCell.appendChild(el('span', { style: 'color:var(--d-tex-suave)', text: '(Caja ' + t.ncaja + ')' }));
+      var row = el('tr', {
+        dataset: { nticket: t.nticket },
+        children: [
+          ntCell,
+          td(t.turno || '—'),
+          td(t.hora || '—'),
+          td(fmt(t.importeTotal), 'text-align:right'),
+          td(fmt(t.totalDescontado), 'text-align:right'),
+          td(accionCell(t)),
+        ],
+      });
+      return row;
+    }
+
+    function render(lista) {
+      if (!body) return;
+      clear(body);
+      if (!lista.length) { msgRow(body, 'Sin tickets para esa fecha y sucursal.', 6, 'var(--d-tex-suave)'); return; }
+      lista.forEach(function (t) { body.appendChild(ticketRow(t)); });
+    }
+
+    function buscar() {
+      if (!body) return;
+      sucursalActual = sucSel ? sucSel.value : '';
+      var fecha = fechaIn ? fechaIn.value : '';
+      msgRow(body, 'Buscando…', 6);
+      if (resumen) clear(resumen);
+      if (filtroIn) { filtroIn.value = ''; filtroIn.disabled = true; }
+
+      fetch('/api/material/tickets-dia?sucursal=' + encodeURIComponent(sucursalActual) + '&fecha=' + encodeURIComponent(fecha))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d.ok) { msgRow(body, 'Error: ' + (d.error || 'desconocido'), 6, '#f87171'); return; }
+          cache = d.tickets || [];
+          if (resumen) {
+            clear(resumen);
+            resumen.appendChild(el('strong', { text: d.numTickets + ' tickets' }));
+            resumen.appendChild(document.createTextNode(' · Total: '));
+            resumen.appendChild(el('strong', { text: fmt(d.total) }));
+          }
+          if (filtroIn) filtroIn.disabled = false;
+          render(cache);
+        })
+        .catch(function (err) { msgRow(body, 'Error de red: ' + err.message, 6, '#f87171'); });
+    }
+
+    if (btn) btn.addEventListener('click', buscar);
+    if (filtroIn) {
+      filtroIn.addEventListener('input', function () {
+        var q = filtroIn.value.trim();
+        render(q ? cache.filter(function (t) { return String(t.nticket).indexOf(q) !== -1; }) : cache);
+      });
+    }
+
+    if (body) {
+      body.addEventListener('click', function (ev) {
+        var target = ev.target.closest('[data-action]');
+        if (!target) return;
+        var action = target.dataset.action;
+
+        if (action === 'toggle-form') {
+          var form = document.getElementById('form-' + target.dataset.nticket);
+          if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        if (action === 'aplicar') {
+          var nt = target.dataset.nticket;
+          var monto  = document.getElementById('monto-' + nt);
+          var motivo = document.getElementById('motivo-' + nt);
+          var errEl  = document.getElementById('err-' + nt);
+          if (errEl) errEl.textContent = '';
+          target.disabled = true;
+          fetch('/api/material/ajuste-ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nticket: nt, sucursal: sucursalActual,
+              montoDescontado: monto ? monto.value : '', motivo: motivo ? motivo.value : '',
+            }),
+          })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              target.disabled = false;
+              if (!d.ok) { if (errEl) errEl.textContent = d.error || 'Error al aplicar el descuento'; return; }
+              buscar();
+            })
+            .catch(function (err) {
+              target.disabled = false;
+              if (errEl) errEl.textContent = 'Error de red: ' + err.message;
+            });
+        }
+
+        if (action === 'del-ask') {
+          var fila = target.closest('.dash-ajuste-fila');
+          if (fila) fila.querySelector('.dash-ajuste-confirm').style.display = 'inline';
+        }
+        if (action === 'del-no') {
+          var fila2 = target.closest('.dash-ajuste-fila');
+          if (fila2) fila2.querySelector('.dash-ajuste-confirm').style.display = 'none';
+        }
+        if (action === 'del-yes') {
+          target.disabled = true;
+          fetch('/api/material/ajuste-ticket/' + target.dataset.id, { method: 'DELETE' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (!d.ok) { target.disabled = false; return; }
+              buscar();
+            })
+            .catch(function () { target.disabled = false; });
+        }
+      });
+    }
+  })();
 })();
 </script>

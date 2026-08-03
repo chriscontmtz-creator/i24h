@@ -213,6 +213,58 @@ router.post('/material/ajuste-ticket', soloAdmin, async (req, res) => {
   }
 });
 
+// ── GET /api/material/tickets-dia?sucursal=&fecha= ─────────────────────
+// Lista todos los tickets de un día para poder ubicar visualmente el
+// dañado por error de impresión (tab "Tickets I24H" del dashboard).
+router.get('/material/tickets-dia', requireAuth, async (req, res) => {
+  try {
+    const { sucursal, fecha } = req.query;
+    const match = {
+      ...filtroSucursal(sucursal),
+      fecha: rangoDiaMX(fecha),
+      anulado: false,
+    };
+
+    const tickets = await Ticket.find(match)
+      .select('nticket ncaja importeTotal lineas sucursal')
+      .sort({ nticket: 1 })
+      .lean();
+
+    const numeros = tickets.map(t => t.nticket);
+    const ajustesTodos = numeros.length
+      ? await AjusteTicket.find({ ...filtroSucursal(sucursal), nticket: { $in: numeros } })
+          .sort({ fecha: -1 })
+          .lean()
+      : [];
+
+    const ajustesPorTicket = new Map();
+    for (const a of ajustesTodos) {
+      if (!ajustesPorTicket.has(a.nticket)) ajustesPorTicket.set(a.nticket, []);
+      ajustesPorTicket.get(a.nticket).push(a);
+    }
+
+    const filas = tickets.map(t => {
+      const ajustes = ajustesPorTicket.get(t.nticket) || [];
+      return {
+        nticket:         t.nticket,
+        ncaja:           t.ncaja ?? null,
+        turno:           turnoDesdeHora(t.lineas?.[0]?.hora),
+        hora:            t.lineas?.[0]?.hora || null,
+        importeTotal:    t.importeTotal || 0,
+        totalDescontado: ajustes.reduce((s, a) => s + a.montoDescontado, 0),
+        ajustes,
+      };
+    });
+
+    const total = filas.reduce((s, f) => s + f.importeTotal, 0);
+
+    res.json({ ok: true, tickets: filas, numTickets: filas.length, total });
+  } catch (err) {
+    console.error('[material] tickets-dia:', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ── GET /api/material/ajustes?sucursal=&fecha= ─────────────────────────
 // Historial de ajustes por error de impresión aplicados ese día.
 router.get('/material/ajustes', requireAuth, async (req, res) => {
@@ -227,6 +279,19 @@ router.get('/material/ajustes', requireAuth, async (req, res) => {
     res.json({ ok: true, ajustes, totalAjustes });
   } catch (err) {
     console.error('[material] ajustes:', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ── DELETE /api/material/ajuste-ticket/:id ──────────────────────────────
+// Elimina un ajuste aplicado por error o porque el caso se canceló.
+router.delete('/material/ajuste-ticket/:id', soloAdmin, async (req, res) => {
+  try {
+    const ajuste = await AjusteTicket.findByIdAndDelete(req.params.id);
+    if (!ajuste) return res.status(404).json({ ok: false, error: 'Ajuste no encontrado' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[material] eliminar ajuste-ticket:', err.message);
     res.status(500).json({ ok: false, error: err.message });
   }
 });

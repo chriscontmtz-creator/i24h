@@ -195,14 +195,16 @@ No usa Mongo — JSON planos (`ventas.json`, `productos.json`, `alertas.json`).
 
 ## 11. Material (`src/routes/material.js`)
 
-Modal "Venta sin material y sin tickets" (`#vsm-overlay`, `panel.hbs:3964-4100`), JS en `public/js/modal-material.js`.
+Dos consumidores hoy: el modal "Venta sin material y sin tickets" (`#vsm-overlay`, `panel.hbs:3964-4100`, JS en `public/js/modal-material.js`) y, desde 2026-08-03, los tabs "VENTA SIN MATERIAL SNACK Y NOVEDADES" / "Tickets I24H" dentro de `/dashboard` (`dashboard.hbs`, script inline al final del archivo — ver sección 16).
 
 | Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Modelo | Notas |
 |---|---|---|---|---|---|
-| Nav sistema / botón sección Ventas → `abrirModalMaterial()` — `panel.hbs:77,578` → `#vsm-mat-btn-cargar` — `panel.hbs:4011` | `vsmCargarMaterial() modal-material.js:63` | `GET /api/material/resumen?sucursal=&fecha=` | `material.js:98` | `Ticket`, `Categoria`, `Producto` | Resta ventas de MATERIAL/NOVEDADES/SNACK del total |
-| Tab "Tickets" → `#vsm-tk-btn-buscar` — `panel.hbs:3984,4065` | `vsmBuscarTicket() modal-material.js:108` | `GET /api/material/buscar-ticket` | `material.js:150` | `Ticket`, `AjusteTicket` | |
-| `#vsm-tk-btn-aplicar` — `panel.hbs:4088` | `vsmAplicarAjuste() modal-material.js:157` | `POST /api/material/ajuste-ticket` | `material.js:178` | `Ticket`, `AjusteTicket` | `soloAdmin` |
-| **⚠️ sin UI encontrada** | — | `GET /api/material/ajustes?sucursal=&fecha=` | `material.js:218` | `AjusteTicket` | Historial de ajustes, sin ningún `fetch` en el frontend |
+| Nav sistema / botón sección Ventas → `abrirModalMaterial()` — `panel.hbs:77,578` → `#vsm-mat-btn-cargar` — `panel.hbs:4011`; también tab "VENTA SIN MATERIAL SNACK Y NOVEDADES" → `#mat-btn` — `dashboard.hbs` | `vsmCargarMaterial() modal-material.js:63`; `consultar() dashboard.hbs` (script inline) | `GET /api/material/resumen?sucursal=&fecha=` | `material.js:98` | `Ticket`, `Categoria`, `Producto` | Resta ventas de MATERIAL/NOVEDADES/SNACK del total (exclusión dinámica por categoría real, no por nombre de producto hardcodeado) |
+| Tab "Tickets" → `#vsm-tk-btn-buscar` — `panel.hbs:3984,4065` | `vsmBuscarTicket() modal-material.js:108` | `GET /api/material/buscar-ticket` | `material.js:150` | `Ticket`, `AjusteTicket` | Búsqueda de un solo ticket por número exacto |
+| Tab "Tickets I24H" → `#tkt-btn` — `dashboard.hbs` | `buscar() dashboard.hbs` (script inline) | `GET /api/material/tickets-dia?sucursal=&fecha=` | `material.js:219` | `Ticket`, `AjusteTicket` | Lista **todos** los tickets de un día (a diferencia de `buscar-ticket`); usa el `rangoDiaMX` verificado de este archivo, no el de `tickets.js` (que tiene bug de huso horario, ver sección 19) |
+| `#vsm-tk-btn-aplicar` — `panel.hbs:4088`; también botón "Descontar" por fila → `[data-action="aplicar"]` — `dashboard.hbs` | `vsmAplicarAjuste() modal-material.js:157`; handler delegado `dashboard.hbs` | `POST /api/material/ajuste-ticket` | `material.js:178` | `Ticket`, `AjusteTicket` | `soloAdmin` |
+| Ícono de basura por ajuste → `[data-action="del-ask"/"del-yes"]` — `dashboard.hbs` | handler delegado `dashboard.hbs` | `DELETE /api/material/ajuste-ticket/:id` | `material.js:288` | `AjusteTicket` | `soloAdmin`; permite deshacer un ajuste aplicado por error o caso cancelado |
+| **⚠️ sin UI encontrada** | — | `GET /api/material/ajustes?sucursal=&fecha=` | `material.js:270` | `AjusteTicket` | Historial de ajustes, sin ningún `fetch` en el frontend (superado en la práctica por `tickets-dia`, que ya trae los ajustes embebidos por ticket) |
 
 ## 12. Resumen (`src/routes/resumen.js`)
 
@@ -270,11 +272,12 @@ No usa Mongo — `datos/reportes.json`.
 
 ## 16. Dashboard (`src/routes/dashboard.js`)
 
-Vista: `src/views/dashboard.hbs` · JS: `public/js/dashboard.js` (108 líneas, solo sidebar/dark-mode/gráfica, sin fetch propio).
+Vista: `src/views/dashboard.hbs` · JS: `public/js/dashboard.js` (108 líneas, solo sidebar/dark-mode/gráfica, sin fetch propio) **+** un segundo `<script>` inline al final de `dashboard.hbs` (agregado 2026-08-03) que sí hace `fetch` — implementa los 2 tabs de la card inferior, ver sección 11 (Material) para sus endpoints.
 
 | Elemento UI (archivo:línea) | Endpoint | Handler de ruta | Modelo | Notas |
 |---|---|---|---|---|
-| Nav "Dashboard" (`panel.hbs:23`), botón "Actualizar" (`dashboard.hbs:69`), filtros sucursal/periodo/turno (`dashboard.hbs:79-100`), links de día (`dashboard.hbs:105-110`) | `GET /dashboard` | `dashboard.js:100` | `Ticket`, `Producto`, `Usuario`, `CorteCaja`, `Revision` | Único endpoint del módulo; navegación GET completa, no AJAX. `Chart.js` solo pinta `window.DASH_DATA` ya renderizado server-side |
+| Nav "Dashboard" (`panel.hbs:23`), botón "Actualizar" (`dashboard.hbs:69`), filtros sucursal/periodo/turno (`dashboard.hbs:79-100`), links de día (`dashboard.hbs:105-110`) | `GET /dashboard` | `dashboard.js:100` | `Ticket`, `Producto`, `Usuario`, `CorteCaja`, `Revision` | Único endpoint de **render** del módulo; navegación GET completa, no AJAX. `Chart.js` solo pinta `window.DASH_DATA` ya renderizado server-side. Contexto de render incluye `esAdmin` (`admin`/`coordinador`, `dashboard.js`) para gatear client-side los controles de descuento del tab "Tickets I24H" — el backend igual lo exige vía `soloAdmin` en `material.js` |
+| Tabs "VENTA SIN MATERIAL SNACK Y NOVEDADES" / "Tickets I24H" (`.dash-tabs`, reemplazan la vieja card "Ventas registradas por el sync") — `dashboard.hbs` | — | — | — | No son un endpoint propio: consumen `GET /api/material/resumen`, `GET /api/material/tickets-dia`, `POST /api/material/ajuste-ticket`, `DELETE /api/material/ajuste-ticket/:id` — ver filas correspondientes en la sección 11 |
 
 ## 17. Revisiones (`src/routes/revisiones.js`, 666 líneas — el módulo más grande)
 
