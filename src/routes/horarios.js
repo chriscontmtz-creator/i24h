@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import Horario  from '../models/Horario.js';
 import Usuario  from '../models/Usuario.js';
-import { requireAuth, requireEmpleado, sesionActual } from '../middlewares/auth.js';
+import { requireAuth, requireAdmin, requireEmpleado, sesionActual } from '../middlewares/auth.js';
 
 const router = Router();
 
@@ -113,8 +113,7 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
 
 // ── GET /horarios/api/empleados ──────────────────────────────────
 // Lista de empleados activos para cargar el roster del editor
-// TODO: agregar requireAdmin cuando sea necesario
-router.get('/api/empleados', requireAuth, async (req, res) => {
+router.get('/api/empleados', requireAuth, requireAdmin, async (req, res) => {
   try {
     const empleados = await Usuario.find({ cargo: { $ne: 'cliente' }, activo: true })
       .select('_id nombre cargo sucursales')
@@ -169,8 +168,7 @@ router.get('/api/semana/:semana/:sucursal', requireAuth, async (req, res) => {
 
 // ── POST /horarios/api/guardar ──────────────────────────────────
 // Crea o actualiza un horario (upsert)
-// TODO: agregar requireAdmin
-router.post('/api/guardar', requireAuth, async (req, res) => {
+router.post('/api/guardar', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { sucursal, semana, turnos } = req.body;
 
@@ -226,8 +224,7 @@ router.post('/api/guardar', requireAuth, async (req, res) => {
 });
 // ── POST /horarios/api/publicar/:id ─────────────────────────────
 // Cambia el estado del horario a 'publicado'
-// TODO: agregar requireAdmin
-router.post('/api/publicar/:id', requireAuth, async (req, res) => {
+router.post('/api/publicar/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     await Horario.findByIdAndUpdate(req.params.id, {
       estado: 'publicado',
@@ -241,8 +238,7 @@ router.post('/api/publicar/:id', requireAuth, async (req, res) => {
 
 // ── POST /horarios/api/copiar-semana ────────────────────────────
 // Copia el horario de una semana a otra como borrador
-// TODO: agregar requireAdmin
-router.post('/api/copiar-semana', requireAuth, async (req, res) => {
+router.post('/api/copiar-semana', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { sucursal, semanaOrigen, semanaDestino } = req.body;
     if (!sucursal || !semanaOrigen || !semanaDestino)
@@ -269,8 +265,7 @@ router.post('/api/copiar-semana', requireAuth, async (req, res) => {
 
 // ── DELETE /horarios/api/celda ──────────────────────────────────
 // Vacía una celda específica (turno + dia) de un horario
-// TODO: agregar requireAdmin
-router.delete('/api/celda', requireAuth, async (req, res) => {
+router.delete('/api/celda', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { horarioId, turno, dia } = req.body;
     if (!horarioId || !turno || dia === undefined)

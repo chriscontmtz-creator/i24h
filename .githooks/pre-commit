@@ -1,0 +1,27 @@
+#!/bin/sh
+# Avisa (y bloquea) si el commit toca rutas/vistas/JS del panel sin tocar
+# CLAUDE.md — el mapa de arquitectura (botón UI -> endpoint -> modelo) vive
+# ahí y se desactualiza en silencio si nadie lo actualiza junto al código.
+#
+# Bypass intencional: git commit --no-verify
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+
+CODE_TOUCHED=$(printf '%s\n' "$STAGED" | grep -E '^(src/routes/|src/views/|public/js/|public/panel\.js|public/JAVA\.js)')
+MAP_TOUCHED=$(printf '%s\n' "$STAGED" | grep -E '^CLAUDE\.md$')
+
+if [ -n "$CODE_TOUCHED" ] && [ -z "$MAP_TOUCHED" ]; then
+  echo ""
+  echo "⚠️  Estas commiteando cambios en rutas/vistas/JS del panel sin tocar CLAUDE.md:"
+  printf '%s\n' "$CODE_TOUCHED" | sed 's/^/   - /'
+  echo ""
+  echo "   El mapa de arquitectura (boton -> endpoint -> modelo) puede haber quedado desactualizado."
+  echo "   Corre '/actualizar-mapa' en Claude Code (dentro de este repo) y vuelve a intentar,"
+  echo "   o si de verdad no aplica a este cambio:"
+  echo ""
+  echo "     git commit --no-verify"
+  echo ""
+  exit 1
+fi
+
+exit 0

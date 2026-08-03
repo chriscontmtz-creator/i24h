@@ -22,6 +22,15 @@ let editorAbierto = false;
 
 // ── Utilidades de semana ─────────────────────────────────────
 
+// Escapa HTML antes de insertar valores de Mongo (nombre de empleado, etc.)
+// en innerHTML — sin esto, el nombre de un empleado con <script> se
+// ejecutaría en la pantalla de cualquiera que abra el roster de Horarios.
+function escHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
 function isoWeekStr(date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -498,12 +507,12 @@ function horRenderRoster(empleados) {
     var ini   = iniciales(e.nombre);
     return '<div class="emp-card" draggable="true" ' +
            'data-id="' + e._id + '" ' +
-           'data-nombre="' + e.nombre.replace(/"/g, '&quot;') + '" ' +
-           'data-cargo="' + (e.cargo || '') + '">' +
-           '<div class="emp-avatar" style="background:' + color + '">' + ini + '</div>' +
+           'data-nombre="' + escHtml(e.nombre) + '" ' +
+           'data-cargo="' + escHtml(e.cargo || '') + '">' +
+           '<div class="emp-avatar" style="background:' + color + '">' + escHtml(ini) + '</div>' +
            '<div class="emp-info">' +
-             '<div class="emp-name">' + e.nombre + '</div>' +
-             '<div class="emp-turno">' + (e.cargo || '') + '</div>' +
+             '<div class="emp-name">' + escHtml(e.nombre) + '</div>' +
+             '<div class="emp-turno">' + escHtml(e.cargo || '') + '</div>' +
            '</div>' +
            '<i class="ti ti-grip-vertical emp-grip"></i>' +
            '</div>';

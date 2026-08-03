@@ -2144,10 +2144,10 @@ function bitCargarHistorial(sucursal) {
         var ok    = doc.resumen ? doc.resumen.ok    : 0;
         var falta = doc.resumen ? doc.resumen.falta : 0;
         var sobra = doc.resumen ? doc.resumen.sobra : 0;
-        return '<div class="bit-hist-fila" onclick="bitVerDetalle(\'' + doc._id + '\')">' +
+        return '<div class="bit-hist-fila" onclick="bitVerDetalle(\'' + escJs(doc._id) + '\')">' +
           '<div class="bit-hist-info">' +
-            '<span class="bit-hist-fecha">' + fecha + ' · ' + doc.turno + '</span>' +
-            '<span class="bit-hist-suc">' + doc.sucursal + ' · Cerrada ' + cierre + ' · ' + (doc.responsable || 'Sin responsable') + '</span>' +
+            '<span class="bit-hist-fecha">' + escHtml(fecha) + ' · ' + escHtml(doc.turno) + '</span>' +
+            '<span class="bit-hist-suc">' + escHtml(doc.sucursal) + ' · Cerrada ' + escHtml(cierre) + ' · ' + escHtml(doc.responsable || 'Sin responsable') + '</span>' +
           '</div>' +
           '<div class="bit-hist-res">' +
             '<span class="bit-pill-ok">✓ ' + ok + '</span>' +
@@ -2170,12 +2170,12 @@ function bitVerDetalle(id) {
       var rows = doc.productos.map(function(p) {
         var cls = p.diferencia === 0 ? 'bit-det-ok' : p.diferencia < 0 ? 'bit-det-falta' : 'bit-det-sobra';
         return '<tr class="' + cls + '">' +
-          '<td>' + p.categoria + '</td>' +
-          '<td>' + p.nombre + '</td>' +
+          '<td>' + escHtml(p.categoria) + '</td>' +
+          '<td>' + escHtml(p.nombre) + '</td>' +
           '<td style="text-align:right">' + p.esperado + '</td>' +
           '<td style="text-align:right">' + p.conteo + '</td>' +
           '<td style="text-align:right;font-weight:600">' + (p.diferencia > 0 ? '+' : '') + p.diferencia + '</td>' +
-          '<td>' + (p.justificacion || '—') + '</td>' +
+          '<td>' + escHtml(p.justificacion || '—') + '</td>' +
         '</tr>';
       }).join('');
       document.getElementById('bit-det-titulo').textContent = fecha + ' · ' + doc.turno + ' · ' + doc.sucursal;

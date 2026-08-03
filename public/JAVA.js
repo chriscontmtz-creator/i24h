@@ -4,6 +4,15 @@
 //  modo oscuro, estrellas, comentarios y login
 // =============================================================
 
+// Escapa HTML antes de insertar texto de terceros en innerHTML — sin esto,
+// cualquier visitante anónimo podía publicar un comentario con <script> y
+// ejecutarlo en el navegador de todo el que cargara el home (XSS público,
+// sin necesidad de sesión ni de login).
+function escHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
 
 // =============================================================
 //  MENÚ HAMBURGUESA (móvil)
@@ -118,7 +127,7 @@ function crearTarjetaComentario(c) {
         <div class="stars">${estrellas}</div>
       </div>
     </div>
-    <p class="comment-text">"${c.texto}"</p>
+    <p class="comment-text">"${escHtml(c.texto)}"</p>
     <p class="comment-time">${tiempoRelativo(c.fecha)}</p>
   `;
   return div;
@@ -209,6 +218,16 @@ document.getElementById('regresar-modal-cliente')?.addEventListener('click', () 
 document.getElementById('btn-ir-cliente')?.addEventListener('click', () => {
   cerrarModal('modal-elegir');
   abrirModal('modal-cliente');
+});
+
+// "Soy empleado" no es un registro — los empleados ya tienen cuenta, así
+// que esto solo cierra el modal y lleva al formulario de login de abajo
+// (antes apuntaba a /panel a secas, que sin sesión rebota al home sin
+// ningún aviso — se sentía como que el botón no hacía nada).
+document.getElementById('btn-ir-empleado')?.addEventListener('click', () => {
+  cerrarModal('modal-elegir');
+  document.querySelector('.access-grid')?.scrollIntoView({ behavior: 'smooth' });
+  setTimeout(() => document.querySelector('.login-box .inp')?.focus(), 400);
 });
 
 

@@ -1,6 +1,6 @@
 {
   "sucursales": [
-    { "id": "simon-bolivar",  "nombre": "Simón Bolívar",  "delta":  4.2, "Novedades":  84, "Papelería": 12, "Snack": 30000000 },
+    { "id": "simon-bolivar",  "nombre": "Simón Bolívar",  "delta":  4.2, "Novedades":  6400, "Papelería": 10200, "Snack": 2600 },
     { "id": "insurgentes",    "nombre": "Insurgentes",     "delta": -1.8, "Novedades":  6100, "Papelería":  9800, "Snack": 2400 },
     { "id": "antigona",       "nombre": "Antígona",        "delta":  7.5, "Novedades":  5700, "Papelería":  8600, "Snack": 1900 },
     { "id": "lincoln-oxxo",   "nombre": "Lincoln Oxxo",    "delta": -3.1, "Novedades":  4300, "Papelería":  7200, "Snack": 1600 },
