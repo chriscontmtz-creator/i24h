@@ -185,14 +185,15 @@ flowchart LR
 
 ## 10. Ventas (`src/routes/ventas.js`)
 
-No usa Mongo — JSON planos (`ventas.json`, `productos.json`, `alertas.json`).
+Mezcla dos fuentes: el desglose por categoría/top-productos/alertas sigue sobre JSON planos mock (`ventas.json`, `productos.json`, `alertas.json`), pero "Ventas extraordinarias" (nuevo, ver abajo) es 100% Mongo real.
 
 | Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Notas |
 |---|---|---|---|---|
-| Pills `.vnt-pill` + `#vnt-suc-filter` — `panel.hbs:554-559` | `vntCargar() panel.hbs:3506` | `GET /api/ventas?sucursal=&periodo=` | `ventas.js:16` | Datos mock, no vienen del sync real |
-| `#vnt-top-cat-filter` — `panel.hbs:628` | `vntCargarTop() panel.hbs:3629` | `GET /api/ventas/top-productos` | `ventas.js:58` | |
-| Automático al final de `vntCargar()` | `vntCargarAlertas() panel.hbs:3659` | `GET /api/ventas/alertas` | `ventas.js:77` | También usado por el Dashboard |
-| `#vnt-export-btn` — `panel.hbs:571` | `vntExportar() panel.hbs:3690` | *(sin API — CSV client-side)* | — | Exporta lo ya cargado en memoria |
+| Pills `.vnt-pill` + `#vnt-suc-filter` — `panel.hbs:562-573` | `vntCargar() panel.hbs:3609` | `GET /api/ventas?sucursal=&periodo=` | `ventas.js:58` | Datos mock (JSON), **no** vienen del sync real; sucursales sin sync conectado (`sucursalConectada()`, `src/utils/sucursales.js`) se devuelven en 0 desde 2026-08-04 en vez de datos de ejemplo |
+| `#vnt-top-cat-filter` — `panel.hbs:632` | `vntCargarTop() panel.hbs:3733` | `GET /api/ventas/top-productos` | `ventas.js:102` | Igual, filtrado a sucursales conectadas |
+| Automático al final de `vntCargar()` | `vntCargarAlertas() panel.hbs:3763` | `GET /api/ventas/alertas` | `ventas.js:121` | También usado por el Dashboard; igual, filtrado a sucursales conectadas |
+| Tarjeta "Ventas extraordinarias" (usa los mismos pills/`#vnt-suc-filter` de arriba) — `panel.hbs:667-706` | `vntCargarExtra() panel.hbs:3924`, disparada dentro de `vntCargar()` | `GET /api/ventas/extraordinarias?sucursal=&periodo=` | `ventas.js:129` | **Nuevo 2026-08-04** — `Ticket`, `CorteCaja` (Mongo real, no mock). Umbral fijo `importeTotal > $300` (mismo criterio que ya usaba `material.js` para su "explicación" de turno en Corte por turno). Compara conteo por sucursal (`porSucursal`) y por turno (`porTurno`, vía `CorteCaja.operador1` + `turnoCorto()`, mismo patrón que dashboard.js/revisiones.js), y trae el detalle completo de líneas de cada ticket (clic en la fila para expandir — sin backend de paginación, corta en los primeros 30 tickets del período). `sucursal=todas` requiere `admin` o `coordinador` (`requireAdmin`); una sucursal específica pasa por `sucursalPermitida()`. Sin atribución a empleado individual — el sync de CyberPlanet no trae cajero/operador por nombre, solo `operador1` tipo "Turno2" |
+| `#vnt-export-btn` — `panel.hbs:574` | `vntExportar() panel.hbs:3955` | *(sin API — CSV client-side)* | — | Exporta lo ya cargado en memoria (solo el desglose mock, no ventas extraordinarias) |
 
 ## 11. Material (`src/routes/material.js`)
 
@@ -333,7 +334,8 @@ Middleware: `sesionActual` + `requireEmpleado` en las 4 rutas. Depende de `Bitac
 
 | Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Modelo | Notas |
 |---|---|---|---|---|---|
-| Botones "Descargar" por categoría — `panel.hbs:918,923,928,933` | `descargarInventario(categoria) panel.hbs:3940` | `GET /api/inventario/descargar?sucursal=&categoria=&fecha=` | `inventario.js:194` | `Producto` | `sesionActual`+`requireEmpleado`; mapeo hardcodeado Excel↔DB (`inventario.js:49-188`); descarga vía `<a href>`, sin manejo de error JS |
+| Botones "Descargar" por categoría — `panel.hbs:983,988,993,998` | `descargarInventario(categoria) panel.hbs:3997` | `GET /api/inventario/descargar?sucursal=&categoria=&fecha=` | `inventario.js:194` | `Producto` | `sesionActual`+`requireEmpleado`; mapeo hardcodeado Excel↔DB (`inventario.js:49-188`); descarga vía `<a href>`, sin manejo de error JS |
+| Cards "Resumen por categoría" + tabla "Vista previa de stock" + botón `#inv-filter-btn` "Filtrar" (categoría/estado/búsqueda) — `panel.hbs:906-975` | `invCargarPreview() panel.hbs:4061`, disparado al entrar a la sección (`irSeccion`/nav, `panel.hbs:1695,1709`) y en cada cambio de sucursal/filtro | `GET /api/inventario/preview?sucursal=&categoria=&estado=&q=` | `inventario.js:290` | `Producto` | **Nuevo 2026-08-04** — antes era HTML 100% hardcodeado (23/129/813/56 artículos y 5 filas fijas, sin backend). Reutiliza el mismo catálogo curado `MAPEO` que la descarga de Excel (no el catálogo completo del POS, que mezcla categorías de servicio como Scanner/Actas/Copias que no son stock físico) — por eso los conteos reales (27/11/59/14) no coinciden con los del mockup original. `estado` = `bajo` si `cantidad <= minimo` de `Producto`, si no `disponible`; sucursales sin sync conectado devuelven todo en 0 (mismo criterio que Ventas, ver `src/utils/sucursales.js`) |
 
 ---
 

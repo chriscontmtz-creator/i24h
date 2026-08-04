@@ -275,4 +275,90 @@ router.get('/inventario/descargar', sesionActual, requireEmpleado, async (req, r
   }
 });
 
+// ── GET /api/inventario/preview ──────────────────────────────────────────────
+// Alimenta el resumen por categoría y la tabla "Vista previa de stock" del
+// panel con stock real de Mongo, usando el mismo catálogo curado (MAPEO) que
+// ya usa la descarga de Excel — no el catálogo completo del POS, que mezcla
+// categorías de servicio (Scanner, Actas, Copias…) que no son stock físico.
+const CATEGORIA_LABEL = {
+  limpieza:  'Limpieza',
+  novedades: 'Novedades',
+  papeleria: 'Papelería',
+  snack:     'Snack',
+};
+
+router.get('/inventario/preview', sesionActual, requireEmpleado, async (req, res) => {
+  try {
+    const { sucursal, categoria = 'todas', estado = 'todos', q = '' } = req.query;
+    if (!sucursal) return res.status(400).json({ error: 'Falta el parámetro sucursal' });
+
+    if (sucursal === 'Todas las sucursales') {
+      if (req.session.usuario.cargo !== 'admin')
+        return res.status(403).json({ error: 'No tienes acceso a todas las sucursales.' });
+    } else if (!(await sucursalPermitida(req.session.usuario, sucursal))) {
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
+    }
+
+    const catKey = categoria.toLowerCase();
+    if (catKey !== 'todas' && !MAPEO[catKey]) {
+      return res.status(400).json({ error: 'Categoría inválida. Usa: limpieza, novedades, papeleria, snack o todas' });
+    }
+    const estadoKey = ['bajo', 'disponible'].includes(estado) ? estado : 'todos';
+
+    const dbKeys = sucursal === 'Todas las sucursales'
+      ? Object.values(SUCURSAL_DB)
+      : [SUCURSAL_DB[sucursal] || sucursal];
+
+    const productos = await Producto.find(
+      { sucursal: { $in: dbKeys }, nombre: { $not: /^Nuevo Producto/i } }
+    ).select('nombre stock minimo').lean();
+
+    // Suma por nombre normalizado — si "Todas las sucursales" trae el mismo
+    // artículo repetido en varias, se agrega el stock total.
+    const stockMap = {};
+    for (const p of productos) {
+      const key = norm(p.nombre);
+      if (!stockMap[key]) stockMap[key] = { stock: 0, minimo: p.minimo ?? 1 };
+      stockMap[key].stock += p.stock ?? 0;
+    }
+
+    const qNorm = norm(q);
+    const resumen = { limpieza: 0, novedades: 0, papeleria: 0, snack: 0 };
+    const articulos = [];
+
+    for (const cat of Object.keys(MAPEO)) {
+      resumen[cat] = MAPEO[cat].length;
+      if (catKey !== 'todas' && catKey !== cat) continue;
+
+      for (const { excel, db } of MAPEO[cat]) {
+        const entry       = db !== null ? stockMap[norm(db)] : null;
+        const cantidad     = entry?.stock ?? 0;
+        const minimo       = entry?.minimo ?? 1;
+        const estadoArt    = cantidad <= minimo ? 'bajo' : 'disponible';
+
+        if (estadoKey !== 'todos' && estadoKey !== estadoArt) continue;
+        if (qNorm && !norm(excel).includes(qNorm)) continue;
+
+        articulos.push({
+          nombre:    excel,
+          categoria: CATEGORIA_LABEL[cat],
+          cantidad,
+          estado:    estadoArt,
+        });
+      }
+    }
+
+    articulos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+
+    res.json({
+      resumen,
+      total:     articulos.length,
+      articulos: articulos.slice(0, 20),
+    });
+  } catch (err) {
+    console.error('[inventario] preview:', err.message);
+    res.status(500).json({ error: 'Error al obtener la vista previa de inventario' });
+  }
+});
+
 export default router;

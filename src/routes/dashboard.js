@@ -31,6 +31,14 @@ const SUCURSAL_DB = {
   'Ordóñez':       'Ordonez',
 };
 
+// Solo estas 9 claves cuentan como sucursal real — en Mongo quedaron restos
+// de pruebas del piloto de sync bajo 'TestSucursal' y 'Simón Bolívar' (con
+// acento, en vez de la clave 'SimonBolivar') con exactamente el mismo rango
+// de fechas que los datos reales: duplicados del mismo snapshot, no
+// sucursales aparte. "Todas las sucursales" debe acotarse a estas 9 claves
+// o esa basura se vuelve a sumar y triplica/infla los números.
+const SUCURSALES_REALES_DB = Object.values(SUCURSAL_DB);
+
 const TIPO_CAT = {
   1: 'Internet',
   2: 'Prepago',
@@ -156,19 +164,23 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
     // Así "hoy" = cajas abiertas ese día (T1+T2+T3 del día operativo 5AM-5AM),
     // excluyendo automáticamente el T3 del día anterior que cierra a las 5 AM.
     const matchCortes = { fecha: { $gte: fi, $lte: ff } };
-    if (sucursalDisplay !== 'todas') matchCortes.sucursal = SUCURSAL_DB[sucursalDisplay] || sucursalDisplay;
-    if (turnoFiltro !== 'todos')     matchCortes.operador1 = turnoFiltro;
+    matchCortes.sucursal = sucursalDisplay !== 'todas'
+      ? (SUCURSAL_DB[sucursalDisplay] || sucursalDisplay)
+      : { $in: SUCURSALES_REALES_DB };
+    if (turnoFiltro !== 'todos') matchCortes.operador1 = turnoFiltro;
 
     const cortesBase = await CorteCaja.find(matchCortes).select('ncaja').lean();
     const ncajasBase = cortesBase.map(c => c.ncaja);
 
+    // El filtro de sucursal se repite aquí a propósito (no basta con el ncaja
+    // de arriba): ncaja solo es único DENTRO de una sucursal, así que sin
+    // esto un mismo número de caja podría mezclar tickets de sucursales
+    // distintas (mismo bug ya documentado en revisiones.js).
     const matchBase = {
-      ncaja:   ncajasBase.length > 0 ? { $in: ncajasBase } : { $in: [-1] },
-      anulado: false,
+      ncaja:    ncajasBase.length > 0 ? { $in: ncajasBase } : { $in: [-1] },
+      anulado:  false,
+      sucursal: matchCortes.sucursal,
     };
-    if (sucursalDisplay !== 'todas') {
-      matchBase.sucursal = SUCURSAL_DB[sucursalDisplay] || sucursalDisplay;
-    }
 
     const [
       ventaAgg,
@@ -242,17 +254,15 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
         { $sort: { total: -1 } },
       ]),
       Usuario.countDocuments({ cargo: { $ne: 'cliente' }, activo: true }),
-      Revision.find(
-        sucursalDisplay !== 'todas'
-          ? { sucursal: matchBase.sucursal, estado: { $in: ['diferencia_cobrable', 'pendiente'] } }
-          : { estado: { $in: ['diferencia_cobrable', 'pendiente'] } }
-      ).sort({ fecha: -1 }).limit(5).lean(),
+      Revision.find({
+        sucursal: matchBase.sucursal,
+        estado:   { $in: ['diferencia_cobrable', 'pendiente'] },
+      }).sort({ fecha: -1 }).limit(5).lean(),
       // Stock de productos (snapshot, no depende del período)
-      Producto.find(
-        sucursalDisplay !== 'todas'
-          ? { sucursal: matchBase.sucursal, nombre: { $not: /^Nuevo Producto/ } }
-          : { nombre: { $not: /^Nuevo Producto/ } }
-      ).sort({ stock: 1, nombre: 1 }).lean(),
+      Producto.find({
+        sucursal: matchBase.sucursal,
+        nombre:   { $not: /^Nuevo Producto/ },
+      }).sort({ stock: 1, nombre: 1 }).lean(),
     ]);
 
     const ventaTotal     = ventaAgg[0]?.total || 0;
@@ -291,9 +301,9 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
     let turnosData = null;
     try {
       const matchTurnos = {
-        cerrada: true,
-        fecha:   { $gte: fi, $lte: ff },
-        ...(sucursalDisplay !== 'todas' ? { sucursal: matchBase.sucursal } : {}),
+        cerrada:  true,
+        fecha:    { $gte: fi, $lte: ff },
+        sucursal: matchBase.sucursal,
       };
       const turnoAgg = await CorteCaja.aggregate([
         { $match: matchTurnos },

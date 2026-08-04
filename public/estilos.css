@@ -3522,6 +3522,23 @@ body.dark .usr-code-status-ico.disp { background: #052e16; color: #4ade80; }
   color: var(--acento);
 }
 
+.inv-filter-btn.activo {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+}
+
+.inv-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.inv-filter-bar .inv-select { width: auto; min-width: 160px; cursor: pointer; }
+.inv-filter-bar input.inv-select { cursor: text; min-width: 200px; }
+
 .inv-table-wrap {
   background: var(--superficie);
   border: 1px solid var(--borde);
@@ -4734,6 +4751,41 @@ body.dark .vnt-alerta-warning .vnt-alerta-tag { background: #1c1007; color: #fbb
   font-size: .82rem;
   justify-content: center;
 }
+
+/* Ventas extraordinarias */
+.vnt-turno-chip {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.vex-fila-ticket { cursor: pointer; }
+.vex-fila-ticket:hover td { background: var(--fondo-alt); }
+
+/* #vex-tabla (id) para ganarle en especificidad a .vnt-tabla td:first-child,
+   que fuerza display:flex y rompe el apilado vertical de las líneas del detalle. */
+#vex-tabla .vex-detalle-row td {
+  background: var(--fondo);
+  padding: 10px 14px;
+  display: table-cell;
+  white-space: normal;
+  text-align: left;
+}
+
+.vex-detalle-linea {
+  display: flex;
+  justify-content: space-between;
+  font-size: .78rem;
+  padding: 3px 0;
+  color: var(--texto-suave);
+}
+
+.vex-detalle-linea span:first-child { color: var(--texto); }
 
 /* Responsive */
 @media (max-width: 1100px) {

@@ -664,6 +664,52 @@
 
         </div>
 
+        <!-- ── Ventas extraordinarias (+$300) ────────────────────────── -->
+        <p class="vnt-section-title" style="margin-top:28px;display:flex;align-items:center;gap:8px">
+          <i class="ti ti-trophy"></i> Ventas extraordinarias
+          <span style="font-weight:400;font-size:.75rem;color:var(--texto-suave);text-transform:none;letter-spacing:0">
+            — tickets de más de $300, usa los mismos filtros de arriba (período y sucursal)
+          </span>
+        </p>
+        <div class="vnt-card" style="padding:16px 20px">
+
+          <div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:16px">
+            <div>
+              <span style="font-size:.7rem;color:var(--texto-suave);text-transform:uppercase;letter-spacing:.04em">Total del período</span>
+              <div style="font-size:1.4rem;font-weight:700;color:var(--texto)" id="vex-k-total">—</div>
+            </div>
+            <div>
+              <span style="font-size:.7rem;color:var(--texto-suave);text-transform:uppercase;letter-spacing:.04em">Por turno</span>
+              <div style="display:flex;gap:10px;margin-top:4px" id="vex-k-turnos">
+                <span class="vnt-turno-chip">T1 —</span>
+                <span class="vnt-turno-chip">T2 —</span>
+                <span class="vnt-turno-chip">T3 —</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="vnt-section-title" style="font-size:.8rem;margin-bottom:8px">Comparativa por sucursal</p>
+          <div id="vex-suc-grid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px"></div>
+
+          <p class="vnt-section-title" style="font-size:.8rem;margin-bottom:8px">Detalle de tickets</p>
+          <div class="vnt-tabla-outer" style="max-height:360px;overflow-y:auto">
+            <table class="vnt-tabla" id="vex-tabla">
+              <thead>
+                <tr>
+                  <th>Ticket</th>
+                  <th>Sucursal</th>
+                  <th>Turno</th>
+                  <th>Fecha</th>
+                  <th style="text-align:right">Total</th>
+                </tr>
+              </thead>
+              <tbody id="vex-tbody">
+                <tr><td colspan="5" class="vnt-empty">Selecciona la sección para cargar…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- ── Verificar ventas del sync ─────────────────────────────── -->
         <p class="vnt-section-title" style="margin-top:28px">
           <i class="ti ti-database"></i> Ventas registradas por el sync (CyberPlanet → MongoDB)
@@ -908,22 +954,22 @@
         <div class="inv-cat-grid">
           <div class="inv-cat-card" style="border-left:3px solid #3B6D11;">
             <p class="inv-cat-label">Limpieza</p>
-            <p class="inv-cat-count">23</p>
+            <p class="inv-cat-count" id="inv-cnt-limpieza">–</p>
             <p class="inv-cat-unit">artículos</p>
           </div>
           <div class="inv-cat-card" style="border-left:3px solid #378ADD;">
             <p class="inv-cat-label">Novedades</p>
-            <p class="inv-cat-count">129</p>
+            <p class="inv-cat-count" id="inv-cnt-novedades">–</p>
             <p class="inv-cat-unit">artículos</p>
           </div>
           <div class="inv-cat-card" style="border-left:3px solid #D4537E;">
             <p class="inv-cat-label">Papelería</p>
-            <p class="inv-cat-count">813</p>
+            <p class="inv-cat-count" id="inv-cnt-papeleria">–</p>
             <p class="inv-cat-unit">artículos</p>
           </div>
           <div class="inv-cat-card" style="border-left:3px solid #BA7517;">
             <p class="inv-cat-label">Snack</p>
-            <p class="inv-cat-count">56</p>
+            <p class="inv-cat-count" id="inv-cnt-snack">–</p>
             <p class="inv-cat-unit">artículos</p>
           </div>
         </div>
@@ -931,7 +977,23 @@
         <!-- Vista previa de stock -->
         <div class="inv-table-header">
           <p class="inv-section-title" style="margin:0;">Vista previa de stock</p>
-          <button class="inv-filter-btn"><i class="ti ti-filter"></i> Filtrar</button>
+          <button class="inv-filter-btn" id="inv-filter-btn" type="button"><i class="ti ti-filter"></i> Filtrar</button>
+        </div>
+
+        <div class="inv-filter-bar" id="inv-filter-bar" style="display:none">
+          <select class="inv-select" id="inv-filtro-categoria">
+            <option value="todas">Todas las categorías</option>
+            <option value="limpieza">Limpieza</option>
+            <option value="novedades">Novedades</option>
+            <option value="papeleria">Papelería</option>
+            <option value="snack">Snack</option>
+          </select>
+          <select class="inv-select" id="inv-filtro-estado">
+            <option value="todos">Todos los estados</option>
+            <option value="bajo">Bajo</option>
+            <option value="disponible">Disponible</option>
+          </select>
+          <input type="text" class="inv-select" id="inv-filtro-busqueda" placeholder="Buscar artículo…">
         </div>
 
         <div class="inv-table-wrap">
@@ -943,35 +1005,11 @@
                 <th>Estado</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>Cloro</td>
-                <td>0</td>
-                <td><span class="inv-badge-bajo">Bajo</span></td>
-              </tr>
-              <tr>
-                <td>Bolsa Grande</td>
-                <td>20</td>
-                <td><span class="inv-badge-ok">Disponible</span></td>
-              </tr>
-              <tr>
-                <td>Tabloide Couche</td>
-                <td>190</td>
-                <td><span class="inv-badge-ok">Disponible</span></td>
-              </tr>
-              <tr>
-                <td>Agua 500ml</td>
-                <td>0</td>
-                <td><span class="inv-badge-bajo">Bajo</span></td>
-              </tr>
-              <tr>
-                <td>Novedad Rojo 20</td>
-                <td>31</td>
-                <td><span class="inv-badge-ok">Disponible</span></td>
-              </tr>
+            <tbody id="inv-tbody">
+              <tr><td colspan="3" style="text-align:center;color:var(--texto-suave);padding:16px">Selecciona una sucursal…</td></tr>
             </tbody>
           </table>
-          <div class="inv-table-footer">Mostrando 5 de 1,021 artículos</div>
+          <div class="inv-table-footer" id="inv-table-footer">—</div>
         </div>
 
         <!-- Descargar plantillas Excel -->
@@ -1700,6 +1738,7 @@ function escJs(str) {
       }
       bitCargarHistorial(sucursalActiva || '');
     }
+    if (id === 'inventario' && window.invCargarPreview) window.invCargarPreview();
   };
 
   items.forEach(function (item) {
@@ -1713,6 +1752,7 @@ function escJs(str) {
         var selSucNav = document.getElementById('bit-sucursal');
         bitCargarHistorial(selSucNav ? selSucNav.value : '');
       }
+      if (item.dataset.seccion === 'inventario' && window.invCargarPreview) window.invCargarPreview();
     });
   });
 
@@ -3521,7 +3561,7 @@ renderBitacora();
     'Ordóñez': 'ordonez',
   };
 
-  var vntPeriodo  = '7';
+  var vntPeriodo  = 'hoy';
   var vntSucursal = 'todas';
   var vntTopCat   = 'todas';
   var vntData     = null;
@@ -3576,6 +3616,7 @@ renderBitacora();
       vntRenderTabla();
       vntCargarTop();
       vntCargarAlertas();
+      vntCargarExtra();
     } catch (e) { console.error('Ventas:', e); }
   }
 
@@ -3745,6 +3786,167 @@ renderBitacora();
       }).join('');
     } catch (e) {
       lista.innerHTML = '<div class="vnt-alerta-empty">Error al cargar alertas</div>';
+    }
+  }
+
+  // ── Ventas extraordinarias (+$300) ──────────────────────────────────────────
+
+  function fmtDinero(n) {
+    return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function fmtFechaHora(iso) {
+    var d = new Date(iso);
+    return d.toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function vexRenderBarras(porSucursal) {
+    var grid = document.getElementById('vex-suc-grid');
+    if (!grid) return;
+    grid.replaceChildren();
+
+    var max = porSucursal.reduce(function (m, s) { return Math.max(m, s.count); }, 0);
+
+    porSucursal.forEach(function (s) {
+      var pct = max > 0 ? Math.round(s.count / max * 100) : 0;
+
+      var row = document.createElement('div');
+      row.className = 'vnt-barra-row';
+
+      var label = document.createElement('span');
+      label.className = 'vnt-barra-label';
+      label.style.color = 'var(--texto)';
+      label.textContent = s.nombre;
+
+      var track = document.createElement('div');
+      track.className = 'vnt-barra-track';
+      var fill = document.createElement('div');
+      fill.className = 'vnt-barra-fill';
+      fill.style.width = pct + '%';
+      fill.style.background = 'var(--acento)';
+      track.appendChild(fill);
+
+      var val = document.createElement('span');
+      val.className = 'vnt-barra-val';
+      val.textContent = s.count;
+
+      row.append(label, track, val);
+      grid.appendChild(row);
+    });
+  }
+
+  function vexRenderTickets(tickets) {
+    var tbody = document.getElementById('vex-tbody');
+    if (!tbody) return;
+    tbody.replaceChildren();
+
+    if (!tickets.length) {
+      var trVacio = document.createElement('tr');
+      var tdVacio = document.createElement('td');
+      tdVacio.colSpan = 5;
+      tdVacio.className = 'vnt-empty';
+      tdVacio.textContent = 'Sin ventas extraordinarias en este período';
+      trVacio.appendChild(tdVacio);
+      tbody.appendChild(trVacio);
+      return;
+    }
+
+    tickets.forEach(function (t) {
+      var tr = document.createElement('tr');
+      tr.className = 'vex-fila-ticket';
+
+      [
+        '#' + t.nticket,
+        t.sucursal,
+        t.turno || '—',
+        fmtFechaHora(t.fecha),
+      ].forEach(function (texto) {
+        var td = document.createElement('td');
+        td.textContent = texto;
+        tr.appendChild(td);
+      });
+
+      var tdTotal = document.createElement('td');
+      tdTotal.style.textAlign = 'right';
+      tdTotal.style.fontWeight = '700';
+      tdTotal.textContent = fmtDinero(t.importeTotal);
+      tr.appendChild(tdTotal);
+
+      var trDetalle = document.createElement('tr');
+      trDetalle.className = 'vex-detalle-row';
+      trDetalle.style.display = 'none';
+      var tdDetalle = document.createElement('td');
+      tdDetalle.colSpan = 5;
+
+      if (!t.lineas.length) {
+        var vacio = document.createElement('div');
+        vacio.className = 'vex-detalle-linea';
+        vacio.textContent = 'Sin detalle de líneas para este ticket.';
+        tdDetalle.appendChild(vacio);
+      } else {
+        t.lineas.forEach(function (l) {
+          var linea = document.createElement('div');
+          linea.className = 'vex-detalle-linea';
+          var nombre = document.createElement('span');
+          nombre.textContent = (l.detalle || 'Sin descripción') + (l.cantidad > 1 ? ' × ' + l.cantidad : '');
+          var importe = document.createElement('span');
+          importe.textContent = fmtDinero(l.importe);
+          linea.append(nombre, importe);
+          tdDetalle.appendChild(linea);
+        });
+      }
+      trDetalle.appendChild(tdDetalle);
+
+      tr.addEventListener('click', function () {
+        trDetalle.style.display = trDetalle.style.display === 'none' ? 'table-row' : 'none';
+      });
+
+      tbody.append(tr, trDetalle);
+    });
+  }
+
+  function vexEstadoError(mensaje) {
+    var elTotal  = document.getElementById('vex-k-total');
+    var elTurnos = document.getElementById('vex-k-turnos');
+    if (elTotal) elTotal.textContent = '—';
+    if (elTurnos) {
+      elTurnos.querySelectorAll('.vnt-turno-chip').forEach(function (chip, i) {
+        chip.textContent = ['T1', 'T2', 'T3'][i] + ' —';
+      });
+    }
+    var grid = document.getElementById('vex-suc-grid');
+    if (grid) grid.replaceChildren();
+    vexRenderTickets([]);
+    var tbody = document.getElementById('vex-tbody');
+    if (tbody && tbody.firstChild) tbody.firstChild.querySelector('td').textContent = mensaje;
+  }
+
+  async function vntCargarExtra() {
+    var elTotal = document.getElementById('vex-k-total');
+    if (elTotal) elTotal.textContent = '…';
+
+    try {
+      var r    = await fetch('/api/ventas/extraordinarias?sucursal=' + vntSucursal + '&periodo=' + vntPeriodo);
+      var data = await r.json();
+      if (!r.ok) {
+        vexEstadoError(data.error || 'No se pudo cargar ventas extraordinarias.');
+        return;
+      }
+
+      if (elTotal) elTotal.textContent = data.total + (data.total === 1 ? ' venta' : ' ventas');
+      var elTurnos = document.getElementById('vex-k-turnos');
+      if (elTurnos) {
+        var chips = elTurnos.querySelectorAll('.vnt-turno-chip');
+        ['T1', 'T2', 'T3'].forEach(function (t, i) {
+          if (chips[i]) chips[i].textContent = t + ' — ' + (data.porTurno[t] || 0);
+        });
+      }
+
+      vexRenderBarras(data.porSucursal);
+      vexRenderTickets(data.tickets);
+    } catch (e) {
+      vexEstadoError('Error de conexión.');
+      console.error('Ventas extraordinarias:', e);
     }
   }
 
@@ -4018,6 +4220,113 @@ function descargarInventario(categoria) {
   a.click();
   document.body.removeChild(a);
 }
+
+// ── Inventario: vista previa de stock (real, filtrable) ──────────────────────
+(function () {
+  const btnFiltrar   = document.getElementById('inv-filter-btn');
+  const barraFiltro  = document.getElementById('inv-filter-bar');
+  const selSucursal  = document.getElementById('inv-sucursal');
+  const selCategoria = document.getElementById('inv-filtro-categoria');
+  const selEstado    = document.getElementById('inv-filtro-estado');
+  const inpBusqueda  = document.getElementById('inv-filtro-busqueda');
+  const tbody        = document.getElementById('inv-tbody');
+  const footer       = document.getElementById('inv-table-footer');
+
+  let debounceId = null;
+
+  function mensajeFila(texto) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 3;
+    td.style.cssText = 'text-align:center;color:var(--texto-suave);padding:16px';
+    td.textContent = texto;
+    tr.appendChild(td);
+    tbody.replaceChildren(tr);
+  }
+
+  function renderArticulos(articulos) {
+    tbody.replaceChildren();
+    articulos.forEach(function (a) {
+      const tr = document.createElement('tr');
+
+      const tdNombre = document.createElement('td');
+      tdNombre.textContent = a.nombre;
+
+      const tdCant = document.createElement('td');
+      tdCant.textContent = a.cantidad;
+
+      const tdEstado = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = a.estado === 'bajo' ? 'inv-badge-bajo' : 'inv-badge-ok';
+      badge.textContent = a.estado === 'bajo' ? 'Bajo' : 'Disponible';
+      tdEstado.appendChild(badge);
+
+      tr.append(tdNombre, tdCant, tdEstado);
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function invCargarPreview() {
+    if (!selSucursal || !tbody) return;
+    const sucursal = selSucursal.value;
+    if (!sucursal) return;
+
+    mensajeFila('Cargando…');
+
+    const params = new URLSearchParams({
+      sucursal,
+      categoria: selCategoria?.value || 'todas',
+      estado:    selEstado?.value    || 'todos',
+      q:         inpBusqueda?.value  || '',
+    });
+
+    try {
+      const res  = await fetch('/api/inventario/preview?' + params.toString());
+      const data = await res.json();
+      if (!res.ok) {
+        mensajeFila(data.error || 'Error al cargar el inventario');
+        if (footer) footer.textContent = '—';
+        return;
+      }
+
+      const el = id => document.getElementById(id);
+      if (el('inv-cnt-limpieza'))  el('inv-cnt-limpieza').textContent  = data.resumen.limpieza;
+      if (el('inv-cnt-novedades')) el('inv-cnt-novedades').textContent = data.resumen.novedades;
+      if (el('inv-cnt-papeleria')) el('inv-cnt-papeleria').textContent = data.resumen.papeleria;
+      if (el('inv-cnt-snack'))     el('inv-cnt-snack').textContent     = data.resumen.snack;
+
+      if (!data.articulos.length) {
+        mensajeFila('Sin artículos que coincidan con el filtro');
+      } else {
+        renderArticulos(data.articulos);
+      }
+
+      if (footer) footer.textContent = 'Mostrando ' + data.articulos.length + ' de ' + data.total + ' artículos';
+    } catch (e) {
+      mensajeFila('Error de conexión');
+      if (footer) footer.textContent = '—';
+    }
+  }
+  window.invCargarPreview = invCargarPreview;
+
+  if (btnFiltrar && barraFiltro) {
+    btnFiltrar.addEventListener('click', function () {
+      const abierta = barraFiltro.style.display !== 'none';
+      barraFiltro.style.display = abierta ? 'none' : 'flex';
+      btnFiltrar.classList.toggle('activo', !abierta);
+    });
+  }
+
+  if (selSucursal)  selSucursal.addEventListener('change', invCargarPreview);
+  if (selCategoria) selCategoria.addEventListener('change', invCargarPreview);
+  if (selEstado)    selEstado.addEventListener('change', invCargarPreview);
+  if (inpBusqueda) {
+    inpBusqueda.addEventListener('input', function () {
+      clearTimeout(debounceId);
+      debounceId = setTimeout(invCargarPreview, 350);
+    });
+  }
+})();
 
 </script>
 
