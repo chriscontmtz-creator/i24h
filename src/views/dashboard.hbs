@@ -289,6 +289,10 @@
       <div class="dash-tabs">
         <button type="button" class="dash-tab-btn dash-tab-btn--activo" data-tab="mat">VENTA SIN MATERIAL SNACK Y NOVEDADES</button>
         <button type="button" class="dash-tab-btn" data-tab="tkt">Tickets I24H</button>
+        <button type="button" class="dash-tab-btn" data-tab="cor">Corte por turno</button>
+        {{#if esAdmin}}
+        <button type="button" class="dash-tab-btn" data-tab="bit">Bitácoras</button>
+        {{/if}}
       </div>
 
       <!-- Tab: venta sin material/snack/novedades -->
@@ -355,6 +359,54 @@
           </table>
         </div>
       </div>
+
+      <!-- Tab: Corte por turno -->
+      <div class="dash-tab-panel dash-tab-panel--oculto" id="tab-cor">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <select class="dash-sel" id="cor-suc" style="min-width:160px">
+            {{#each sucursales}}
+              <option value="{{nombre}}" {{#if activa}}selected{{/if}}>{{nombre}}</option>
+            {{/each}}
+          </select>
+          <input type="date" class="dash-sel" id="cor-fecha" style="max-width:155px">
+          <button class="dash-btn-o" id="cor-btn" style="gap:6px">
+            <i class="ti ti-search"></i> Consultar
+          </button>
+        </div>
+        <div id="cor-header" class="dash-corte-header"></div>
+        <div class="dash-corte-grid" id="cor-body">
+          <div style="text-align:center;padding:20px;color:var(--d-tex-suave);grid-column:1/-1">Selecciona sucursal y fecha, luego presiona Consultar.</div>
+        </div>
+        <div id="cor-total" class="dash-corte-total"></div>
+      </div>
+
+      {{#if esAdmin}}
+      <!-- Tab: Bitácoras (estado de turnos por sucursal) -->
+      <div class="dash-tab-panel dash-tab-panel--oculto" id="tab-bit">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <input type="date" class="dash-sel" id="bit-fecha" style="max-width:155px">
+          <button class="dash-btn-o" id="bit-btn" style="gap:6px">
+            <i class="ti ti-search"></i> Consultar
+          </button>
+          <span id="bit-resumen" style="font-size:.82rem;color:var(--d-tex-suave)"></span>
+        </div>
+        <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
+          <table class="dash-inv-tabla" id="bit-tabla" style="width:100%">
+            <thead>
+              <tr>
+                <th style="text-align:left">Sucursal</th>
+                <th style="text-align:center">T1</th>
+                <th style="text-align:center">T2</th>
+                <th style="text-align:center">T3</th>
+              </tr>
+            </thead>
+            <tbody id="bit-body">
+              <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--d-tex-suave)">Selecciona una fecha y presiona Consultar.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {{/if}}
     </div>
 
   </main>
@@ -402,7 +454,8 @@
 
   // ── Tabs ──────────────────────────────────────────────────────────
   var tabBtns   = document.querySelectorAll('.dash-tab-btn');
-  var tabPanels = { mat: document.getElementById('tab-mat'), tkt: document.getElementById('tab-tkt') };
+  var tabPanels = { mat: document.getElementById('tab-mat'), tkt: document.getElementById('tab-tkt'), cor: document.getElementById('tab-cor') };
+  if (document.getElementById('tab-bit')) tabPanels.bit = document.getElementById('tab-bit');
   tabBtns.forEach(function (b) {
     b.addEventListener('click', function () {
       tabBtns.forEach(function (x) { x.classList.remove('dash-tab-btn--activo'); });
@@ -642,6 +695,134 @@
         }
       });
     }
+  })();
+
+  // ── Tab: Corte por turno ─────────────────────────────────────────────
+  (function () {
+    var btn     = document.getElementById('cor-btn');
+    var sucSel  = document.getElementById('cor-suc');
+    var fechaIn = document.getElementById('cor-fecha');
+    var header  = document.getElementById('cor-header');
+    var body    = document.getElementById('cor-body');
+    var totalEl = document.getElementById('cor-total');
+    if (fechaIn) fechaIn.value = hoyMx;
+
+    var EMOJI = { T1: '🟢', T2: '🔵', T3: '🔴' };
+
+    function filaDato(label, valor) {
+      return el('div', {
+        className: 'dash-corte-fila',
+        children: [el('span', { text: label }), el('span', { text: valor })],
+      });
+    }
+
+    function tarjetaTurno(id, d) {
+      return el('div', {
+        className: 'dash-corte-card dash-corte-' + id.toLowerCase(),
+        children: [
+          el('div', { className: 'dash-corte-lbl', text: EMOJI[id] + ' ' + id }),
+          el('div', { className: 'dash-corte-val', text: fmt(d.ingreso) }),
+          filaDato('SDP', fmt(d.sdp)),
+          filaDato('SDA', '#' + d.sda.cantidad + ' · ' + fmt(d.sda.monto)),
+          filaDato('TI24H', fmt(d.ti24h)),
+          filaDato('Tickets generados', String(d.ticketsGenerados)),
+          el('div', { className: 'dash-corte-exp', text: d.explicacion }),
+        ],
+      });
+    }
+
+    function consultar() {
+      if (!body) return;
+      var suc = sucSel ? sucSel.value : '', fecha = fechaIn ? fechaIn.value : '';
+      clear(body);
+      body.appendChild(el('div', { style: 'text-align:center;padding:20px;color:var(--d-tex-suave);grid-column:1/-1', text: 'Consultando…' }));
+      if (header) clear(header);
+      if (totalEl) clear(totalEl);
+
+      fetch('/api/material/corte-turno?sucursal=' + encodeURIComponent(suc) + '&fecha=' + encodeURIComponent(fecha))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d.ok) {
+            clear(body);
+            body.appendChild(el('div', { style: 'text-align:center;padding:20px;color:#f87171;grid-column:1/-1', text: 'Error: ' + (d.error || 'desconocido') }));
+            return;
+          }
+          if (header) {
+            clear(header);
+            header.appendChild(el('strong', { text: d.sucursal + ' — ' + d.fecha + ' — ' + d.diaSemana }));
+          }
+          clear(body);
+          ['T1', 'T2', 'T3'].forEach(function (id) { body.appendChild(tarjetaTurno(id, d.turnos[id])); });
+          if (totalEl) {
+            clear(totalEl);
+            totalEl.appendChild(el('strong', { text: 'Total: ' + fmt(d.totalIngreso) }));
+          }
+        })
+        .catch(function (err) {
+          clear(body);
+          body.appendChild(el('div', { style: 'text-align:center;padding:20px;color:#f87171;grid-column:1/-1', text: 'Error de red: ' + err.message }));
+        });
+    }
+    if (btn) btn.addEventListener('click', consultar);
+  })();
+
+  // ── Tab: Bitácoras (estado de turnos por sucursal) ──────────────────
+  (function () {
+    var btn     = document.getElementById('bit-btn');
+    var fechaIn = document.getElementById('bit-fecha');
+    var body    = document.getElementById('bit-body');
+    var resumen = document.getElementById('bit-resumen');
+    if (!body) return; // no-admin: el tab no existe en el DOM
+
+    if (fechaIn) fechaIn.value = hoyMx;
+
+    function pill(hecha) {
+      return el('span', {
+        className: 'dash-pill ' + (hecha ? 'dash-pill--exito' : 'dash-pill--peligro'),
+        text: hecha ? 'Hecha' : 'Pendiente',
+      });
+    }
+
+    function filaSucursal(f) {
+      return el('tr', {
+        children: [
+          td(f.sucursal),
+          td(pill(f.turnos.T1), 'text-align:center'),
+          td(pill(f.turnos.T2), 'text-align:center'),
+          td(pill(f.turnos.T3), 'text-align:center'),
+        ],
+      });
+    }
+
+    function consultar() {
+      var fecha = fechaIn ? fechaIn.value : '';
+      msgRow(body, 'Consultando…', 4);
+      if (resumen) clear(resumen);
+
+      fetch('/api/bitacora/estado-turnos?fecha=' + encodeURIComponent(fecha))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d.ok) { msgRow(body, 'Error: ' + (d.error || 'desconocido'), 4, '#f87171'); return; }
+          if (resumen) {
+            var total = d.filas.length * 3;
+            var hechas = d.filas.reduce(function (n, f) {
+              return n + (f.turnos.T1 ? 1 : 0) + (f.turnos.T2 ? 1 : 0) + (f.turnos.T3 ? 1 : 0);
+            }, 0);
+            clear(resumen);
+            resumen.appendChild(el('strong', { text: hechas + ' / ' + total + ' turnos con bitácora' }));
+          }
+          if (!d.filas || d.filas.length === 0) {
+            msgRow(body, 'Sin datos para esa fecha.', 4, 'var(--d-tex-suave)');
+            return;
+          }
+          clear(body);
+          d.filas.forEach(function (f) { body.appendChild(filaSucursal(f)); });
+        })
+        .catch(function (err) { msgRow(body, 'Error de red: ' + err.message, 4, '#f87171'); });
+    }
+
+    if (btn) btn.addEventListener('click', consultar);
+    consultar(); // carga automática con la fecha de hoy al entrar
   })();
 })();
 </script>

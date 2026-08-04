@@ -1,0 +1,76 @@
+<div class="as-marcar">
+  <div class="as-marcar-card" id="as-confirmar-card" data-token="{{token}}">
+
+    {{#if error}}
+      <i class="ti ti-alert-triangle as-marcar-icon as-marcar-icon--error"></i>
+      <div class="as-marcar-msg">{{error}}</div>
+    {{/if}}
+
+    {{#if confirmar}}
+      <i class="ti ti-scan as-marcar-icon"></i>
+      <div class="as-marcar-msg">Confirmar {{tipoTexto}} de <b>{{nombre}}</b></div>
+      <div class="as-marcar-sub">{{sucursal}}</div>
+      <div class="as-marcar-botones">
+        <button class="as-btn as-btn-entrada" onclick="asConfirmar(this)">
+          <i class="ti ti-circle-check"></i> Confirmar
+        </button>
+      </div>
+      <div id="as-confirmar-resultado" class="as-marcar-sub"></div>
+    {{/if}}
+
+  </div>
+</div>
+
+{{#if confirmar}}
+<script>
+  var ETIQUETAS = {
+    entrada:       'Entrada registrada',
+    salida:        'Salida registrada',
+    inicio_comida: 'Inicio de comida registrado',
+    fin_comida:    'Fin de comida registrado',
+  };
+
+  function asRenderExito(tipo) {
+    var card = document.getElementById('as-confirmar-card');
+    card.textContent = '';
+
+    var icon = document.createElement('i');
+    icon.className = 'ti ti-circle-check as-marcar-icon as-marcar-icon--ok';
+    card.appendChild(icon);
+
+    var msg = document.createElement('div');
+    msg.className = 'as-marcar-msg';
+    msg.textContent = ETIQUETAS[tipo] || 'Registrado';
+    card.appendChild(msg);
+
+    var sub = document.createElement('div');
+    sub.className = 'as-marcar-sub';
+    sub.textContent = 'Ya podés cerrar esta pestaña';
+    card.appendChild(sub);
+  }
+
+  async function asConfirmar(btn) {
+    var card  = document.getElementById('as-confirmar-card');
+    var token = card.dataset.token;
+    btn.disabled = true;
+
+    try {
+      var resp = await fetch('/asistencia/api/confirmar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token }),
+      });
+      var data = await resp.json();
+      if (!resp.ok) {
+        document.getElementById('as-confirmar-resultado').textContent = data.error || 'Error al confirmar';
+        btn.disabled = false;
+        return;
+      }
+      asRenderExito(data.tipo);
+    } catch (err) {
+      document.getElementById('as-confirmar-resultado').textContent = 'Error de conexión, intentá de nuevo';
+      btn.disabled = false;
+    }
+  }
+</script>
+{{/if}}

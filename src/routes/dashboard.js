@@ -40,6 +40,13 @@ const TIPO_CAT = {
 // Solo estos tipos cuentan en totales (4=interno $0, 16=descuentos/ajustes negativos)
 const TIPOS_VALIDOS = [1, 2, 5, 6];
 
+// Turno a partir de CorteCaja.operador1 ("Turno1", "Turno 2"…) — mismo patrón
+// que revisiones.js:11-14 y material.js.
+function turnoCorto(operador) {
+  const m = (operador || '').match(/Turno\s*(\d)/i);
+  return m ? 'T' + m[1] : null;
+}
+
 const MXN = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
 function rangoPeriodo(periodo) {
@@ -274,13 +281,16 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
       const turnoAgg = await CorteCaja.aggregate([
         { $match: matchTurnos },
         { $group: { _id: '$operador1', promedio: { $avg: '$ingreso' }, total: { $sum: '$ingreso' }, count: { $sum: 1 } } },
-        { $sort: { total: -1 } },
       ]);
+      // Se asigna por el turno REAL de operador1 (regex "Turno N" -> TN), no
+      // por ranking de total — antes T1/T2/T3 salían por quién vendió más.
+      const porTurno = id => turnoAgg.find(a => turnoCorto(a._id) === id);
+      const t1turno = porTurno('T1'), t2turno = porTurno('T2'), t3turno = porTurno('T3');
       if (turnoAgg.length > 0) {
         turnosData = {
-          T1: turnoAgg[0] ? { label: turnoAgg[0]._id, promedio: MXN.format(turnoAgg[0].promedio), total: MXN.format(turnoAgg[0].total), count: turnoAgg[0].count } : null,
-          T2: turnoAgg[1] ? { label: turnoAgg[1]._id, promedio: MXN.format(turnoAgg[1].promedio), total: MXN.format(turnoAgg[1].total), count: turnoAgg[1].count } : null,
-          T3: turnoAgg[2] ? { label: turnoAgg[2]._id, promedio: MXN.format(turnoAgg[2].promedio), total: MXN.format(turnoAgg[2].total), count: turnoAgg[2].count } : null,
+          T1: t1turno ? { label: t1turno._id, promedio: MXN.format(t1turno.promedio), total: MXN.format(t1turno.total), count: t1turno.count } : null,
+          T2: t2turno ? { label: t2turno._id, promedio: MXN.format(t2turno.promedio), total: MXN.format(t2turno.total), count: t2turno.count } : null,
+          T3: t3turno ? { label: t3turno._id, promedio: MXN.format(t3turno.promedio), total: MXN.format(t3turno.total), count: t3turno.count } : null,
         };
       }
     } catch (_) {}

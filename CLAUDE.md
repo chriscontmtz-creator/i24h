@@ -195,7 +195,7 @@ No usa Mongo — JSON planos (`ventas.json`, `productos.json`, `alertas.json`).
 
 ## 11. Material (`src/routes/material.js`)
 
-Dos consumidores hoy: el modal "Venta sin material y sin tickets" (`#vsm-overlay`, `panel.hbs:3964-4100`, JS en `public/js/modal-material.js`) y, desde 2026-08-03, los tabs "VENTA SIN MATERIAL SNACK Y NOVEDADES" / "Tickets I24H" dentro de `/dashboard` (`dashboard.hbs`, script inline al final del archivo — ver sección 16).
+Dos consumidores hoy: el modal "Venta sin material y sin tickets" (`#vsm-overlay`, `panel.hbs:3964-4100`, JS en `public/js/modal-material.js`) y, desde 2026-08-03, los tabs "VENTA SIN MATERIAL SNACK Y NOVEDADES" / "Tickets I24H" / "Corte por turno" dentro de `/dashboard` (`dashboard.hbs`, script inline al final del archivo — ver sección 16).
 
 | Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Modelo | Notas |
 |---|---|---|---|---|---|
@@ -204,6 +204,7 @@ Dos consumidores hoy: el modal "Venta sin material y sin tickets" (`#vsm-overlay
 | Tab "Tickets I24H" → `#tkt-btn` — `dashboard.hbs` | `buscar() dashboard.hbs` (script inline) | `GET /api/material/tickets-dia?sucursal=&fecha=` | `material.js:219` | `Ticket`, `AjusteTicket` | Lista **todos** los tickets de un día (a diferencia de `buscar-ticket`); usa el `rangoDiaMX` verificado de este archivo, no el de `tickets.js` (que tiene bug de huso horario, ver sección 19) |
 | `#vsm-tk-btn-aplicar` — `panel.hbs:4088`; también botón "Descontar" por fila → `[data-action="aplicar"]` — `dashboard.hbs` | `vsmAplicarAjuste() modal-material.js:157`; handler delegado `dashboard.hbs` | `POST /api/material/ajuste-ticket` | `material.js:178` | `Ticket`, `AjusteTicket` | `soloAdmin` |
 | Ícono de basura por ajuste → `[data-action="del-ask"/"del-yes"]` — `dashboard.hbs` | handler delegado `dashboard.hbs` | `DELETE /api/material/ajuste-ticket/:id` | `material.js:288` | `AjusteTicket` | `soloAdmin`; permite deshacer un ajuste aplicado por error o caso cancelado |
+| Tab "Corte por turno" → `#cor-btn` — `dashboard.hbs` (agregado 2026-08-04) | `consultar() dashboard.hbs` (script inline) | `GET /api/material/corte-turno?sucursal=&fecha=` | `material.js` (después de `tickets-dia`) | `Ticket`, `CorteCaja`, `Categoria`, `Producto` | Corte de caja por turno (T1/T2/T3): `ingreso` de `CorteCaja.operador1` (vía `turnoCorto()`, regex `Turno\s*(\d)`) + **SDP** (sobre de producto: líneas de ticket en categorías MATERIAL/NOVEDADES/SNACK, mismo helper `nombresProductosExcluidos` que `resumen`) + **SDA** (sobre de actas: líneas dentro de ACTA DE MATRIMONIO/DEFUNCION/NACIMIENTO cuyo nombre no es el de la categoría — o sea el pago a gobierno variable por estado, no el $50 de servicio fijo — vía `nombresProductosActaEstado()`) + **TI24H** (venta bruta de tickets del turno) + tickets generados + una "explicación" en texto por reglas simples (venta extraordinaria >$300, comparación contra promedio histórico de 30 días del mismo turno/sucursal). Requiere `sucursal` real, no admite `'todas'` |
 | **⚠️ sin UI encontrada** | — | `GET /api/material/ajustes?sucursal=&fecha=` | `material.js:270` | `AjusteTicket` | Historial de ajustes, sin ningún `fetch` en el frontend (superado en la práctica por `tickets-dia`, que ya trae los ajustes embebidos por ticket) |
 
 ## 12. Resumen (`src/routes/resumen.js`)
@@ -242,22 +243,28 @@ flowchart LR
 
 ## 14. Asistencia (`src/routes/asistencia.js`)
 
-Vistas: `src/views/asistencia/marcar.hbs`, `pantalla.hbs`. Sin JS propio en `public/js/` — handlers inline en las vistas; el tab "Horas trabajadas" vive en `public/js/horarios.js`.
+**Rediseñado 2026-08-03**: se retiró el kiosco de recepción (PC fija + QR de 25s que cualquiera escaneaba y auto-marcaba). Ahora cada empleado genera su **propio QR personal de 2 minutos** desde la nueva sección "Asistencia" del panel (`panel.hbs`, visible a **todos** los cargos no-cliente, incluido colaborador — fuera del bloque `{{#unless esColaborador}}`, línea 49), y un supervisor (Encargado/Líder/Coordinador/Admin) lo escanea con la cámara nativa de su teléfono para confirmarlo. Vista propia solo para la landing de confirmación: `src/views/asistencia/confirmar.hbs`. El resto de la UI (generar QR, cuenta regresiva, tab "Reporte") vive inline en `panel.hbs` (funciones `asis*`, IIFE que arranca en línea 4030).
 
 | Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Modelo | Notas |
 |---|---|---|---|---|---|
-| Pantalla de kiosco (PC recepción), auto-recarga — `pantalla.hbs:16` | — | `GET /asistencia/pantalla/:sucursal` | `asistencia.js:143` | — (token efímero en memoria) | Rate-limit propio (60/5min); genera QR |
-| QR escaneado con el celular — `pantalla.hbs:4` | — | `GET /asistencia/marcar` | `asistencia.js:176` | `Horario` (solo lectura, best-effort) | GET sin efectos secundarios a propósito |
-| Botones Entrada/Salida/Comida — `marcar.hbs:15,20,25,30` | `asMarcar() marcar.hbs:51` | `POST /asistencia/api/marcar` | `asistencia.js:213` | `AsistenciaEvento` | Único punto que escribe; revalida token + transición de estado server-side |
-| Tab "Horas trabajadas" — `horarios/index.hbs:71-73` | `hasCargarSemana() horarios.js:220` | `GET /asistencia/api/horas-trabajadas` | `asistencia.js:230` | `AsistenciaEvento`, `Usuario` | `requireAdmin`; vive físicamente en el JS de Horarios |
+| Nav "Asistencia" (todos los cargos no-cliente) — `panel.hbs:49` | `asisCargarEstado() panel.hbs:4057` | `GET /asistencia/api/estado` | `asistencia.js:198` | `Usuario` (solo lectura) | `requireAuth`; devuelve estado actual + transiciones válidas + sucursales del empleado |
+| Botones de tipo (Entrada/Salida/Comida) en tab "Marcar asistencia" — `panel.hbs:829-843` | `asisGenerarQr() panel.hbs` (dentro del IIFE ~4057) | `POST /asistencia/api/generar-qr` | `asistencia.js:216` | — (token efímero en memoria, `tokensPorEmpleado`, TTL 2min) | `requireAuth`; revalida la transición server-side antes de crear el token |
+| Escaneo del QR con la cámara nativa del teléfono del supervisor | — | `GET /asistencia/confirmar` | `asistencia.js:257` | `Usuario` (solo lectura) | GET sin efectos secundarios a propósito (mismo patrón que el viejo `/marcar`); exige cargo en `['admin','coordinador','lider','encargado']` |
+| Botón "Confirmar" — `confirmar.hbs:12` | `asConfirmar() confirmar.hbs:37` | `POST /asistencia/api/confirmar` | `asistencia.js:299` | `AsistenciaEvento` | `requireSupervisor` (local a este archivo, no es el `requireAdmin` global); escribe `confirmado_por` |
+| Botón "Confirmar de todos modos" (solo si `esSupervisorAsistencia`) — `panel.hbs:836` | `asisAutoConfirmar() panel.hbs` | `POST /asistencia/api/autoconfirmar` | `asistencia.js:324` | `AsistenciaEvento` | `requireSupervisor` + solo puede autoconfirmar su propio token; escribe `auto_confirmado:true` |
+| Tab "Horas trabajadas" de Horarios — `horarios/index.hbs:71-73` | `hasCargarSemana() horarios.js:220` | `GET /asistencia/api/horas-trabajadas` | `asistencia.js:351` | `AsistenciaEvento`, `Usuario` | Sin cambios — `requireAdmin`; agregado semanal, vive físicamente en el JS de Horarios |
+| Tab "Reporte" (solo `esAdmin`) — `panel.hbs:850-880` | `asisCargarReporte() panel.hbs:4167` | `GET /asistencia/api/reporte` | `asistencia.js:460` | `AsistenciaEvento`, `Usuario` | **Nuevo** — detalle día a día (hora entrada/salida, diferencia, quién confirmó), no agregado semanal; filtro `soloIncompletos` para jornadas por debajo de lo esperado |
 
 ```mermaid
 flowchart LR
-    A["PC recepción: GET /pantalla/:sucursal"] --> B["QR (token TTL 25s)"]
-    B -->|escaneo| C["GET /marcar (solo lectura)"]
-    C --> D["Botón Marcar"] --> E["POST /api/marcar"] --> F[("AsistenciaEvento")]
-    G["Tab Horas trabajadas"] --> H["GET /api/horas-trabajadas"] --> F
-    H --> I[("Usuario")]
+    A["Empleado: tab 'Marcar asistencia'"] --> B["GET /api/estado"] --> C["Botón de tipo"]
+    C --> D["POST /api/generar-qr"] --> E[("token en memoria, TTL 2min")]
+    D --> F["QR en pantalla"]
+    F -->|supervisor escanea con su cámara| G["GET /confirmar"]
+    G --> H["Botón Confirmar"] --> I["POST /api/confirmar"] --> J[("AsistenciaEvento")]
+    F -.solo si nadie escaneó.-> K["Confirmar de todos modos"] --> L["POST /api/autoconfirmar"] --> J
+    M["Tab Horas trabajadas (Horarios)"] --> N["GET /api/horas-trabajadas"] --> J
+    O["Tab Reporte (solo admin)"] --> P["GET /api/reporte"] --> J
 ```
 
 ## 15. Reportes (`src/routes/reportes.js`)
@@ -276,8 +283,8 @@ Vista: `src/views/dashboard.hbs` · JS: `public/js/dashboard.js` (108 líneas, s
 
 | Elemento UI (archivo:línea) | Endpoint | Handler de ruta | Modelo | Notas |
 |---|---|---|---|---|
-| Nav "Dashboard" (`panel.hbs:23`), botón "Actualizar" (`dashboard.hbs:69`), filtros sucursal/periodo/turno (`dashboard.hbs:79-100`), links de día (`dashboard.hbs:105-110`) | `GET /dashboard` | `dashboard.js:100` | `Ticket`, `Producto`, `Usuario`, `CorteCaja`, `Revision` | Único endpoint de **render** del módulo; navegación GET completa, no AJAX. `Chart.js` solo pinta `window.DASH_DATA` ya renderizado server-side. Contexto de render incluye `esAdmin` (`admin`/`coordinador`, `dashboard.js`) para gatear client-side los controles de descuento del tab "Tickets I24H" — el backend igual lo exige vía `soloAdmin` en `material.js` |
-| Tabs "VENTA SIN MATERIAL SNACK Y NOVEDADES" / "Tickets I24H" (`.dash-tabs`, reemplazan la vieja card "Ventas registradas por el sync") — `dashboard.hbs` | — | — | — | No son un endpoint propio: consumen `GET /api/material/resumen`, `GET /api/material/tickets-dia`, `POST /api/material/ajuste-ticket`, `DELETE /api/material/ajuste-ticket/:id` — ver filas correspondientes en la sección 11 |
+| Nav "Dashboard" (`panel.hbs:23`), botón "Actualizar" (`dashboard.hbs:69`), filtros sucursal/periodo/turno (`dashboard.hbs:79-100`), links de día (`dashboard.hbs:105-110`) | `GET /dashboard` | `dashboard.js:100` | `Ticket`, `Producto`, `Usuario`, `CorteCaja`, `Revision` | Único endpoint de **render** del módulo; navegación GET completa, no AJAX. `Chart.js` solo pinta `window.DASH_DATA` ya renderizado server-side. Contexto de render incluye `esAdmin` (`admin`/`coordinador`, `dashboard.js`) para gatear client-side los controles de descuento del tab "Tickets I24H" — el backend igual lo exige vía `soloAdmin` en `material.js`. Tarjetas "Recaudación por turno" (`turnosData`, `dashboard.js:266-295`): **arreglado 2026-08-04** — antes asignaba T1/T2/T3 por *ranking* de ingreso (bug), ahora usa `turnoCorto()` (regex sobre `CorteCaja.operador1`) para mostrar el turno real |
+| Tabs "VENTA SIN MATERIAL SNACK Y NOVEDADES" / "Tickets I24H" / "Corte por turno" (`.dash-tabs`, reemplazan la vieja card "Ventas registradas por el sync"; "Corte por turno" agregado 2026-08-04) — `dashboard.hbs` | — | — | — | No son un endpoint propio: consumen `GET /api/material/resumen`, `GET /api/material/tickets-dia`, `POST /api/material/ajuste-ticket`, `DELETE /api/material/ajuste-ticket/:id`, `GET /api/material/corte-turno` — ver filas correspondientes en la sección 11 |
 
 ## 17. Revisiones (`src/routes/revisiones.js`, 666 líneas — el módulo más grande)
 
@@ -371,6 +378,7 @@ Sin `/asistencia` en `panel.hbs` — esperado, se accede vía QR desde `/asisten
 - **`revisiones.js:518,538`** — flujo de detalle/aprobación de revisión con botón inalcanzable (el modal que lo contiene nunca se abre).
 - **`revisiones.js:563,595`** — `/causa` y `/corregir`, cero referencias en todo el frontend.
 - **`tickets.js`** — bug de huso horario conocido en `rangoDiaMX` (resta 6h de más), sin corregir.
+- **Turnos (T1/T2/T3) — 4 definiciones de horario distintas e inconsistentes conviven en el repo**, ninguna es "la" fuente de verdad: `material.js:turnoDesdeHora` (07-14/14-22/22-07, usada por Material/Dashboard/Corte por turno), `revisiones.js:turnoDesdeHora` (07-15/15-23/23-07, usada por Resumen de caja), `asistencia.js:TURNOS` (07-15:30/14-22:30/22-07, con solape intencional para relevo de empleados) y `cronCortes.js` (horarios de corte automático de stock: 05:05/15:05/21:45). Ninguna se tocó al agregar "Corte por turno" (sección 11) — se estandarizó solo esa feature nueva en la ventana de `material.js`. Unificarlas es trabajo aparte, no asumido por ningún cambio reciente.
 
 ### Pendientes de QA registrados en memoria (no verificados en este barrido — cubren archivos/secciones fuera del alcance de rutas API)
 

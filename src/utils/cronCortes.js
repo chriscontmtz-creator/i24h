@@ -46,20 +46,20 @@ async function tomarSnapshot(turnoQueEntrega, turnoQueRecibe) {
 }
 
 export function iniciarCronCortes() {
-  // T3 corte 05:00 AM → snapshot 05:05 AM → T1 lo usa
-  cron.schedule('5 5 * * *', () => tomarSnapshot('T3', 'T1'), {
+  // Sync unificado de sucursal arranca 07:10 (tarda ~5-6 min) → snapshot de respaldo 07:20 → T1 lo usa
+  cron.schedule('20 7 * * *', () => tomarSnapshot('T3', 'T1'), {
     timezone: 'America/Mexico_City',
   });
 
-  // T1 corte 15:00 PM → snapshot 15:05 PM → T2 lo usa
-  cron.schedule('5 15 * * *', () => tomarSnapshot('T1', 'T2'), {
+  // Sync unificado arranca 15:10 → snapshot de respaldo 15:20 → T2 lo usa
+  cron.schedule('20 15 * * *', () => tomarSnapshot('T1', 'T2'), {
     timezone: 'America/Mexico_City',
   });
 
-  // T2 corte 21:40 PM → snapshot 21:45 PM → T3 lo usa
-  cron.schedule('45 21 * * *', () => tomarSnapshot('T2', 'T3'), {
+  // Sync unificado arranca 21:50 → snapshot de respaldo 22:00 → T3 lo usa
+  cron.schedule('0 22 * * *', () => tomarSnapshot('T2', 'T3'), {
     timezone: 'America/Mexico_City',
   });
 
-  console.log('[cron-corte] Activo: 05:05, 15:05, 21:45 (hora México)');
+  console.log('[cron-corte] Activo: 07:20, 15:20, 22:00 (hora México)');
 }

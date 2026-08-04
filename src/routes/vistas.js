@@ -117,10 +117,12 @@ router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
   res.render('panel', {
     titulo:          'Panel i24h',
     scriptPrincipal: 'panel.js',
+    estiloExtra:     'css/asistencia.css',
     estiloExtra2:    'css/modal-material.css',
     scriptExtra:     'js/modal-material.js',
     usuario:         u,
     esAdmin:         ['admin', 'coordinador'].includes(u.cargo),
+    esSupervisorAsistencia: ['admin', 'coordinador', 'lider', 'encargado'].includes(u.cargo),
     esColaborador,
     sucursalesBitacora,
   });

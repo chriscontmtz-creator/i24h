@@ -29,6 +29,19 @@ const AsistenciaEventoSchema = new mongoose.Schema({
     type:    Date,
     default: Date.now,
   },
+  // Quién escaneó/confirmó esta marcación (Encargado/Líder/Coordinador/Admin).
+  // Null en eventos históricos del kiosco (auto-servicio, sin confirmante).
+  confirmado_por: {
+    type:    mongoose.Schema.Types.ObjectId,
+    ref:     'Usuario',
+    default: null,
+  },
+  // true si el propio dueño del evento se autoconfirmó por no tener a nadie
+  // más con rango disponible para escanearle en ese momento.
+  auto_confirmado: {
+    type:    Boolean,
+    default: false,
+  },
 }, { timestamps: false });
 
 AsistenciaEventoSchema.index({ empleado_id: 1, timestamp: -1 });

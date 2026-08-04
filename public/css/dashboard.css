@@ -435,6 +435,45 @@ body.dark .dash-nav-item--active {
 .dash-turno-t3 .dash-turno-hora,
 .dash-turno-t3 .dash-turno-val { color: var(--d-t3-txt); }
 
+/* ── Corte por turno (SDP/SDA/TI24H) ─────────────────────── */
+.dash-corte-header { font-size: 14px; margin-bottom: 12px; }
+
+.dash-corte-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.dash-corte-card {
+  padding: 14px 16px;
+  border-radius: var(--d-radio);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dash-corte-t1 { background: var(--d-t1-bg); }
+.dash-corte-t2 { background: var(--d-t2-bg); }
+.dash-corte-t3 { background: var(--d-t3-bg); }
+
+.dash-corte-lbl  { font-size: 14px; font-weight: 700; }
+.dash-corte-val  { font-size: 21px; font-weight: 700; margin-bottom: 4px; }
+.dash-corte-fila { font-size: 12.5px; display: flex; justify-content: space-between; opacity: .92; }
+.dash-corte-exp  { font-size: 11.5px; margin-top: 6px; opacity: .8; line-height: 1.35; }
+
+.dash-corte-t1 .dash-corte-lbl, .dash-corte-t1 .dash-corte-val,
+.dash-corte-t1 .dash-corte-fila, .dash-corte-t1 .dash-corte-exp { color: var(--d-t1-txt); }
+.dash-corte-t2 .dash-corte-lbl, .dash-corte-t2 .dash-corte-val,
+.dash-corte-t2 .dash-corte-fila, .dash-corte-t2 .dash-corte-exp { color: var(--d-t2-txt); }
+.dash-corte-t3 .dash-corte-lbl, .dash-corte-t3 .dash-corte-val,
+.dash-corte-t3 .dash-corte-fila, .dash-corte-t3 .dash-corte-exp { color: var(--d-t3-txt); }
+
+.dash-corte-total { text-align: right; margin-top: 12px; font-size: 1.05rem; }
+
+@media (max-width: 720px) {
+  .dash-corte-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Grid de 2 columnas ───────────────────────────────────── */
 .dash-grid-2 {
   display: grid;

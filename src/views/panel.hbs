@@ -46,6 +46,9 @@
         <button class="panel-nav-item{{#if esColaborador}} active{{/if}}" data-seccion="bitacoras" data-titulo="Bitácoras">
           <i class="ti ti-notebook"></i><span>Bitácoras</span>
         </button>
+        <button class="panel-nav-item" data-seccion="asistencia" data-titulo="Asistencia">
+          <i class="ti ti-qrcode"></i><span>Asistencia</span>
+        </button>
         {{#unless esColaborador}}
         <button class="panel-nav-item" data-seccion="inventario" data-titulo="Inventario / Stock">
           <i class="ti ti-package"></i><span>Inventario / Stock</span>
@@ -775,11 +778,13 @@
           </button>
         </div>
 
-        <!-- Historial de bitácoras guardadas -->
+        <!-- Historial de bitácoras guardadas — solo admin/coordinador -->
+        {{#if esAdmin}}
         <div class="bit-hist-wrap">
           <p class="bit-hist-titulo"><i class="ti ti-history"></i> Bitácoras guardadas</p>
           <div id="bit-historial-lista"><p class="bit-hist-vacio">Sin bitácoras guardadas aún.</p></div>
         </div>
+        {{/if}}
 
         <!-- Modal detalle de bitácora -->
         <div id="bit-det-overlay" class="bit-det-overlay bit-det--oculto" onclick="this.classList.add('bit-det--oculto')">
@@ -802,6 +807,78 @@
             </div>
           </div>
         </div>
+
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-asistencia">
+
+        <div class="hor-tabs">
+          <button class="hor-tab hor-tab--active" id="asis-tab-marcar">
+            <i class="ti ti-qrcode"></i> Marcar asistencia
+          </button>
+          {{#if esAdmin}}
+          <button class="hor-tab" id="asis-tab-reporte">
+            <i class="ti ti-report"></i> Reporte
+          </button>
+          {{/if}}
+        </div>
+
+        <div id="asis-view-marcar" class="asis-wrap">
+          <div class="asis-suc-row">
+            <label for="asis-sucursal" style="font-size:0.9rem;color:#777">Sucursal:</label>
+            <select class="asis-select" id="asis-sucursal"></select>
+          </div>
+
+          <p class="asis-estado-actual" id="asis-estado-txt">Cargando tu estado...</p>
+
+          <div class="asis-tipo-botones" id="asis-botones-tipo"></div>
+
+          <div class="asis-qr-card" id="asis-qr-card" style="display:none">
+            <img class="asis-qr-img" id="asis-qr-img" src="" alt="Código QR de asistencia">
+            <div class="asis-qr-countdown" id="asis-qr-countdown">2:00</div>
+            <p class="asis-qr-hint">Pedile a tu Encargado, Líder, Coordinador o Admin que lo escanee con la cámara de su teléfono para confirmar.</p>
+            <div class="asis-qr-acciones">
+              {{#if esSupervisorAsistencia}}
+              <button class="asis-btn-secundario" id="asis-btn-autoconfirmar">
+                <i class="ti ti-user-check"></i> Confirmar de todos modos (estoy solo)
+              </button>
+              {{/if}}
+              <button class="asis-btn-secundario" id="asis-btn-regenerar" style="display:none">
+                <i class="ti ti-refresh"></i> Generar de nuevo
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {{#if esAdmin}}
+        <div id="asis-view-reporte" class="asis-wrap" style="display:none">
+          <div class="asis-reporte-filtros">
+            <select class="asis-select" id="asis-rep-sucursal">
+              <option value="todas">Todas las sucursales</option>
+              {{#each sucursalesBitacora}}
+              <option value="{{this}}">{{this}}</option>
+              {{/each}}
+            </select>
+            <button class="asis-btn-secundario" id="asis-rep-prev">◀</button>
+            <span id="asis-rep-semana-txt" style="font-size:0.9rem;color:#666"></span>
+            <button class="asis-btn-secundario" id="asis-rep-next">▶</button>
+            <label class="asis-reporte-check">
+              <input type="checkbox" id="asis-rep-incompletos"> Solo quienes no llegaron a sus horas
+            </label>
+          </div>
+
+          <div class="asis-table-wrap">
+            <table class="asis-table">
+              <thead><tr>
+                <th>Nombre</th><th>Sucursal</th><th>Fecha</th><th>Entrada</th><th>Salida</th>
+                <th>Horas trabajadas</th><th>Esperadas</th><th>Diferencia</th><th>Confirmó</th>
+              </tr></thead>
+              <tbody id="asis-rep-body"></tbody>
+            </table>
+            <p class="asis-empty-msg" id="asis-rep-empty" style="display:none"></p>
+          </div>
+        </div>
+        {{/if}}
 
       </div>
 
@@ -1739,30 +1816,18 @@ const PRODUCTOS_BITACORA = [
   ]},
   { cat: 'Snack', icono: 'ti-candy', items: [
     { nombre: 'Agua 500ml',             cyber: 'agua 500 ml',               esperado: 0 },
-    { nombre: 'Aguas de Sabor',         cyber: 'aguas de sabor',            esperado: 0 },
-    { nombre: 'Botana Variada',         cyber: 'botana variada',            esperado: 0 },
-    { nombre: 'Cacahuates Varios',      cyber: 'cacahuates varios',         esperado: 0 },
-    { nombre: 'Chocolate Kiss',         cyber: 'chocolate kiss',            esperado: 0 },
     { nombre: 'Chocolates Varios',      cyber: 'chocolates varios',         esperado: 0 },
     { nombre: 'Coca Cola',              cyber: 'coca cola',                 esperado: 0 },
     { nombre: 'Dulces Varios',          cyber: 'dulces varios',             esperado: 0 },
     { nombre: 'Duvalín',                cyber: 'duvalin',                   esperado: 0 },
     { nombre: 'Frutsi / Pau Pau',       cyber: 'frutsi o pau pau varios',   esperado: 0 },
     { nombre: 'Galleta Varios',         cyber: 'galleta varios',            esperado: 0 },
-    { nombre: 'Gatorade',               cyber: 'gatorade',                  esperado: 0 },
     { nombre: 'Gomitas Varios',         cyber: 'gomitas varios',            esperado: 0 },
-    { nombre: 'Jugos Cartón',           cyber: 'jugos carton',              esperado: 0 },
-    { nombre: 'Leche Hersheys',         cyber: 'leche hersheys',            esperado: 0 },
     { nombre: 'Mazapán Azteca',         cyber: 'mazapan azteca',            esperado: 0 },
-    { nombre: 'Mini Papitas',           cyber: 'mini papitas',              esperado: 0 },
-    { nombre: 'Mini Pastelitos',        cyber: 'mini pastelitos',           esperado: 0 },
-    { nombre: 'Monster',                cyber: 'monster',                   esperado: 0 },
     { nombre: 'Paleta Payaso',          cyber: 'paleta payaso',             esperado: 0 },
-    { nombre: 'Papaen Bote',            cyber: 'papaen bote',               esperado: 0 },
     { nombre: 'Sabritas Varios',        cyber: 'sabritas varios',           esperado: 0 },
     { nombre: 'Skwinkles Varios',       cyber: 'skwinkles varios',          esperado: 0 },
     { nombre: 'Trident Varios',         cyber: 'trident varios',            esperado: 0 },
-    { nombre: 'Zumba',                  cyber: 'zumba',                     esperado: 0 },
   ]},
 ];
 
@@ -2065,8 +2130,8 @@ document.getElementById('btn-cerrar-bitacora')?.addEventListener('click', functi
 
 // ── bloqueo 15 min post-corte ─────────────────────────────────────────────
 (function() {
-  var CORTES_MIN = [7 * 60, 15 * 60, 23 * 60]; // 07:00, 15:00, 23:00 en minutos
-  var ESPERA    = 15;
+  var CORTES_MIN = [7 * 60 + 10, 15 * 60 + 10, 21 * 60 + 50]; // 07:10, 15:10, 21:50 — horario del sync unificado
+  var ESPERA    = 10; // desbloquea 10 min después de cada sync: 07:20 / 15:20 / 22:00
 
   function minutosMX() {
     var ahora = new Date();
@@ -3956,6 +4021,276 @@ function descargarInventario(categoria) {
   document.body.removeChild(a);
 }
 
+</script>
+
+<!-- ============================================================
+     ASISTENCIA — QR personal de 2 minutos + reporte (solo admin)
+     ============================================================ -->
+<script>
+(function () {
+  var asisExpiraEn = null;
+  var asisIntervalId = null;
+  var asisTokenActual = null;
+  var asisRepFecha = new Date();
+
+  var ETIQUETAS_BOTON = {
+    entrada:       { texto: 'Marcar entrada',   icono: 'ti-door-enter', clase: 'as-btn-entrada' },
+    salida:        { texto: 'Marcar salida',    icono: 'ti-door-exit',  clase: 'as-btn-salida' },
+    inicio_comida: { texto: 'Iniciar comida',   icono: 'ti-coffee',     clase: 'as-btn-comida' },
+    fin_comida:    { texto: 'Terminar comida',  icono: 'ti-coffee-off', clase: 'as-btn-entrada' },
+  };
+
+  var ESTADO_TXT = {
+    fuera:      'Estás fuera de turno.',
+    trabajando: 'Estás trabajando.',
+    en_comida:  'Estás en tu tiempo de comida.',
+  };
+
+  function asisOcultarQr() {
+    var card = document.getElementById('asis-qr-card');
+    if (card) card.style.display = 'none';
+    if (asisIntervalId) { clearInterval(asisIntervalId); asisIntervalId = null; }
+    asisTokenActual = null;
+    asisExpiraEn = null;
+  }
+
+  async function asisCargarEstado() {
+    var estadoTxt   = document.getElementById('asis-estado-txt');
+    var botonesWrap = document.getElementById('asis-botones-tipo');
+    var sucSel      = document.getElementById('asis-sucursal');
+    if (!estadoTxt || !botonesWrap || !sucSel) return;
+
+    asisOcultarQr();
+    estadoTxt.textContent = 'Cargando tu estado...';
+    botonesWrap.textContent = '';
+
+    try {
+      var resp = await fetch('/asistencia/api/estado');
+      var data = await resp.json();
+      if (!resp.ok) { estadoTxt.textContent = data.error || 'No se pudo cargar tu estado.'; return; }
+
+      estadoTxt.textContent = ESTADO_TXT[data.estado] || '';
+
+      if (sucSel.options.length === 0) {
+        (data.sucursales || []).forEach(function (s) {
+          var opt = document.createElement('option');
+          opt.value = s;
+          opt.textContent = s;
+          sucSel.appendChild(opt);
+        });
+      }
+
+      (data.opciones || []).forEach(function (tipo) {
+        var meta = ETIQUETAS_BOTON[tipo];
+        if (!meta) return;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'as-btn ' + meta.clase;
+        var icon = document.createElement('i');
+        icon.className = 'ti ' + meta.icono;
+        btn.appendChild(icon);
+        btn.appendChild(document.createTextNode(' ' + meta.texto));
+        btn.addEventListener('click', function () { asisGenerarQr(tipo); });
+        botonesWrap.appendChild(btn);
+      });
+    } catch (e) {
+      estadoTxt.textContent = 'Error de conexión.';
+    }
+  }
+
+  async function asisGenerarQr(tipo) {
+    var sucSel = document.getElementById('asis-sucursal');
+    var sucursal = sucSel ? sucSel.value : '';
+    if (!sucursal) { alert('Elegí una sucursal.'); return; }
+
+    try {
+      var resp = await fetch('/asistencia/api/generar-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: tipo, sucursal: sucursal }),
+      });
+      var data = await resp.json();
+      if (!resp.ok) { alert(data.error || 'No se pudo generar el código.'); return; }
+
+      asisTokenActual = data.token;
+      asisExpiraEn = data.expiresAt;
+
+      var card  = document.getElementById('asis-qr-card');
+      var img   = document.getElementById('asis-qr-img');
+      var boton = document.getElementById('asis-btn-regenerar');
+      if (img) { img.src = data.qrDataUrl; img.classList.remove('asis-qr-img--vencido'); }
+      if (boton) boton.style.display = 'none';
+      var countdown = document.getElementById('asis-qr-countdown');
+      if (countdown) countdown.classList.remove('asis-qr-countdown--vencido');
+      if (card) card.style.display = 'block';
+
+      if (asisIntervalId) clearInterval(asisIntervalId);
+      asisTickCountdown();
+      asisIntervalId = setInterval(asisTickCountdown, 1000);
+    } catch (e) {
+      alert('Error de conexión al generar el código.');
+    }
+  }
+
+  function asisTickCountdown() {
+    var el    = document.getElementById('asis-qr-countdown');
+    var img   = document.getElementById('asis-qr-img');
+    var boton = document.getElementById('asis-btn-regenerar');
+    if (!el || !asisExpiraEn) return;
+
+    var restanteMs = asisExpiraEn - Date.now();
+    if (restanteMs <= 0) {
+      el.textContent = 'Código vencido';
+      el.classList.add('asis-qr-countdown--vencido');
+      if (img) img.classList.add('asis-qr-img--vencido');
+      if (boton) boton.style.display = 'block';
+      if (asisIntervalId) { clearInterval(asisIntervalId); asisIntervalId = null; }
+      return;
+    }
+
+    var totalSeg = Math.ceil(restanteMs / 1000);
+    var min = Math.floor(totalSeg / 60);
+    var seg = totalSeg % 60;
+    el.textContent = min + ':' + String(seg).padStart(2, '0');
+  }
+
+  async function asisAutoConfirmar() {
+    if (!asisTokenActual) return;
+    try {
+      var resp = await fetch('/asistencia/api/autoconfirmar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: asisTokenActual }),
+      });
+      var data = await resp.json();
+      if (!resp.ok) { alert(data.error || 'No se pudo autoconfirmar.'); return; }
+      asisCargarEstado();
+    } catch (e) {
+      alert('Error de conexión.');
+    }
+  }
+
+  // ── Semana viernes→jueves — misma lógica que src/routes/asistencia.js
+  //    y public/js/horarios.js, portada acá para poder mostrar el rango de
+  //    fechas del reporte sin ir al servidor por cada flecha ◀▶.
+  function asisIsoWeekStr(date) {
+    var d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    var yearStart = new Date(d.getFullYear(), 0, 1);
+    var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return d.getFullYear() + '-' + String(weekNo).padStart(2, '0');
+  }
+
+  function asisGetViernesDeISO(weekStr) {
+    var partes = weekStr.split('-');
+    var year = parseInt(partes[0], 10);
+    var week = parseInt(partes[1], 10);
+    var jan4 = new Date(year, 0, 4);
+    var dayOfWeek = (jan4.getDay() + 6) % 7;
+    var monday = new Date(jan4);
+    monday.setDate(jan4.getDate() - dayOfWeek + (week - 1) * 7);
+    var viernes = new Date(monday);
+    viernes.setDate(monday.getDate() - 3);
+    viernes.setHours(0, 0, 0, 0);
+    return viernes;
+  }
+
+  async function asisCargarReporte() {
+    var tbody = document.getElementById('asis-rep-body');
+    var empty = document.getElementById('asis-rep-empty');
+    var semanaTxt = document.getElementById('asis-rep-semana-txt');
+    if (!tbody) return;
+
+    var semana = asisIsoWeekStr(asisRepFecha);
+    var sucursal = document.getElementById('asis-rep-sucursal')?.value || 'todas';
+    var soloIncompletos = document.getElementById('asis-rep-incompletos')?.checked ? '1' : '0';
+
+    var viernes = asisGetViernesDeISO(semana);
+    var jueves = new Date(viernes);
+    jueves.setDate(viernes.getDate() + 6);
+    var fmt = function (d) { return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }); };
+    if (semanaTxt) semanaTxt.textContent = 'Semana ' + fmt(viernes) + ' – ' + fmt(jueves);
+
+    tbody.textContent = '';
+    if (empty) empty.style.display = 'none';
+
+    try {
+      var url = '/asistencia/api/reporte?semana=' + encodeURIComponent(semana) +
+                 '&sucursal=' + encodeURIComponent(sucursal) +
+                 '&soloIncompletos=' + soloIncompletos;
+      var resp = await fetch(url);
+      var data = await resp.json();
+      if (!resp.ok) {
+        if (empty) { empty.textContent = data.error || 'Error al cargar el reporte.'; empty.style.display = 'block'; }
+        return;
+      }
+
+      var filas = data.filas || [];
+      if (filas.length === 0) {
+        if (empty) { empty.textContent = 'Sin marcaciones para este filtro.'; empty.style.display = 'block'; }
+        return;
+      }
+
+      var horaFmt = function (iso) { return new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }); };
+
+      filas.forEach(function (f) {
+        var tr = document.createElement('tr');
+        var celdas = [
+          f.nombre, f.sucursal, f.fecha,
+          horaFmt(f.horaEntrada), horaFmt(f.horaSalida),
+          f.horasTrabajadas.toFixed(2) + 'h',
+          f.horasEsperadas != null ? f.horasEsperadas.toFixed(2) + 'h' : '—',
+          f.diferencia != null ? (f.diferencia > 0 ? '+' : '') + f.diferencia.toFixed(2) + 'h' : '—',
+          f.confirmadoPor || '—',
+        ];
+        celdas.forEach(function (val, idx) {
+          var td = document.createElement('td');
+          td.textContent = val;
+          if (idx === 7 && f.diferencia != null) {
+            td.className = f.diferencia < 0 ? 'asis-diff-neg' : 'asis-diff-pos';
+          }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    } catch (e) {
+      if (empty) { empty.textContent = 'Error de conexión.'; empty.style.display = 'block'; }
+    }
+  }
+
+  function asisMostrarTab(tab) {
+    var btnMarcar = document.getElementById('asis-tab-marcar');
+    var btnReporte = document.getElementById('asis-tab-reporte');
+    var viewMarcar = document.getElementById('asis-view-marcar');
+    var viewReporte = document.getElementById('asis-view-reporte');
+    if (!btnMarcar || !viewMarcar) return;
+
+    var esReporte = (tab === 'reporte' && viewReporte);
+    btnMarcar.classList.toggle('hor-tab--active', !esReporte);
+    if (btnReporte) btnReporte.classList.toggle('hor-tab--active', !!esReporte);
+    viewMarcar.style.display = esReporte ? 'none' : 'block';
+    if (viewReporte) viewReporte.style.display = esReporte ? 'block' : 'none';
+    if (esReporte) asisCargarReporte();
+  }
+
+  document.getElementById('asis-btn-autoconfirmar')?.addEventListener('click', asisAutoConfirmar);
+  document.getElementById('asis-btn-regenerar')?.addEventListener('click', asisCargarEstado);
+  document.getElementById('asis-tab-marcar')?.addEventListener('click', function () { asisMostrarTab('marcar'); });
+  document.getElementById('asis-tab-reporte')?.addEventListener('click', function () { asisMostrarTab('reporte'); });
+  document.getElementById('asis-rep-sucursal')?.addEventListener('change', asisCargarReporte);
+  document.getElementById('asis-rep-incompletos')?.addEventListener('change', asisCargarReporte);
+  document.getElementById('asis-rep-prev')?.addEventListener('click', function () {
+    asisRepFecha.setDate(asisRepFecha.getDate() - 7);
+    asisCargarReporte();
+  });
+  document.getElementById('asis-rep-next')?.addEventListener('click', function () {
+    asisRepFecha.setDate(asisRepFecha.getDate() + 7);
+    asisCargarReporte();
+  });
+
+  document.querySelector('[data-seccion="asistencia"]')?.addEventListener('click', asisCargarEstado);
+})();
 </script>
 
 {{!-- ============================================================
