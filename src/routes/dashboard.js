@@ -8,13 +8,14 @@ import Usuario           from '../models/Usuario.js';
 import CorteCaja         from '../models/CorteCaja.js';
 import Revision          from '../models/Revision.js';
 import { requireEmpleado, sesionActual } from '../middlewares/auth.js';
+import { sucursalesDeUsuario } from '../utils/sucursales.js';
 
 const router = Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const SUCURSALES = [
   'Simón Bolívar', 'Insurgentes', 'Antígona', 'Lincoln Oxxo',
-  'Lincoln Dos', 'Ruiz Cortines', 'Rodas', 'Cuauhtémoc', 'Ordóñez',
+  'Lincoln 2', 'Ruiz Cortines', 'Rodas', 'Cuauhtémoc', 'Ordóñez',
 ];
 
 // Clave interna usada al hacer sync (sin tildes ni espacios)
@@ -23,7 +24,7 @@ const SUCURSAL_DB = {
   'Insurgentes':   'Insurgentes',
   'Antígona':      'Antigona',
   'Lincoln Oxxo':  'LincolnOxxo',
-  'Lincoln Dos':   'LincolnDos',
+  'Lincoln 2':     'LincolnDos',
   'Ruiz Cortines': 'RuizCortines',
   'Rodas':         'Rodas',
   'Cuauhtémoc':    'Cuauhtemoc',
@@ -106,7 +107,23 @@ function rangoPeriodo(periodo) {
 // ── GET /dashboard ──────────────────────────────────────────────
 router.get('/', sesionActual, requireEmpleado, async (req, res) => {
   try {
-    const sucursalDisplay = req.query.sucursal || 'todas';
+    const usuarioSesion = req.session.usuario;
+    const verTodasLasSucursales = usuarioSesion.cargo === 'admin';
+    const sucursalesPermitidas  = await sucursalesDeUsuario(usuarioSesion);
+
+    // Solo admin puede pedir "todas" o cualquier sucursal fuera de las
+    // suyas — cualquier otro cargo se recorta a la primera que tenga
+    // asignada (o a un filtro imposible si no tiene ninguna).
+    let sucursalDisplay = req.query.sucursal || 'todas';
+    const sinSucursalesAsignadas = !verTodasLasSucursales && sucursalesPermitidas.length === 0;
+    if (!verTodasLasSucursales) {
+      if (sinSucursalesAsignadas) {
+        sucursalDisplay = '__sin_sucursal_asignada__';
+      } else if (sucursalDisplay === 'todas' || !sucursalesPermitidas.includes(sucursalDisplay)) {
+        sucursalDisplay = sucursalesPermitidas[0];
+      }
+    }
+
     const periodo         = req.query.periodo  || 'semestre';
     const turnoFiltro     = req.query.turno    || 'todos';
     const diaFiltro       = req.query.dia      || 'todos';
@@ -307,10 +324,13 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
       scriptPrincipal: 'js/dashboard.js',
       usuario:         req.session.usuario,
       esAdmin:         ['admin', 'coordinador'].includes(req.session.usuario.cargo),
+      verTodasLasSucursales: verTodasLasSucursales,
+      sinSucursalesAsignadas,
       sucursalActiva:  sucursalDisplay,
       periodoActivo:   periodo,
       turnoActivo:     turnoFiltro,
-      sucursales:      SUCURSALES.map(s => ({ nombre: s, activa: s === sucursalDisplay })),
+      sucursales:      (verTodasLasSucursales ? SUCURSALES : sucursalesPermitidas)
+        .map(s => ({ nombre: s, activa: s === sucursalDisplay })),
       labelPeriodo,
       labelFechas,
       // período booleans para <select> selected

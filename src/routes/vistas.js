@@ -7,8 +7,23 @@ import Promocion  from '../models/Promocion.js';
 import FotoSucursal from '../models/FotoSucursal.js';
 import { requireEmpleado, sesionActual } from '../middlewares/auth.js';
 import { RECOMPENSAS, SUCURSALES_CLIENTE } from '../config/constants.js';
+import { sucursalesDeUsuario } from '../utils/sucursales.js';
 
 const router = Router();
+
+// Slugs que ya usaba el filtro de Ventas (datos mock, ver src/routes/ventas.js
+// y data/ventas.json) — distintos del nombre con acentos usado en todo lo demás.
+const SLUG_VENTA = {
+  'Simón Bolívar': 'simon-bolivar',
+  'Insurgentes':   'insurgentes',
+  'Antígona':      'antigona',
+  'Lincoln Oxxo':  'lincoln-oxxo',
+  'Lincoln 2':     'lincoln-2',
+  'Ruiz Cortines': 'ruiz-cortines',
+  'Rodas':         'rodas',
+  'Cuauhtémoc':    'cuauhtemoc',
+  'Ordóñez':       'ordonez',
+};
 
 // Única sucursal con el agente de sync activo hasta ahora (piloto en Simón
 // Bolívar) — cuando se sincronicen más, agregar sus claves aquí ($in).
@@ -94,25 +109,24 @@ router.get('/', sesionActual, (req, res) => {
   });
 });
 
-// Las 9 sucursales reales de la cadena — mismo listado ya usado en
-// dashboard.js/horarios.js/revisiones.js y en el JS de panel.hbs.
-const TODAS_SUCURSALES = [
-  'Simón Bolívar', 'Insurgentes', 'Antígona', 'Lincoln Oxxo', 'Lincoln 2',
-  'Ruiz Cortines', 'Rodas', 'Cuauhtémoc', 'Ordóñez',
-];
-
 // GET /panel — panel de administración (solo empleados)
 router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
   const u = req.session.usuario;
   const esColaborador = u.cargo === 'colaborador';
 
-  // Un colaborador solo ve, en el selector de Bitácora, las sucursales que
-  // tiene asignadas en su perfil — el resto de los cargos ven las 9.
-  let sucursalesBitacora = TODAS_SUCURSALES;
-  if (esColaborador) {
-    const perfil = await Usuario.findById(u.id).select('sucursales').lean();
-    sucursalesBitacora = perfil?.sucursales || [];
-  }
+  // Solo admin ve las 9 sucursales en todos los selectores del panel;
+  // cualquier otro cargo (coordinador, lider, encargado, colaborador) solo
+  // ve las que tiene asignadas en su perfil — si no tiene ninguna, no ve
+  // ninguna. Se usa en Bitácoras, Ventas, Inventario, Reportes, Fotos,
+  // Tickets I24H y el reporte de Asistencia.
+  const sucursalesUsuario = await sucursalesDeUsuario(u);
+
+  // El filtro de Ventas usa slugs propios (datos mock, ver ventas.js) en vez
+  // del nombre con acentos — se arma aparte solo para ese selector.
+  const sucursalesUsuarioVenta = sucursalesUsuario.map(nombre => ({
+    nombre,
+    slug: SLUG_VENTA[nombre] || nombre,
+  }));
 
   res.render('panel', {
     titulo:          'Panel i24h',
@@ -122,9 +136,12 @@ router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
     scriptExtra:     'js/modal-material.js',
     usuario:         u,
     esAdmin:         ['admin', 'coordinador'].includes(u.cargo),
+    esLider:         u.cargo === 'lider',
     esSupervisorAsistencia: ['admin', 'coordinador', 'lider', 'encargado'].includes(u.cargo),
+    esSupervisorBitacoras: ['admin', 'coordinador', 'lider'].includes(u.cargo),
     esColaborador,
-    sucursalesBitacora,
+    sucursalesUsuario,
+    sucursalesUsuarioVenta,
   });
 });
 

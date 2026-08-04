@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middlewares/auth.js';
 import { soloAdmin }   from '../middlewares/soloAdmin.js';
+import { sucursalPermitida } from '../utils/sucursales.js';
 import Ticket        from '../models/Ticket.js';
 import AjusteTicket  from '../models/AjusteTicket.js';
 import Producto      from '../models/Producto.js';
@@ -145,6 +146,10 @@ async function nombresProductosActaEstado(sucursal) {
 router.get('/material/resumen', requireAuth, async (req, res) => {
   try {
     const { sucursal, fecha } = req.query;
+    if (sucursal && sucursal !== 'todas' && !(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ ok: false, error: 'No tienes acceso a esa sucursal.' });
+    if ((!sucursal || sucursal === 'todas') && req.session.usuario.cargo !== 'admin')
+      return res.status(403).json({ ok: false, error: 'Selecciona una sucursal.' });
     const match = {
       ...filtroSucursal(sucursal),
       fecha: rangoDiaMX(fecha),
@@ -200,6 +205,8 @@ router.get('/material/buscar-ticket', requireAuth, async (req, res) => {
     if (!sucursal || !nticket) {
       return res.status(400).json({ ok: false, error: 'Faltan sucursal o número de ticket' });
     }
+    if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ ok: false, error: 'No tienes acceso a esa sucursal.' });
     const nticketNum = Number(nticket);
     if (!Number.isFinite(nticketNum)) {
       return res.status(400).json({ ok: false, error: 'Número de ticket inválido' });
@@ -232,6 +239,8 @@ router.post('/material/ajuste-ticket', soloAdmin, async (req, res) => {
     if (!sucursal || !Number.isFinite(nticketNum)) {
       return res.status(400).json({ ok: false, error: 'Faltan sucursal o número de ticket válido' });
     }
+    if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ ok: false, error: 'No tienes acceso a esa sucursal.' });
     if (!Number.isFinite(monto) || monto <= 0) {
       return res.status(400).json({ ok: false, error: 'El monto a descontar debe ser mayor a 0' });
     }
@@ -266,6 +275,10 @@ router.post('/material/ajuste-ticket', soloAdmin, async (req, res) => {
 router.get('/material/tickets-dia', requireAuth, async (req, res) => {
   try {
     const { sucursal, fecha } = req.query;
+    if (sucursal && sucursal !== 'todas' && !(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ ok: false, error: 'No tienes acceso a esa sucursal.' });
+    if ((!sucursal || sucursal === 'todas') && req.session.usuario.cargo !== 'admin')
+      return res.status(403).json({ ok: false, error: 'Selecciona una sucursal.' });
     const match = {
       ...filtroSucursal(sucursal),
       fecha: rangoDiaMX(fecha),
@@ -322,6 +335,8 @@ router.get('/material/corte-turno', requireAuth, async (req, res) => {
     if (!sucursal || sucursal === 'todas') {
       return res.status(400).json({ ok: false, error: 'Selecciona una sucursal' });
     }
+    if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ ok: false, error: 'No tienes acceso a esa sucursal.' });
 
     const rango = rangoDiaMX(fecha);
     const matchTickets = { ...filtroSucursal(sucursal), fecha: rango, anulado: false };
@@ -450,6 +465,10 @@ router.get('/material/corte-turno', requireAuth, async (req, res) => {
 router.get('/material/ajustes', requireAuth, async (req, res) => {
   try {
     const { sucursal, fecha } = req.query;
+    if (sucursal && sucursal !== 'todas' && !(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ ok: false, error: 'No tienes acceso a esa sucursal.' });
+    if ((!sucursal || sucursal === 'todas') && req.session.usuario.cargo !== 'admin')
+      return res.status(403).json({ ok: false, error: 'Selecciona una sucursal.' });
     const match = { ...filtroSucursal(sucursal) };
     if (fecha) match.fecha = rangoDiaMX(fecha);
 
@@ -467,6 +486,11 @@ router.get('/material/ajustes', requireAuth, async (req, res) => {
 // Elimina un ajuste aplicado por error o porque el caso se canceló.
 router.delete('/material/ajuste-ticket/:id', soloAdmin, async (req, res) => {
   try {
+    const ajusteActual = await AjusteTicket.findById(req.params.id).select('sucursal').lean();
+    if (!ajusteActual) return res.status(404).json({ ok: false, error: 'Ajuste no encontrado' });
+    if (!(await sucursalPermitida(req.session.usuario, ajusteActual.sucursal)))
+      return res.status(403).json({ ok: false, error: 'No tienes acceso a esa sucursal.' });
+
     const ajuste = await AjusteTicket.findByIdAndDelete(req.params.id);
     if (!ajuste) return res.status(404).json({ ok: false, error: 'Ajuste no encontrado' });
     res.json({ ok: true });

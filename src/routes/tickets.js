@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middlewares/auth.js';
 import Ticket from '../models/Ticket.js';
+import { sucursalPermitida } from '../utils/sucursales.js';
 
 const router = Router();
 
@@ -46,6 +47,11 @@ function rangoDiaMX(fechaStr) {
 router.get('/tickets/dia', requireAuth, async (req, res) => {
   try {
     const { sucursal, fecha } = req.query;
+    if (sucursal && sucursal !== 'todas' && !(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ ok: false, error: 'No tienes acceso a esa sucursal.' });
+    if ((!sucursal || sucursal === 'todas') && req.session.usuario.cargo !== 'admin')
+      return res.status(403).json({ ok: false, error: 'Selecciona una sucursal.' });
+
     const match = {
       ...filtroSucursal(sucursal),
       fecha: rangoDiaMX(fecha),

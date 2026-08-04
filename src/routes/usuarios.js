@@ -1,14 +1,27 @@
 import { Router } from 'express';
 import Usuario    from '../models/Usuario.js';
 import { requireAuth, requireAdmin, requireEmpleado } from '../middlewares/auth.js';
+import { sucursalesDeUsuario } from '../utils/sucursales.js';
 
 const router = Router();
 
+// Admin/coordinador pueden tocar el estado de cualquier cuenta; un líder
+// solo el de sus propios colaboradores (mismo criterio que GET /api/empleados
+// en empleados.js: cargo 'colaborador' + sucursal compartida con el líder).
+async function puedeCambiarEstado(sesion, objetivo) {
+  if (['admin', 'coordinador'].includes(sesion.cargo)) return true;
+  if (sesion.cargo !== 'lider' || objetivo.cargo !== 'colaborador') return false;
+  const sucursalesLider = await sucursalesDeUsuario(sesion);
+  return (objetivo.sucursales || []).some(s => sucursalesLider.includes(s));
+}
+
 // PATCH /api/usuarios/:id/estado — activa o desactiva una cuenta
-router.patch('/usuarios/:id/estado', requireAuth, requireAdmin, async (req, res) => {
+router.patch('/usuarios/:id/estado', requireAuth, async (req, res) => {
   try {
     const usuario = await Usuario.findById(req.params.id);
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (!(await puedeCambiarEstado(req.session.usuario, usuario)))
+      return res.status(403).json({ error: 'Acceso restringido al personal autorizado.' });
     usuario.activo = !usuario.activo;
     await usuario.save();
     res.json({ id: usuario._id, activo: usuario.activo });

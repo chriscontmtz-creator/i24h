@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middlewares/auth.js';
 import { leer } from '../utils/data.js';
+import { sucursalConectada } from '../utils/sucursales.js';
 
 const router = Router();
 
@@ -24,20 +25,22 @@ router.get('/ventas', requireAuth, (req, res) => {
     : sucursales.filter(s => s.id === sucursal);
 
   const desglose = filtradas.map(s => {
+    const conectada = sucursalConectada(s.nombre);
     const categorias = {};
     let totalSuc = 0;
     CATS.forEach(cat => {
-      const val = Math.round((s[cat] || 0) * mult);
+      const val = conectada ? Math.round((s[cat] || 0) * mult) : 0;
       categorias[cat] = val;
       totalSuc += val;
     });
-    return { id: s.id, nombre: s.nombre, total: totalSuc, categorias, delta: s.delta || 0 };
+    return { id: s.id, nombre: s.nombre, total: totalSuc, categorias, delta: conectada ? (s.delta || 0) : 0 };
   });
 
   const totalGeneral  = desglose.reduce((a, s) => a + s.total, 0);
   const topSucursal   = [...desglose].sort((a, b) => b.total - a.total)[0];
+  const conectadas    = desglose.filter(s => sucursalConectada(s.nombre));
   const deltaPromedio = Math.round(
-    desglose.reduce((a, s) => a + s.delta, 0) / (desglose.length || 1) * 10
+    conectadas.reduce((a, s) => a + s.delta, 0) / (conectadas.length || 1) * 10
   ) / 10;
 
   const porCategoria = {};
@@ -59,7 +62,7 @@ router.get('/ventas/top-productos', requireAuth, (req, res) => {
   const { categoria = 'todas', periodo = '7' } = req.query;
   const mult = VNT_MULT[periodo] || 7;
 
-  const lista = getProductos();
+  const lista = getProductos().filter(p => sucursalConectada(p.sucursal));
   const filtrados = categoria === 'todas' ? lista : lista.filter(p => p.categoria === categoria);
 
   const resultado = filtrados.slice(0, 10).map(p => ({
@@ -75,7 +78,7 @@ router.get('/ventas/top-productos', requireAuth, (req, res) => {
 
 // GET /api/ventas/alertas
 router.get('/ventas/alertas', requireAuth, (req, res) => {
-  res.json(getAlertas());
+  res.json(getAlertas().filter(a => sucursalConectada(a.sucursal)));
 });
 
 export default router;

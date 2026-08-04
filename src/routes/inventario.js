@@ -4,6 +4,7 @@ import path         from 'path';
 import { fileURLToPath } from 'url';
 import Producto     from '../models/Producto.js';
 import { requireEmpleado, sesionActual } from '../middlewares/auth.js';
+import { sucursalPermitida } from '../utils/sucursales.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PLANTILLAS = path.join(__dirname, '../../datos/plantillas');
@@ -197,6 +198,12 @@ router.get('/inventario/descargar', sesionActual, requireEmpleado, async (req, r
 
     if (!sucursal || !categoria || !fecha) {
       return res.status(400).json({ error: 'Faltan parámetros: sucursal, categoria, fecha' });
+    }
+    if (sucursal === 'Todas las sucursales') {
+      if (req.session.usuario.cargo !== 'admin')
+        return res.status(403).json({ error: 'No tienes acceso a todas las sucursales.' });
+    } else if (!(await sucursalPermitida(req.session.usuario, sucursal))) {
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     }
 
     const catKey = categoria.toLowerCase();

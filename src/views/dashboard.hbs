@@ -75,11 +75,17 @@
       </div>
     </div>
 
+    {{#if sinSucursalesAsignadas}}
+    <p class="dash-page-sub" style="color:#f87171;margin-bottom:14px">
+      <i class="ti ti-alert-triangle"></i> No tienes ninguna sucursal asignada todavía — pide a un administrador que te agregue una desde Usuarios.
+    </p>
+    {{/if}}
+
     <!-- ── Filtros ───────────────────────────────────────────── -->
     <form class="dash-filtros" method="get" action="/dashboard">
       <input type="hidden" name="dia" value="{{diaFiltro}}">
       <select class="dash-sel" name="sucursal" onchange="this.form.submit()">
-        <option value="todas">Todas las sucursales</option>
+        {{#if verTodasLasSucursales}}<option value="todas">Todas las sucursales</option>{{/if}}
         {{#each sucursales}}
           <option value="{{nombre}}" {{#if activa}}selected{{/if}}>{{nombre}}</option>
         {{/each}}

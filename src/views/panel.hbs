@@ -78,7 +78,7 @@
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Sistema</span>
         <button class="panel-nav-action" onclick="window.abrirModalMaterial()">
-          <i class="ti ti-pencil-dollar"></i><span>Venta sin material y sin tickets</span>
+          <i class="ti ti-pencil-dollar"></i><span>Tickets I24H</span>
         </button>
         <button class="panel-nav-item" data-seccion="usuarios" data-titulo="Usuarios">
           <i class="ti ti-user-cog"></i><span>Usuarios</span>
@@ -93,6 +93,15 @@
           <i class="ti ti-settings"></i><span>Configuración</span>
         </button>
       </div>
+      {{else if esLider}}
+      <!-- Líder: solo ve las cuentas de sus colaboradores, misma sección
+           "Usuarios" pero recortada — nada de Tickets/Promociones/Fotos/Config -->
+      <div class="panel-nav-grupo">
+        <span class="panel-nav-label">Equipo</span>
+        <button class="panel-nav-item" data-seccion="usuarios" data-titulo="Mi equipo">
+          <i class="ti ti-user-cog"></i><span>Mi equipo</span>
+        </button>
+      </div>
       {{/if}}
 
     </nav>
@@ -104,7 +113,10 @@
       </a>
     </div>
 
-    <script>window.BIT_USUARIO = '{{usuario.nombre}}';</script>
+    <script>
+      window.BIT_USUARIO  = '{{usuario.nombre}}';
+      window.USR_ES_LIDER = {{#if esLider}}true{{else}}false{{/if}};
+    </script>
 
     <!-- Tarjeta del usuario -->
     <div class="panel-sidebar-usuario" onclick="perfilAbrirModal()" title="Editar mi perfil" style="cursor:pointer">
@@ -139,12 +151,6 @@
       </button>
 
       <h1 class="panel-topbar-titulo" id="panel-titulo">{{#if esColaborador}}Bitácoras{{else}}Dashboard{{/if}}</h1>
-
-      <div class="panel-topbar-centro">
-        <span class="panel-suc-pill">
-          <i class="ti ti-building-store"></i> Todas las sucursales
-        </span>
-      </div>
 
       <div class="panel-topbar-acciones">
         <button class="toggle-btn" id="toggle-btn-panel" aria-label="Cambiar modo">
@@ -561,15 +567,9 @@
           </div>
           <select class="vnt-select" id="vnt-suc-filter">
             <option value="todas">Todas las sucursales</option>
-            <option value="simon-bolivar">Simón Bolívar</option>
-            <option value="insurgentes">Insurgentes</option>
-            <option value="antigona">Antígona</option>
-            <option value="lincoln-oxxo">Lincoln Oxxo</option>
-            <option value="lincoln-2">Lincoln 2</option>
-            <option value="ruiz-cortines">Ruiz Cortines</option>
-            <option value="rodas">Rodas</option>
-            <option value="cuauhtemoc">Cuauhtémoc</option>
-            <option value="ordonez">Ordóñez</option>
+            {{#each sucursalesUsuarioVenta}}
+            <option value="{{slug}}">{{nombre}}</option>
+            {{/each}}
           </select>
           <button class="vnt-export-btn" id="vnt-export-btn">
             <i class="ti ti-file-spreadsheet"></i> Exportar Excel
@@ -579,7 +579,7 @@
             class="vnt-export-btn"
             style="background:rgba(192,57,43,.15);border-color:rgba(192,57,43,.4);color:#f87171"
             onclick="window.abrirModalMaterial()">
-            <i class="ti ti-pencil-dollar"></i> Venta sin material y sin tickets
+            <i class="ti ti-pencil-dollar"></i> Tickets I24H
           </button>
           {{/if}}
         </div>
@@ -671,15 +671,9 @@
         <div class="vnt-card" style="padding:16px 20px">
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
             <select class="vnt-select" id="tkt-sucursal">
-              <option value="Simón Bolívar">Simón Bolívar</option>
-              <option value="Insurgentes">Insurgentes</option>
-              <option value="Antígona">Antígona</option>
-              <option value="Lincoln Oxxo">Lincoln Oxxo</option>
-              <option value="Lincoln 2">Lincoln 2</option>
-              <option value="Ruiz Cortines">Ruiz Cortines</option>
-              <option value="Rodas">Rodas</option>
-              <option value="Cuauhtémoc">Cuauhtémoc</option>
-              <option value="Ordóñez">Ordóñez</option>
+              {{#each sucursalesUsuario}}
+              <option value="{{this}}">{{this}}</option>
+              {{/each}}
             </select>
             <input type="date" class="vnt-select" id="tkt-fecha" style="max-width:160px">
             <button class="bit-btn-iniciar" id="btn-consultar-tickets" style="padding:7px 18px;font-size:.85rem">
@@ -707,16 +701,16 @@
 
       <div class="panel-seccion{{#unless esColaborador}} oculta{{/unless}}" id="sec-bitacoras">
 
-        {{#if esColaborador}}{{#unless sucursalesBitacora.length}}
+        {{#unless sucursalesUsuario.length}}
         <p class="bit-sync-note" style="margin-bottom:16px">
           <i class="ti ti-alert-triangle"></i> No tienes ninguna sucursal asignada todavía — pide a un administrador que te agregue una desde Usuarios.
         </p>
-        {{/unless}}{{/if}}
+        {{/unless}}
 
         <div class="bit-header-bar">
           <div class="bit-meta">
             <select class="bit-select" id="bit-sucursal">
-              {{#each sucursalesBitacora}}
+              {{#each sucursalesUsuario}}
               <option>{{this}}</option>
               {{/each}}
             </select>
@@ -778,8 +772,8 @@
           </button>
         </div>
 
-        <!-- Historial de bitácoras guardadas — solo admin/coordinador -->
-        {{#if esAdmin}}
+        <!-- Historial de bitácoras guardadas — admin, coordinador o líder -->
+        {{#if esSupervisorBitacoras}}
         <div class="bit-hist-wrap">
           <p class="bit-hist-titulo"><i class="ti ti-history"></i> Bitácoras guardadas</p>
           <div id="bit-historial-lista"><p class="bit-hist-vacio">Sin bitácoras guardadas aún.</p></div>
@@ -855,7 +849,7 @@
           <div class="asis-reporte-filtros">
             <select class="asis-select" id="asis-rep-sucursal">
               <option value="todas">Todas las sucursales</option>
-              {{#each sucursalesBitacora}}
+              {{#each sucursalesUsuario}}
               <option value="{{this}}">{{this}}</option>
               {{/each}}
             </select>
@@ -897,16 +891,10 @@
           <div>
             <label class="inv-field-lbl">Seleccionar sucursal</label>
             <select class="inv-select" id="inv-sucursal">
-              <option>Simón Bolívar</option>
-              <option>Insurgentes</option>
-              <option>Antígona</option>
-              <option>Lincoln Oxxo</option>
-              <option>Lincoln 2</option>
-              <option>Ruiz Cortines</option>
-              <option>Rodas</option>
-              <option>Cuauhtémoc</option>
-              <option>Ordóñez</option>
-              <option>Todas las sucursales</option>
+              {{#each sucursalesUsuario}}
+              <option>{{this}}</option>
+              {{/each}}
+              {{#if esAdmin}}<option>Todas las sucursales</option>{{/if}}
             </select>
           </div>
           <div>
@@ -1026,15 +1014,9 @@
               <div class="rpt-field-group">
                 <span class="rpt-field-label">Sucursal</span>
                 <select id="rpt-sel-suc">
-                  <option>Simón Bolívar</option>
-                  <option>Insurgentes</option>
-                  <option>Antígona</option>
-                  <option>Lincoln Oxxo</option>
-                  <option>Lincoln 2</option>
-                  <option>Ruiz Cortines</option>
-                  <option>Rodas</option>
-                  <option>Cuauhtémoc</option>
-                  <option>Ordóñez</option>
+                  {{#each sucursalesUsuario}}
+                  <option>{{this}}</option>
+                  {{/each}}
                 </select>
               </div>
               <div class="rpt-field-group">
@@ -1264,6 +1246,7 @@
             <div class="usr-stat-val" id="usr-cnt-emp-tot">0</div>
             <div class="usr-stat-sub" style="color:#16a34a" id="usr-cnt-emp-act">0 activos</div>
           </div>
+          {{#unless esLider}}
           <div class="usr-stat-card">
             <div class="usr-stat-label">Clientes registrados</div>
             <div class="usr-stat-val" id="usr-cnt-cli-tot">0</div>
@@ -1274,6 +1257,7 @@
             <div class="usr-stat-val" id="usr-cnt-cod-dis">0</div>
             <div class="usr-stat-sub" style="color:var(--texto-suave)" id="usr-cnt-cod-usa">0 usados</div>
           </div>
+          {{/unless}}
           <div class="usr-stat-card" style="cursor:pointer" onclick="usrFiltrarInactivos()" title="Clic para filtrar inactivos">
             <div class="usr-stat-label">Cuentas inactivas</div>
             <div class="usr-stat-val" id="usr-cnt-inac" style="color:#991b1b">0</div>
@@ -1284,22 +1268,25 @@
         <div style="background:var(--superficie);border:1px solid var(--borde);border-radius:var(--radio);overflow:hidden">
 
           <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--borde)">
-            <span style="font-size:.88rem;font-weight:600;color:var(--texto)">Gestión de cuentas</span>
+            <span style="font-size:.88rem;font-weight:600;color:var(--texto)">{{#if esLider}}Mi equipo{{else}}Gestión de cuentas{{/if}}</span>
             <div style="display:flex;gap:6px;align-items:center">
               <button class="usr-btn-export" id="usr-btn-export" onclick="usrExportarCSV()">
                 <i class="ti ti-file-download" aria-hidden="true"></i> Exportar CSV
               </button>
+              {{#unless esLider}}
               <button class="usr-btn-nuevo" id="usr-btn-nuevo-emp">
                 <i class="ti ti-user-plus" aria-hidden="true"></i> Nuevo empleado
               </button>
+              {{/unless}}
             </div>
           </div>
 
-          <div class="usr-tabs-row">
+          <div class="usr-tabs-row"{{#if esLider}} style="display:none"{{/if}}>
             <button class="usr-tab active" id="usr-tab-emp" onclick="usrSetTab('emp')">
               <i class="ti ti-id-badge" aria-hidden="true"></i> Empleados
               <span class="usr-tab-count" id="usr-tcnt-emp">0</span>
             </button>
+            {{#unless esLider}}
             <button class="usr-tab" id="usr-tab-cli" onclick="usrSetTab('cli')">
               <i class="ti ti-users" aria-hidden="true"></i> Clientes
               <span class="usr-tab-count" id="usr-tcnt-cli">0</span>
@@ -1308,6 +1295,7 @@
               <i class="ti ti-key" aria-hidden="true"></i> Códigos de acceso
               <span class="usr-tab-count" id="usr-tcnt-cod">0</span>
             </button>
+            {{/unless}}
           </div>
 
           <div class="usr-filter-bar" id="usr-filter-bar">
@@ -1401,15 +1389,9 @@
 
         <div class="foto-subir-bar">
           <select class="usr-field-inp" id="foto-sel-suc" style="max-width:220px">
-            <option value="Simón Bolívar">Simón Bolívar</option>
-            <option value="Insurgentes">Insurgentes</option>
-            <option value="Antígona">Antígona</option>
-            <option value="Lincoln Oxxo">Lincoln Oxxo</option>
-            <option value="Lincoln 2">Lincoln 2</option>
-            <option value="Ruiz Cortines">Ruiz Cortines</option>
-            <option value="Rodas">Rodas</option>
-            <option value="Cuauhtémoc">Cuauhtémoc</option>
-            <option value="Ordóñez">Ordóñez</option>
+            {{#each sucursalesUsuario}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
           </select>
           <input type="file" id="foto-input-archivo" accept="image/png,image/jpeg,image/webp" style="display:none">
           <button class="promo-btn-nueva" id="foto-btn-subir" type="button">
@@ -1692,7 +1674,6 @@ function escJs(str) {
   const items     = document.querySelectorAll('.panel-nav-item');
   const secciones = document.querySelectorAll('.panel-seccion');
   const titulo    = document.getElementById('panel-titulo');
-  const sucPill   = document.querySelector('.panel-suc-pill');
 
   function activarSeccion(id, nombre) {
     if (!id) return;   // botones sin data-seccion (ej: abrir modal) no deben ocultar secciones
@@ -1712,9 +1693,6 @@ function escJs(str) {
     sucursalActiva = sucursal || null;
     var nombre = document.querySelector('[data-seccion="' + id + '"]')?.dataset.titulo || id;
     activarSeccion(id, nombre);
-    if (sucPill && sucursalActiva) {
-      sucPill.innerHTML = '<i class="ti ti-building-store"></i> ' + sucursalActiva;
-    }
     if (id === 'bitacoras') {
       if (sucursalActiva) {
         var selSuc = document.getElementById('bit-sucursal');
@@ -1727,8 +1705,14 @@ function escJs(str) {
   items.forEach(function (item) {
     item.addEventListener('click', function () {
       sucursalActiva = null;
-      if (sucPill) sucPill.innerHTML = '<i class="ti ti-building-store"></i> Todas las sucursales';
       activarSeccion(item.dataset.seccion, item.dataset.titulo);
+      // Entrar a Bitácoras directo desde el nav (sin pasar por una tarjeta de
+      // sucursal) antes no cargaba el historial guardado — solo se refrescaba
+      // al cerrar una bitácora. Ahora se carga siempre al entrar a la sección.
+      if (item.dataset.seccion === 'bitacoras') {
+        var selSucNav = document.getElementById('bit-sucursal');
+        bitCargarHistorial(selSucNav ? selSucNav.value : '');
+      }
     });
   });
 
@@ -2225,6 +2209,10 @@ function bitCargarHistorial(sucursal) {
     .catch(function() {});
 }
 
+document.getElementById('bit-sucursal')?.addEventListener('change', function () {
+  bitCargarHistorial(this.value);
+});
+
 function bitVerDetalle(id) {
   fetch('/api/bitacora/' + id)
     .then(function(r) { return r.json(); })
@@ -2281,15 +2269,24 @@ renderBitacora();
   let usrCodigos   = [];
 
   async function usrCargarTodo() {
+    // Un líder solo ve a sus colaboradores (filtrado en el backend por
+    // sucursal) — Clientes y Códigos son secciones exclusivas de admin.
     try {
-      const [rEmp, rCli, rCod] = await Promise.all([
-        fetch('/api/empleados'),
-        fetch('/api/clientes'),
-        fetch('/api/codigos')
-      ]);
-      usrEmpleados = await rEmp.json();
-      usrClientes  = await rCli.json();
-      usrCodigos   = await rCod.json();
+      if (window.USR_ES_LIDER) {
+        const rEmp = await fetch('/api/empleados');
+        usrEmpleados = await rEmp.json();
+        usrClientes  = [];
+        usrCodigos   = [];
+      } else {
+        const [rEmp, rCli, rCod] = await Promise.all([
+          fetch('/api/empleados'),
+          fetch('/api/clientes'),
+          fetch('/api/codigos')
+        ]);
+        usrEmpleados = await rEmp.json();
+        usrClientes  = await rCli.json();
+        usrCodigos   = await rCod.json();
+      }
     } catch(e) {
       usrEmpleados = [];
       usrClientes  = [];
@@ -2517,7 +2514,8 @@ renderBitacora();
             '<div class="usr-tog-t"></div></div>' +
           '<span class="usr-tog-label">' + (e.activo?'Activo':'Inactivo') + '</span>' +
         '</div></td>' +
-        '<td><div class="usr-menu-wrap">' +
+        '<td>' + (window.USR_ES_LIDER ? '' :
+          '<div class="usr-menu-wrap">' +
           '<button class="usr-act-btn" onclick="usrAbrirMenu(\'e' + e._id + '\')" aria-label="Acciones">' +
             '<i class="ti ti-dots-vertical" aria-hidden="true"></i></button>' +
           '<div class="usr-menu-dd" id="usr-menu-e' + e._id + '">' +
@@ -2527,7 +2525,7 @@ renderBitacora();
             '<div class="usr-mitem" onclick="usrCambiarPassword(\'' + e._id + '\',\'' + nom + '\')"><i class="ti ti-lock" aria-hidden="true"></i> Cambiar contrase\xF1a</div>' +
             '<div class="usr-mitem danger" onclick="usrCerrarMenu();usrEliminarUsuario(\'' + e._id + '\',\'' + nom + '\')"><i class="ti ti-trash" aria-hidden="true"></i> Eliminar cuenta</div>' +
           '</div>' +
-        '</div></td>' +
+        '</div>') + '</td>' +
       '</tr>';
     }).join('');
   }
@@ -4069,6 +4067,13 @@ function descargarInventario(categoria) {
       var data = await resp.json();
       if (!resp.ok) { estadoTxt.textContent = data.error || 'No se pudo cargar tu estado.'; return; }
 
+      if (!data.sucursales || data.sucursales.length === 0) {
+        estadoTxt.textContent = 'No tenés ninguna sucursal asignada todavía — pedile a un administrador que te agregue una desde Usuarios.';
+        sucSel.style.display = 'none';
+        return;
+      }
+      sucSel.style.display = '';
+
       estadoTxt.textContent = ESTADO_TXT[data.estado] || '';
 
       if (sucSel.options.length === 0) {
@@ -4294,7 +4299,9 @@ function descargarInventario(categoria) {
 </script>
 
 {{!-- ============================================================
-     MODAL VENTA SIN MATERIAL Y SIN TICKETS — solo visible para admins
+     MODAL TICKETS I24H — buscar ticket y aplicar descuento manual
+     (el resumen de "venta sin material" vive ahora solo en el Dashboard)
+     solo visible para admins
      ============================================================ --}}
 {{#if esAdmin}}
 <div id="vsm-overlay" class="vsm-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="vsm-titulo">
@@ -4305,92 +4312,22 @@ function descargarInventario(categoria) {
       <div class="vsm-header-left">
         <span class="vsm-badge">ADMIN</span>
         <h2 id="vsm-titulo" class="vsm-titulo">
-          <i class="ti ti-pencil-dollar"></i> Venta sin material y sin tickets
+          <i class="ti ti-ticket"></i> Tickets I24H
         </h2>
       </div>
       <button class="vsm-close" id="vsm-close" aria-label="Cerrar">&times;</button>
     </div>
 
-    <!-- ── Tabs ──────────────────────────────────────────────── -->
-    <div class="vsm-tabs">
-      <button class="vsm-tab vsm-tab--active" id="vsm-tab-material" onclick="window.vsmSwitchTab('material')">
-        <i class="ti ti-package"></i> Material
-      </button>
-      <button class="vsm-tab" id="vsm-tab-tickets" onclick="window.vsmSwitchTab('tickets')">
-        <i class="ti ti-ticket"></i> Tickets con error de impresión
-      </button>
-    </div>
-
-    <!-- ── TAB: Material (automático, por palabra clave) ────── -->
-    <div id="vsm-panel-material" class="vsm-panel">
-      <div class="vsm-filtros">
-        <div class="vsm-filtro-grupo">
-          <label for="vsm-mat-fecha">Fecha del día</label>
-          <input type="date" id="vsm-mat-fecha" class="vsm-input">
-        </div>
-        <div class="vsm-filtro-grupo">
-          <label for="vsm-mat-sucursal">Sucursal</label>
-          <select id="vsm-mat-sucursal" class="vsm-input">
-            <option value="">— Selecciona —</option>
-            <option value="Simón Bolívar">Simón Bolívar</option>
-            <option value="Insurgentes">Insurgentes</option>
-            <option value="Antígona">Antígona</option>
-            <option value="Lincoln Oxxo">Lincoln Oxxo</option>
-            <option value="Lincoln 2">Lincoln 2</option>
-            <option value="Ruiz Cortines">Ruiz Cortines</option>
-            <option value="Rodas">Rodas</option>
-            <option value="Cuauhtémoc">Cuauhtémoc</option>
-            <option value="Ordóñez">Ordóñez</option>
-          </select>
-        </div>
-        <button class="vsm-btn-cargar" id="vsm-mat-btn-cargar">
-          <i class="ti ti-search"></i> Cargar
-        </button>
-      </div>
-
-      <div id="vsm-mat-estado" class="vsm-estado hidden"></div>
-
-      <div class="vsm-tabla-wrap">
-        <table class="vsm-tabla" id="vsm-mat-tabla">
-          <thead>
-            <tr>
-              <th>Caja</th>
-              <th>Turno</th>
-              <th class="col-num">Unidades</th>
-              <th class="col-num">Importe</th>
-              <th>Detalle</th>
-            </tr>
-          </thead>
-          <tbody id="vsm-mat-tbody">
-            <tr><td colspan="5" class="vsm-fila-vacia">Selecciona una fecha y sucursal para cargar.</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="vsm-footer">
-        <span class="vsm-footer-nota">
-          <i class="ti ti-info-circle"></i> Se excluyen: legajos, cartulinas, memorias USB, snacks y novedades — no cuentan como venta real del departamento.
-        </span>
-        <div id="vsm-mat-total" class="vsm-footer-total">Total material: <strong>—</strong></div>
-      </div>
-    </div>
-
-    <!-- ── TAB: Tickets con error de impresión (manual) ─────── -->
-    <div id="vsm-panel-tickets" class="vsm-panel hidden">
+    <!-- ── Buscar ticket y aplicar descuento manual ─────────── -->
+    <div id="vsm-panel-tickets" class="vsm-panel">
       <div class="vsm-filtros">
         <div class="vsm-filtro-grupo">
           <label for="vsm-tk-sucursal">Sucursal</label>
           <select id="vsm-tk-sucursal" class="vsm-input">
             <option value="">— Selecciona —</option>
-            <option value="Simón Bolívar">Simón Bolívar</option>
-            <option value="Insurgentes">Insurgentes</option>
-            <option value="Antígona">Antígona</option>
-            <option value="Lincoln Oxxo">Lincoln Oxxo</option>
-            <option value="Lincoln 2">Lincoln 2</option>
-            <option value="Ruiz Cortines">Ruiz Cortines</option>
-            <option value="Rodas">Rodas</option>
-            <option value="Cuauhtémoc">Cuauhtémoc</option>
-            <option value="Ordóñez">Ordóñez</option>
+            {{#each sucursalesUsuario}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
           </select>
         </div>
         <div class="vsm-filtro-grupo">

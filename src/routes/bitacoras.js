@@ -4,6 +4,17 @@ import SnapshotCorte  from '../models/SnapshotCorte.js';
 import Producto       from '../models/Producto.js';
 import { requireEmpleado, requireAdmin, sesionActual } from '../middlewares/auth.js';
 
+// El historial de bitácoras (lista + detalle) lo puede ver Admin, Coordinador
+// o Líder — más amplio que requireAdmin (que solo cubre admin/coordinador y
+// se usa en el resto del panel para acciones administrativas).
+function requireSupervisorBitacoras(req, res, next) {
+  const cargo = req.session.usuario?.cargo;
+  if (!['admin', 'coordinador', 'lider'].includes(cargo)) {
+    return res.status(403).json({ error: 'Acceso restringido al personal autorizado.' });
+  }
+  next();
+}
+
 // Mapeo nombre display → clave en MongoDB (igual que sync.js)
 const SUCURSAL_DB = {
   'Simón Bolívar': 'SimonBolivar',
@@ -73,7 +84,7 @@ router.post('/bitacora/guardar', sesionActual, requireEmpleado, async (req, res)
 });
 
 // GET /api/bitacora/lista?sucursal=X&limit=20&skip=0
-router.get('/bitacora/lista', sesionActual, requireEmpleado, requireAdmin, async (req, res) => {
+router.get('/bitacora/lista', sesionActual, requireEmpleado, requireSupervisorBitacoras, async (req, res) => {
   try {
     const { sucursal, limit = 20, skip = 0 } = req.query;
     const filtro = {};
@@ -174,7 +185,7 @@ router.get('/bitacora/snapshot-corte', sesionActual, requireEmpleado, async (req
 });
 
 // GET /api/bitacora/:id
-router.get('/bitacora/:id', sesionActual, requireEmpleado, requireAdmin, async (req, res) => {
+router.get('/bitacora/:id', sesionActual, requireEmpleado, requireSupervisorBitacoras, async (req, res) => {
   try {
     const doc = await BitacoraTurno.findById(req.params.id).lean();
     if (!doc) return res.status(404).json({ error: 'No encontrada' });

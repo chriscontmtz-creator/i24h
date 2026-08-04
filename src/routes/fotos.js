@@ -7,6 +7,7 @@ import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 import FotoSucursal, { SUCURSALES } from '../models/FotoSucursal.js';
 import { requireAuth, requireAdmin } from '../middlewares/auth.js';
+import { sucursalesDeUsuario, sucursalPermitida } from '../utils/sucursales.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CARPETA_FOTOS = path.join(__dirname, '../../public/imagenes/sucursales');
@@ -29,7 +30,15 @@ const upload = multer({
 // GET /api/fotos-sucursal — lista todas (panel admin), o filtradas por ?sucursal=
 router.get('/fotos-sucursal', requireAuth, async (req, res) => {
   try {
-    const filtro = req.query.sucursal ? { sucursal: req.query.sucursal } : {};
+    if (req.query.sucursal) {
+      if (!(await sucursalPermitida(req.session.usuario, req.query.sucursal)))
+        return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
+      return res.json(await FotoSucursal.find({ sucursal: req.query.sucursal }).sort({ createdAt: -1 }));
+    }
+
+    // Sin filtro explícito: admin ve todas, cualquier otro cargo solo las suyas.
+    const permitidas = await sucursalesDeUsuario(req.session.usuario);
+    const filtro = req.session.usuario.cargo === 'admin' ? {} : { sucursal: { $in: permitidas } };
     const fotos  = await FotoSucursal.find(filtro).sort({ createdAt: -1 });
     res.json(fotos);
   } catch {
@@ -56,6 +65,8 @@ router.post('/fotos-sucursal', requireAuth, requireAdmin, subirFoto, async (req,
   const { sucursal } = req.body;
   if (!SUCURSALES.includes(sucursal))
     return res.status(400).json({ error: 'Sucursal inválida' });
+  if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+    return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
   if (!req.file)
     return res.status(400).json({ error: 'Selecciona una imagen (jpg, png o webp), máx. 5MB' });
 
@@ -92,6 +103,8 @@ router.delete('/fotos-sucursal/:id', requireAuth, requireAdmin, async (req, res)
   try {
     const foto = await FotoSucursal.findById(req.params.id);
     if (!foto) return res.status(404).json({ error: 'Foto no encontrada' });
+    if (!(await sucursalPermitida(req.session.usuario, foto.sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
 
     try {
       fs.unlinkSync(path.join(CARPETA_FOTOS, foto.archivo));

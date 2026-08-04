@@ -2,6 +2,7 @@ import { Router } from 'express';
 import Horario  from '../models/Horario.js';
 import Usuario  from '../models/Usuario.js';
 import { requireAuth, requireAdmin, requireEmpleado, sesionActual } from '../middlewares/auth.js';
+import { sucursalesDeUsuario, sucursalPermitida } from '../utils/sucursales.js';
 
 const router = Router();
 
@@ -58,8 +59,20 @@ function normalizarHorario(h) {
 // Renderiza la vista principal del módulo
 router.get('/', sesionActual, requireEmpleado, async (req, res) => {
   try {
-    const semana   = req.query.semana   || isoWeekStr(new Date());
-    const sucursal = req.query.sucursal || 'todas';
+    const usuarioSesion = req.session.usuario;
+    const verTodasLasSucursales = usuarioSesion.cargo === 'admin';
+    const sucursalesPermitidas  = await sucursalesDeUsuario(usuarioSesion);
+    const sinSucursalesAsignadas = !verTodasLasSucursales && sucursalesPermitidas.length === 0;
+
+    const semana = req.query.semana || isoWeekStr(new Date());
+    let sucursal = req.query.sucursal || 'todas';
+    if (!verTodasLasSucursales) {
+      if (sinSucursalesAsignadas) {
+        sucursal = '__sin_sucursal_asignada__';
+      } else if (sucursal === 'todas' || !sucursalesPermitidas.includes(sucursal)) {
+        sucursal = sucursalesPermitidas[0];
+      }
+    }
 
     const filtro = { semana };
     if (sucursal !== 'todas') filtro.sucursal = sucursal;
@@ -95,15 +108,19 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
       horariosPorSucursal[h.sucursal] = { ...h, esPublicado: h.estado === 'publicado' };
     });
 
+    const sucursalesVista = verTodasLasSucursales ? SUCURSALES : sucursalesPermitidas;
+
     res.render('horarios/index', {
       titulo:          'Horarios',
       estiloExtra:     'css/horarios.css',
       scriptPrincipal: 'js/horarios.js',
-      horDataJson:     JSON.stringify({ horarios, empleados, semana, sucursal, sucursales: SUCURSALES }),
+      horDataJson:     JSON.stringify({ horarios, empleados, semana, sucursal, sucursales: sucursalesVista }),
       horariosPorSucursal,
       semanaActual:    semana,
       sucursalActiva:  sucursal,
-      sucursales:      SUCURSALES,
+      sucursales:      sucursalesVista,
+      verTodasLasSucursales,
+      sinSucursalesAsignadas,
     });
   } catch (err) {
     console.error(err);
@@ -129,6 +146,13 @@ router.get('/api/empleados', requireAuth, requireAdmin, async (req, res) => {
 router.get('/api/semana/:semana/:sucursal', requireAuth, async (req, res) => {
   try {
     const { semana, sucursal } = req.params;
+
+    if (sucursal === 'todas') {
+      if (req.session.usuario.cargo !== 'admin')
+        return res.status(403).json({ error: 'No tienes acceso a todas las sucursales.' });
+    } else if (!(await sucursalPermitida(req.session.usuario, sucursal))) {
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
+    }
 
     let horarios;
     if (sucursal === 'todas') {
@@ -190,6 +214,9 @@ router.post('/api/guardar', requireAuth, requireAdmin, async (req, res) => {
         error: 'Faltan sucursal o semana'
       });
     }
+    if (!(await sucursalPermitida(req.session.usuario, sucursal))) {
+      return res.status(403).json({ ok: false, error: 'No tienes acceso a esa sucursal.' });
+    }
 
     const horario = await Horario.findOneAndUpdate(
       { sucursal, semana },
@@ -226,6 +253,11 @@ router.post('/api/guardar', requireAuth, requireAdmin, async (req, res) => {
 // Cambia el estado del horario a 'publicado'
 router.post('/api/publicar/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
+    const horarioActual = await Horario.findById(req.params.id).select('sucursal').lean();
+    if (!horarioActual) return res.status(404).json({ error: 'Horario no encontrado' });
+    if (!(await sucursalPermitida(req.session.usuario, horarioActual.sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
+
     await Horario.findByIdAndUpdate(req.params.id, {
       estado: 'publicado',
       actualizadoEn: new Date(),
@@ -243,6 +275,8 @@ router.post('/api/copiar-semana', requireAuth, requireAdmin, async (req, res) =>
     const { sucursal, semanaOrigen, semanaDestino } = req.body;
     if (!sucursal || !semanaOrigen || !semanaDestino)
       return res.status(400).json({ error: 'Faltan campos' });
+    if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
 
     const origen = await Horario.findOne({ sucursal, semana: semanaOrigen }).lean();
     if (!origen) return res.status(404).json({ error: 'Semana origen no encontrada' });
@@ -270,6 +304,10 @@ router.delete('/api/celda', requireAuth, requireAdmin, async (req, res) => {
     const { horarioId, turno, dia } = req.body;
     if (!horarioId || !turno || dia === undefined)
       return res.status(400).json({ error: 'Faltan campos' });
+    const horarioActual = await Horario.findById(horarioId).select('sucursal').lean();
+    if (!horarioActual) return res.status(404).json({ error: 'Horario no encontrado' });
+    if (!(await sucursalPermitida(req.session.usuario, horarioActual.sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
 
     const setKey = `turnos.${turno}.${dia}`;
     await Horario.findByIdAndUpdate(horarioId, {

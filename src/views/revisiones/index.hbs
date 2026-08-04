@@ -26,7 +26,7 @@
         <input class="rev-sel rev-date-input" type="date" id="rev-hasta" value="{{hastaActivo}}" onchange="revFiltrar()">
       </div>
       <select class="rev-sel" id="rev-suc-sel" onchange="revFiltrar()">
-        <option value="todas" {{#unless sucursalActiva}}selected{{/unless}}>Todas las sucursales</option>
+        {{#if verTodasLasSucursales}}<option value="todas" {{#unless sucursalActiva}}selected{{/unless}}>Todas las sucursales</option>{{/if}}
         {{#each sucursales}}
           <option value="{{this}}">{{this}}</option>
         {{/each}}
@@ -34,6 +34,12 @@
       <button class="rev-btn-o" id="rev-dark-btn"><i class="ti ti-moon" id="rev-dark-ico"></i></button>
     </div>
   </header>
+
+  {{#if sinSucursalesAsignadas}}
+  <p style="color:#f87171;margin:12px 20px 0" class="rev-topbar-title" >
+    <i class="ti ti-alert-triangle"></i> No tienes ninguna sucursal asignada todavía — pide a un administrador que te agregue una desde Usuarios.
+  </p>
+  {{/if}}
 
   <!-- ═══════════════════════════════════════════════════════════
        DÍAS DE LA SEMANA (solo visible con periodo = "Esta semana")
@@ -245,6 +251,10 @@
               <div class="rc-sin-contador"><i class="ti ti-alert-triangle"></i> Sin lectura de contadores para esta caja</div>
             {{/if}}
 
+            {{#if brechaLarga}}
+              <div class="rc-brecha-aviso"><i class="ti ti-clock-exclamation"></i> {{brechaTexto}}</div>
+            {{/if}}
+
             <!-- CUERPO: dos columnas -->
             <div class="rc-body">
 
@@ -253,23 +263,26 @@
                 <div class="rc-sec-titulo"><i class="ti ti-copy"></i> Copias</div>
                 <table class="rc-tabla">
                   <thead>
-                    <tr><th>Tipo</th><th>Cobradas</th><th>Contador</th></tr>
+                    <tr><th>Tipo</th><th>Cobradas</th><th>Contador</th><th>Diferencia</th></tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>BYN</td>
                       <td class="rc-num">{{copBYNcob}}</td>
                       <td class="rc-num rc-cnt">{{copBYNcnt}}</td>
+                      <td class="rc-num"><span class="rc-dif-badge {{#if copBYNfaltante}}rc-dif-mal{{else}}rc-dif-ok{{/if}}">{{copBYNdifFmt}}</span></td>
                     </tr>
                     <tr>
                       <td>INE</td>
                       <td class="rc-num">{{copINEcob}}</td>
                       <td class="rc-num rc-cnt rc-cnt-sub">—</td>
+                      <td class="rc-num rc-cnt-sub">—</td>
                     </tr>
                     <tr>
                       <td>Color</td>
                       <td class="rc-num">{{copColorCob}}</td>
                       <td class="rc-num rc-cnt">{{copColorCnt}}</td>
+                      <td class="rc-num"><span class="rc-dif-badge {{#if copColorFaltante}}rc-dif-mal{{else}}rc-dif-ok{{/if}}">{{copColorDifFmt}}</span></td>
                     </tr>
                   </tbody>
                 </table>
@@ -280,24 +293,27 @@
                 <div class="rc-sec-titulo"><i class="ti ti-printer"></i> Impresiones</div>
                 <table class="rc-tabla">
                   <thead>
-                    <tr><th>Tipo</th><th>Cobradas</th><th>Contador</th></tr>
+                    <tr><th>Tipo</th><th>Cobradas</th><th>Contador</th><th>Diferencia</th></tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>BYN</td>
                       <td class="rc-num">{{impreBYNcob}}</td>
                       <td class="rc-num rc-cnt">{{impreBYNcnt}}</td>
+                      <td class="rc-num"><span class="rc-dif-badge {{#if impreBYNfaltante}}rc-dif-mal{{else}}rc-dif-ok{{/if}}">{{impreBYNdifFmt}}</span></td>
                     </tr>
                     <tr>
                       <td>Color</td>
                       <td class="rc-num">{{impreColorCob}}</td>
                       <td class="rc-num rc-cnt">{{impreColorCnt}}</td>
+                      <td class="rc-num"><span class="rc-dif-badge {{#if impreColorFaltante}}rc-dif-mal{{else}}rc-dif-ok{{/if}}">{{impreColorDifFmt}}</span></td>
                     </tr>
                     {{#if tabloideCnt}}
                     <tr class="rc-fila-sub">
                       <td>Tabloides</td>
                       <td class="rc-num">—</td>
                       <td class="rc-num rc-cnt">{{tabloideCnt}}</td>
+                      <td class="rc-num rc-cnt-sub">—</td>
                     </tr>
                     {{/if}}
                     {{#if dobCartaCnt}}
@@ -305,6 +321,7 @@
                       <td>Doble carta</td>
                       <td class="rc-num">—</td>
                       <td class="rc-num rc-cnt">{{dobCartaCnt}}</td>
+                      <td class="rc-num rc-cnt-sub">—</td>
                     </tr>
                     {{/if}}
                   </tbody>

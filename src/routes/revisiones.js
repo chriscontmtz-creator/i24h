@@ -7,6 +7,7 @@ import Producto          from '../models/Producto.js';
 import BitacoraTurno     from '../models/BitacoraTurno.js';
 import Ticket            from '../models/Ticket.js';
 import { requireEmpleado, requireAuth, sesionActual } from '../middlewares/auth.js';
+import { sucursalesDeUsuario, sucursalPermitida } from '../utils/sucursales.js';
 
 function turnoCorto(t) {
   const m = (t || '').match(/Turno\s*(\d)/i);
@@ -103,8 +104,22 @@ const SUCURSAL_DB = {
 // ── GET /revisiones ─────────────────────────────────────────────
 router.get('/', sesionActual, requireEmpleado, async (req, res) => {
   try {
-    const { sucursal = 'todas', turno = 'todos', estado = 'todos', pagina = 0, tab = 'contadores',
+    const usuarioSesion = req.session.usuario;
+    const verTodasLasSucursales = usuarioSesion.cargo === 'admin';
+    const sucursalesPermitidas  = await sucursalesDeUsuario(usuarioSesion);
+    const sinSucursalesAsignadas = !verTodasLasSucursales && sucursalesPermitidas.length === 0;
+
+    let { sucursal = 'todas', turno = 'todos', estado = 'todos', pagina = 0, tab = 'contadores',
             periodo = 'mes_actual', desde = '', hasta = '', dia = 'todos' } = req.query;
+
+    if (!verTodasLasSucursales) {
+      if (sinSucursalesAsignadas) {
+        sucursal = '__sin_sucursal_asignada__';
+      } else if (sucursal === 'todas' || !sucursalesPermitidas.includes(sucursal)) {
+        sucursal = sucursalesPermitidas[0];
+      }
+    }
+
     const limite = 20;
     const skip   = Number(pagina) * limite;
 
@@ -185,7 +200,7 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
             sucursal: dbKeySuc || { $exists: true },
             ncaja: { $in: ncajasResumen },
             anulado: false,
-          }).select('ncaja importeTotal lineas').lean(),
+          }).select('sucursal ncaja importeTotal lineas').lean(),
           ContadorImpresora.find({
             sucursal: dbKeySuc || { $exists: true },
             ncaja: { $in: ncajasResumen },
@@ -294,22 +309,30 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
     });
 
     // ── RESUMEN DE CAJA ─────────────────────────────────────────
-    // Agrupar tickets por ncaja
+    // Clave compuesta sucursal|ncaja — ncaja solo es único POR SUCURSAL
+    // (índices de CorteCaja/ContadorImpresora: {sucursal,ncaja}), así que
+    // agrupar solo por ncaja mezclaba cajas de sucursales distintas que
+    // comparten número cuando se ve "Todas las sucursales".
+    const claveCaja = (sucursal, ncaja) => `${sucursal}|${ncaja}`;
+
+    // Agrupar tickets por sucursal+ncaja
     const ticketsPorNcaja = {};
     for (const t of ticketsResumen) {
-      if (!ticketsPorNcaja[t.ncaja]) ticketsPorNcaja[t.ncaja] = [];
-      ticketsPorNcaja[t.ncaja].push(t);
+      const clave = claveCaja(t.sucursal, t.ncaja);
+      if (!ticketsPorNcaja[clave]) ticketsPorNcaja[clave] = [];
+      ticketsPorNcaja[clave].push(t);
     }
-    // Agrupar contadores por ncaja (suma todos los campos de todas las impresoras)
+    // Agrupar contadores por sucursal+ncaja (suma todos los campos de todas las impresoras)
     const contPorNcaja = {};
     for (const c of contadoresResumen) {
-      if (!contPorNcaja[c.ncaja]) {
-        contPorNcaja[c.ncaja] = {
+      const clave = claveCaja(c.sucursal, c.ncaja);
+      if (!contPorNcaja[clave]) {
+        contPorNcaja[clave] = {
           copBYN: 0, copColor: 0, impreBYN: 0, impreColor: 0,
           escanerTotal: 0, tabloide: 0, dobleCarta: 0,
         };
       }
-      const cn = contPorNcaja[c.ncaja];
+      const cn = contPorNcaja[clave];
       cn.copBYN     += deltaImp('copiarNegro', c)   + deltaImp('copiarNegroG', c);
       cn.copColor   += deltaImp('copiarColor', c)   + deltaImp('copiarColorG', c);
       cn.impreBYN   += deltaImp('imprimirNegro', c) + deltaImp('imprimirNegroG', c);
@@ -317,6 +340,49 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
       cn.escanerTotal += deltaImp('escanerTotal', c);
       cn.tabloide     += deltaImp('papelTabloide', c);
       cn.dobleCarta   += deltaImp('papelDobleCarta', c);
+    }
+
+    // ── Brecha entre cortes de contador ──────────────────────────
+    // Cada ContadorImpresora.delta es "curr - final del registro anterior de
+    // esa misma impresora" (calculado en I24H-sync). Si el corte anterior fue
+    // hace mucho (o no existe), el delta cubre varios días de uso real, no un
+    // turno, y una "Diferencia" grande no es necesariamente una fuga.
+    const seriesInvolucradas = [...new Set(contadoresResumen.map(c => `${c.sucursal}|${c.serie}`))];
+    const historialContadores = seriesInvolucradas.length
+      ? await ContadorImpresora.find({
+          $or: seriesInvolucradas.map(clave => {
+            const [suc, serie] = clave.split('|');
+            return { sucursal: suc, serie };
+          }),
+          completo: true,
+        }).select('sucursal serie fecha -_id').sort({ fecha: 1 }).lean()
+      : [];
+
+    const historialPorSerie = {};
+    for (const h of historialContadores) {
+      const clave = `${h.sucursal}|${h.serie}`;
+      (historialPorSerie[clave] ||= []).push(h.fecha);
+    }
+
+    const UMBRAL_BRECHA_HORAS = 30;
+    function brechaHoras(sucursal, serie, fecha) {
+      const fechas = historialPorSerie[`${sucursal}|${serie}`] || [];
+      let anterior = null;
+      for (const f of fechas) {
+        if (f < fecha) anterior = f; else break; // fechas viene ordenado asc
+      }
+      return anterior ? (fecha - anterior) / 3600000 : null; // null = sin corte previo (bootstrap)
+    }
+
+    // Por caja: la brecha más larga entre sus impresoras, y si alguna no tenía
+    // corte previo (bootstrap) — ambos casos ameritan el aviso.
+    const brechaPorNcaja = {};
+    for (const c of contadoresResumen) {
+      const clave = claveCaja(c.sucursal, c.ncaja);
+      if (!brechaPorNcaja[clave]) brechaPorNcaja[clave] = { horasMax: 0, sinCortePrevio: false };
+      const horas = brechaHoras(c.sucursal, c.serie, c.fecha);
+      if (horas == null) brechaPorNcaja[clave].sinCortePrevio = true;
+      else brechaPorNcaja[clave].horasMax = Math.max(brechaPorNcaja[clave].horasMax, horas);
     }
 
     // Filtrar por turno si aplica
@@ -327,23 +393,49 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
         return t === turno;
       })
       .map(c => {
-        const t    = agregaTickets(ticketsPorNcaja[c.ncaja] || []);
-        const cnt  = contPorNcaja[c.ncaja] || {};
+        const clave = claveCaja(c.sucursal, c.ncaja);
+        const t    = agregaTickets(ticketsPorNcaja[clave] || []);
+        const cnt  = contPorNcaja[clave] || {};
         const tc   = turnoDesdeOperador(c.operador1) || turnoDesdeOperador(c.operador2) || turnoDesdeHora(c.horaApertura);
         const merma = c.merma || 0;
 
-        const cobTodasCopias  = t.copias_byn_cant + t.copias_color_cant + t.copias_ine_cant;
-        const cobTodasImpre   = t.impre_byn_cant  + t.impre_color_cant;
-        const totalCobradas   = cobTodasCopias + cobTodasImpre;
-        const cntTodasCopias  = (cnt.copBYN   || 0) + (cnt.copColor   || 0);
-        const cntTodasImpre   = (cnt.impreBYN || 0) + (cnt.impreColor || 0);
-        const totalContador   = cntTodasCopias + cntTodasImpre;
-        const diferencia      = (totalCobradas + merma) - totalContador;
+        // Diferencia por categoría — INE, Tabloides y Doble carta no tienen
+        // contraparte de contador comparable, así que quedan solo informativas
+        // (mismo patrón esFaltante/esSobrante/difFmt que bitacorasVista arriba).
+        function filaDif(cobradas, contador) {
+          const dif = cobradas - contador;
+          return {
+            cobradas, contador, diferencia: dif,
+            difFmt:     (dif > 0 ? '+' : '') + dif,
+            esFaltante: dif < 0,
+            esSobrante: dif > 0,
+          };
+        }
+        const fCopBYN   = filaDif(t.copias_byn_cant,   cnt.copBYN     || 0);
+        const fCopColor = filaDif(t.copias_color_cant, cnt.copColor   || 0);
+        const fImpreBYN = filaDif(t.impre_byn_cant,    cnt.impreBYN   || 0);
+        const fImpreColor = filaDif(t.impre_color_cant,cnt.impreColor|| 0);
+        const fEscaner  = filaDif(t.scanner_cant,      cnt.escanerTotal || 0);
 
-        const difScanner      = t.scanner_cant - (cnt.escanerTotal || 0);
+        // Total: suma de las 5 categorías comparables + merma. INE/Tabloides/
+        // Doble carta quedan fuera por no tener contador equivalente.
+        const totalCobradas = t.copias_byn_cant + t.copias_color_cant
+                             + t.impre_byn_cant  + t.impre_color_cant
+                             + t.scanner_cant;
+        const totalContador = (cnt.copBYN || 0) + (cnt.copColor || 0)
+                             + (cnt.impreBYN || 0) + (cnt.impreColor || 0)
+                             + (cnt.escanerTotal || 0);
+        const diferencia    = (totalCobradas + merma) - totalContador;
+        const difSign       = diferencia > 0 ? '+' : '';
 
-        const difSign = diferencia > 0 ? '+' : '';
-        const difScanSign = difScanner > 0 ? '+' : '';
+        const brecha = brechaPorNcaja[clave];
+        const brechaLarga = !!brecha && (brecha.sinCortePrevio || brecha.horasMax > UMBRAL_BRECHA_HORAS);
+        let brechaTexto = null;
+        if (brechaLarga) {
+          brechaTexto = brecha.sinCortePrevio
+            ? 'Sin corte previo registrado para esta impresora — el contador puede incluir uso de antes del rango visible, no solo este turno.'
+            : `Este contador acumula ~${(brecha.horasMax / 24).toFixed(1)} días de uso sin corte previo — la diferencia puede no reflejar solo este turno.`;
+        }
 
         return {
           idStr:       c._id.toString(),
@@ -386,6 +478,11 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
           escanerCnt:   cnt.escanerTotal || 0,
           tabloideCnt:  cnt.tabloide   || 0,
           dobCartaCnt:  cnt.dobleCarta || 0,
+          // Diferencia por categoría
+          copBYNdifFmt:    fCopBYN.difFmt,    copBYNfaltante:    fCopBYN.esFaltante,
+          copColorDifFmt:  fCopColor.difFmt,  copColorFaltante:  fCopColor.esFaltante,
+          impreBYNdifFmt:  fImpreBYN.difFmt,  impreBYNfaltante:  fImpreBYN.esFaltante,
+          impreColorDifFmt:fImpreColor.difFmt,impreColorFaltante:fImpreColor.esFaltante,
           // Totales cruce
           totalCobradas,
           totalContador,
@@ -396,12 +493,14 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
           difMal:      diferencia < -5,
           difWarn:     diferencia < 0 && diferencia >= -5,
           // Scanner cruce
-          difScanner,
-          difScannerFmt: difScanSign + difScanner,
-          difScannerOk:  difScanner >= 0,
-          difScannerMal: difScanner < -2,
-          // Estado sin contador
-          sinContador: !contPorNcaja[c.ncaja],
+          difScanner:     fEscaner.diferencia,
+          difScannerFmt:  fEscaner.difFmt,
+          difScannerOk:   fEscaner.diferencia >= 0,
+          difScannerMal:  fEscaner.diferencia < -2,
+          // Estado sin contador / brecha
+          sinContador: !contPorNcaja[clave],
+          brechaLarga,
+          brechaTexto,
         };
       });
 
@@ -410,10 +509,12 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
       estiloExtra:     'css/revisiones.css',
       scriptPrincipal: 'js/revisiones.js',
       usuario:         req.session.usuario,
+      verTodasLasSucursales,
+      sinSucursalesAsignadas,
       sucursalActiva:  sucursal,
       turnoActivo:     turno,
       estadoActivo:    estado,
-      sucursales:      SUCURSALES,
+      sucursales:      verTodasLasSucursales ? SUCURSALES : sucursalesPermitidas,
       revisiones:      revisionesVista,
       hayRevisiones:   revisionesVista.length > 0,
       total,
@@ -448,6 +549,8 @@ router.get('/api/conteo/productos', requireAuth, async (req, res) => {
     const { sucursal } = req.query;
     if (!sucursal || sucursal === 'todas')
       return res.status(400).json({ error: 'Selecciona una sucursal' });
+    if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     const dbKey   = SUCURSAL_DB[sucursal] || sucursal;
     const productos = await Producto.find(
       { sucursal: dbKey, nombre: { $not: /^Nuevo Producto/ } }
@@ -465,6 +568,8 @@ router.post('/api/conteo', requireAuth, async (req, res) => {
     const { sucursal, responsable, lineas } = req.body;
     if (!sucursal || !responsable || !Array.isArray(lineas) || !lineas.length)
       return res.status(400).json({ error: 'Faltan campos requeridos' });
+    if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
 
     const procesadas = lineas.map(l => ({
       codigo:     Number(l.codigo),
@@ -508,6 +613,8 @@ router.get('/api/conteo/:id', requireAuth, async (req, res) => {
   try {
     const conteo = await ConteoFisico.findById(req.params.id).lean();
     if (!conteo) return res.status(404).json({ error: 'No encontrado' });
+    if (!(await sucursalPermitida(req.session.usuario, conteo.sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     res.json({ conteo });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener conteo' });
@@ -518,6 +625,8 @@ router.get('/api/conteo/:id', requireAuth, async (req, res) => {
 router.get('/api/:ncaja', requireAuth, async (req, res) => {
   try {
     const { sucursal } = req.query;
+    if (sucursal && !(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     const filtro = { ncaja: Number(req.params.ncaja) };
     if (sucursal) filtro.sucursal = sucursal;
 
@@ -527,6 +636,8 @@ router.get('/api/:ncaja', requireAuth, async (req, res) => {
     ]);
 
     if (!revision) return res.status(404).json({ error: 'Revisión no encontrada' });
+    if (!sucursal && !(await sucursalPermitida(req.session.usuario, revision.sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     res.json({ revision, contadores });
   } catch (err) {
     console.error(err);
@@ -538,6 +649,8 @@ router.get('/api/:ncaja', requireAuth, async (req, res) => {
 router.post('/api/:ncaja/aprobar', requireAuth, async (req, res) => {
   try {
     const { sucursal } = req.body;
+    if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     const revision = await Revision.findOne({ ncaja: Number(req.params.ncaja), sucursal });
     if (!revision) return res.status(404).json({ error: 'Revisión no encontrada' });
 
@@ -563,6 +676,8 @@ router.post('/api/:ncaja/aprobar', requireAuth, async (req, res) => {
 router.post('/api/:ncaja/causa', requireAuth, async (req, res) => {
   try {
     const { sucursal, concepto, causa } = req.body;
+    if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     const revision = await Revision.findOne({ ncaja: Number(req.params.ncaja), sucursal });
     if (!revision) return res.status(404).json({ error: 'Revisión no encontrada' });
 
@@ -595,6 +710,8 @@ router.post('/api/:ncaja/causa', requireAuth, async (req, res) => {
 router.post('/api/:ncaja/corregir', requireAuth, async (req, res) => {
   try {
     const { sucursal, concepto, campo, valorNuevo, motivo } = req.body;
+    if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     const revision = await Revision.findOne({ ncaja: Number(req.params.ncaja), sucursal });
     if (!revision) return res.status(404).json({ error: 'Revisión no encontrada' });
 
@@ -631,6 +748,10 @@ router.post('/api/caja/:id/merma', requireAuth, async (req, res) => {
     const val = Number(merma);
     if (isNaN(val) || val < 0)
       return res.status(400).json({ error: 'Merma inválida' });
+    const cajaActual = await CorteCaja.findById(req.params.id).select('sucursal').lean();
+    if (!cajaActual) return res.status(404).json({ error: 'Caja no encontrada' });
+    if (!(await sucursalPermitida(req.session.usuario, cajaActual.sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     const caja = await CorteCaja.findByIdAndUpdate(
       req.params.id,
       { $set: { merma: val, mermaNotas: (mermaNotas || '').trim() } },
@@ -650,6 +771,10 @@ router.post('/api/bitacora/:id/estado', requireAuth, async (req, res) => {
     const { estado } = req.body;
     if (!['pendiente', 'revisado'].includes(estado))
       return res.status(400).json({ error: 'Estado inválido' });
+    const bitActual = await BitacoraTurno.findById(req.params.id).select('sucursal').lean();
+    if (!bitActual) return res.status(404).json({ error: 'No encontrada' });
+    if (!(await sucursalPermitida(req.session.usuario, bitActual.sucursal)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
     const bit = await BitacoraTurno.findByIdAndUpdate(
       req.params.id,
       { $set: { estado } },

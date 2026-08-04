@@ -35,16 +35,10 @@
 
       <div class="hor-filters">
         <select class="hor-select" id="hor-suc-filter" onchange="horFilterSucursal(this.value)">
-          <option value="todas">Todas las sucursales</option>
-          <option value="Simón Bolívar">Simón Bolívar</option>
-          <option value="Insurgentes">Insurgentes</option>
-          <option value="Antígona">Antígona</option>
-          <option value="Lincoln Oxxo">Lincoln Oxxo</option>
-          <option value="Lincoln 2">Lincoln 2</option>
-          <option value="Ruiz Cortines">Ruiz Cortines</option>
-          <option value="Rodas">Rodas</option>
-          <option value="Cuauhtémoc">Cuauhtémoc</option>
-          <option value="Ordóñez">Ordóñez</option>
+          {{#if verTodasLasSucursales}}<option value="todas">Todas las sucursales</option>{{/if}}
+          {{#each sucursales}}
+          <option value="{{this}}">{{this}}</option>
+          {{/each}}
         </select>
       </div>
 
@@ -60,6 +54,12 @@
 
     </div>
   </header>
+
+  {{#if sinSucursalesAsignadas}}
+  <p style="color:#f87171;margin:10px 16px 0">
+    <i class="ti ti-alert-triangle"></i> No tienes ninguna sucursal asignada todavía — pide a un administrador que te agregue una desde Usuarios.
+  </p>
+  {{/if}}
 
   <!-- ═══════════════════════════════════════════════════════════
        Tabs — Vista semanal (existente) / Horas trabajadas (nueva)

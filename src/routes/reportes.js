@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { leer, guardar } from '../utils/data.js';
 import { requireAuth }  from '../middlewares/auth.js';
+import { sucursalPermitida } from '../utils/sucursales.js';
 
 const router = Router();
 
@@ -17,10 +18,12 @@ router.get('/reportes', requireAuth, (req, res) => {
 });
 
 // POST /api/reportes — guarda un reporte nuevo
-router.post('/reportes', requireAuth, (req, res) => {
+router.post('/reportes', requireAuth, async (req, res) => {
   const { sucursal, dept, descripcion, numImpresora, marca, mensaje } = req.body;
   if (!sucursal || !dept || !descripcion)
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  if (!(await sucursalPermitida(req.session.usuario, sucursal)))
+    return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
 
   const lista  = leer('reportes.json');
   const nuevo  = {

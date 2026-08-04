@@ -632,6 +632,20 @@ body.dark .bit-badge--t3, html.dark .bit-badge--t3 { background: #2e1065; color:
   border-bottom: 1px solid color-mix(in srgb, var(--r-alerta) 20%, transparent);
 }
 
+/* Aviso de brecha larga entre cortes de contador — informativo, no es un
+   error como "sin contador", por eso usa el tono azul (--r-info) en vez de
+   naranja/rojo */
+.rc-brecha-aviso {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--r-info) 10%, transparent);
+  color: var(--r-info);
+  font-size: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--r-info) 20%, transparent);
+}
+
 /* Cuerpo dos columnas */
 .rc-body {
   display: grid;

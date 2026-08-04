@@ -4,6 +4,7 @@ import Usuario    from '../models/Usuario.js';
 import Empleado   from '../models/Empleado.js';
 import Auditoria  from '../models/Auditoria.js';
 import { requireAuth, requireAdmin } from '../middlewares/auth.js';
+import { sucursalesDeUsuario } from '../utils/sucursales.js';
 
 const router = Router();
 
@@ -11,10 +12,22 @@ const SUCURSALES_STAFF = ['Simon Bolivar', 'Centro', 'Sureste'];
 
 // ── Empleados (cuentas auth) ─────────────────────────────────────────────
 
-// GET /api/empleados — lista todos los empleados
+// GET /api/empleados — admin/coordinador ven a todos; un líder solo ve a
+// sus colaboradores (los que comparten sucursal con él); cualquier otro
+// cargo no tiene vista de cuentas ajenas.
 router.get('/empleados', requireAuth, async (req, res) => {
+  const sesion = req.session.usuario;
   try {
-    const empleados = await Usuario.find({ cargo: { $ne: 'cliente' } }).sort({ fechaCreacion: -1 });
+    let filtro;
+    if (['admin', 'coordinador'].includes(sesion.cargo)) {
+      filtro = { cargo: { $ne: 'cliente' } };
+    } else if (sesion.cargo === 'lider') {
+      const sucursales = await sucursalesDeUsuario(sesion);
+      filtro = { cargo: 'colaborador', sucursales: { $in: sucursales } };
+    } else {
+      return res.status(403).json({ error: 'Acceso restringido al personal autorizado.' });
+    }
+    const empleados = await Usuario.find(filtro).sort({ fechaCreacion: -1 });
     res.json(empleados);
   } catch {
     res.status(500).json({ error: 'Error al obtener empleados' });

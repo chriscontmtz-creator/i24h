@@ -6,6 +6,7 @@ import AsistenciaEvento from '../models/AsistenciaEvento.js';
 import Usuario from '../models/Usuario.js';
 import Horario from '../models/Horario.js';
 import { requireAuth, requireAdmin } from '../middlewares/auth.js';
+import { TODAS_SUCURSALES, sucursalesDeUsuario, sucursalPermitida } from '../utils/sucursales.js';
 
 const router = Router();
 
@@ -37,20 +38,6 @@ const ETIQUETAS_TIPO = {
 // usuario 2026-08-03: Encargado, Líder, Coordinador o Admin — más amplio que
 // requireAdmin (que solo cubre admin/coordinador).
 const CARGOS_SUPERVISOR = ['admin', 'coordinador', 'lider', 'encargado'];
-
-// Misma lista que src/routes/horarios.js — duplicada a propósito en vez de
-// importada, para no tocar ese archivo (pedido explícito del usuario).
-const SUCURSALES = [
-  'Simón Bolívar',
-  'Insurgentes',
-  'Antígona',
-  'Lincoln Oxxo',
-  'Lincoln 2',
-  'Ruiz Cortines',
-  'Rodas',
-  'Cuauhtémoc',
-  'Ordóñez',
-];
 
 // Horarios reales de cada turno (confirmados por el usuario 2026-08-02).
 // T1/T2/T3 se solapan a propósito (relevo de turno).
@@ -200,8 +187,7 @@ router.get('/api/estado', limiteApi, requireAuth, bloquearCliente, async (req, r
     const u = req.session.usuario;
     const estado = await estadoActual(u.id);
     const opciones = TRANSICIONES_VALIDAS[estado];
-    const perfil = await Usuario.findById(u.id).select('sucursales').lean();
-    const sucursales = (perfil?.sucursales?.length ? perfil.sucursales : SUCURSALES);
+    const sucursales = await sucursalesDeUsuario(u);
     res.json({ estado, opciones, sucursales });
   } catch (err) {
     console.error('[ASISTENCIA estado]', err);
@@ -216,8 +202,11 @@ router.get('/api/estado', limiteApi, requireAuth, bloquearCliente, async (req, r
 router.post('/api/generar-qr', limiteMarcar, requireAuth, bloquearCliente, async (req, res) => {
   try {
     const { tipo, sucursal } = req.body;
-    if (!SUCURSALES.includes(sucursal)) {
+    if (!TODAS_SUCURSALES.includes(sucursal)) {
       return res.status(400).json({ error: 'Sucursal no reconocida' });
+    }
+    if (!(await sucursalPermitida(req.session.usuario, sucursal))) {
+      return res.status(403).json({ error: 'No tenés esa sucursal asignada' });
     }
 
     const estado = await estadoActual(req.session.usuario.id);
@@ -352,6 +341,9 @@ router.get('/api/horas-trabajadas', limiteApi, requireAuth, requireAdmin, async 
   try {
     const semana = req.query.semana || isoWeekStr(new Date());
     const sucursalFiltro = req.query.sucursal || 'todas';
+    if (sucursalFiltro !== 'todas' && !(await sucursalPermitida(req.session.usuario, sucursalFiltro)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
+    const permitidasReporte = await sucursalesDeUsuario(req.session.usuario);
 
     const inicio = getViernesDeISO(semana);
     const fin = new Date(inicio);
@@ -422,6 +414,7 @@ router.get('/api/horas-trabajadas', limiteApi, requireAuth, requireAdmin, async 
 
       for (const [sucursal, datos] of porSucursal.entries()) {
         if (sucursalFiltro !== 'todas' && sucursal !== sucursalFiltro) continue;
+        if (sucursalFiltro === 'todas' && !permitidasReporte.includes(sucursal)) continue;
 
         const horasTrabajadasNetas = Math.max(0, datos.horasTrabajo - datos.horasComida);
 
@@ -462,6 +455,9 @@ router.get('/api/reporte', limiteApi, requireAuth, requireAdmin, async (req, res
     const semana = req.query.semana || isoWeekStr(new Date());
     const sucursalFiltro = req.query.sucursal || 'todas';
     const soloIncompletos = req.query.soloIncompletos === '1';
+    if (sucursalFiltro !== 'todas' && !(await sucursalPermitida(req.session.usuario, sucursalFiltro)))
+      return res.status(403).json({ error: 'No tienes acceso a esa sucursal.' });
+    const permitidasReporte = await sucursalesDeUsuario(req.session.usuario);
 
     const inicio = getViernesDeISO(semana);
     const fin = new Date(inicio);
@@ -514,7 +510,10 @@ router.get('/api/reporte', limiteApi, requireAuth, requireAdmin, async (req, res
           if (comidaAbierta) horasComidaAcum += (ts - comidaAbierta) / 3_600_000;
           comidaAbierta = null;
         } else if (ev.tipo === 'salida') {
-          if (entradaAbierta && (sucursalFiltro === 'todas' || entradaAbierta.sucursal === sucursalFiltro)) {
+          const sucursalOk = sucursalFiltro === 'todas'
+            ? permitidasReporte.includes(entradaAbierta && entradaAbierta.sucursal)
+            : entradaAbierta && entradaAbierta.sucursal === sucursalFiltro;
+          if (entradaAbierta && sucursalOk) {
             const horasTotales = (ts - entradaAbierta.ts) / 3_600_000;
             const horasNetas = Math.max(0, horasTotales - horasComidaAcum);
 
