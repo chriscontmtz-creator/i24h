@@ -89,6 +89,9 @@
         <button class="panel-nav-item" data-seccion="fotos-sucursal" data-titulo="Fotos de sucursal">
           <i class="ti ti-photo"></i><span>Fotos de sucursal</span>
         </button>
+        <button class="panel-nav-item" data-seccion="cotizaciones" data-titulo="Cotizaciones">
+          <i class="ti ti-clipboard-text"></i><span>Cotizaciones</span>
+        </button>
         <button class="panel-nav-item" data-seccion="configuracion" data-titulo="Configuración">
           <i class="ti ti-settings"></i><span>Configuración</span>
         </button>
@@ -1440,6 +1443,16 @@
 
         <div class="promo-grid" id="foto-grid" style="margin-top:20px">
           <div class="usr-empty">Cargando fotos…</div>
+        </div>
+      </div>
+
+      <div class="panel-seccion oculta" id="sec-cotizaciones">
+        <div class="promo-top-bar">
+          <h1 class="promo-titulo">Cotizaciones</h1>
+        </div>
+        <p class="promo-sub">Solicitudes enviadas desde el formulario del sitio público. Márcalas como atendidas cuando ya contactaste al interesado.</p>
+        <div class="promo-grid" id="cot-grid">
+          <div class="usr-empty">Cargando cotizaciones…</div>
         </div>
       </div>
 
@@ -2981,19 +2994,23 @@ renderBitacora();
   window.usrVerCanjes = usrVerCanjes;
 
   // ── acción: ver QR ──────────────────────────────────────────────────────
+  // Antes codificaba el id/qrId crudo (no una URL) — al escanearlo con la
+  // cámara no pasaba nada. Ahora codifica /socios/escanear/:qrId, la misma
+  // página que ya usa el QR de /cliente (vistas.js) para ver y sumar
+  // puntos del cliente en el momento.
   function usrVerQR(id, correo, qrId) {
     usrCerrarMenu();
-    var dato   = qrId || id;
-    var imgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(dato);
+    var url    = window.location.origin + '/socios/escanear/' + (qrId || id);
+    var imgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(url);
     usrAbrirEM({
       icono: 'ti-qrcode',
       titulo: 'C\xF3digo QR',
       sub: correo,
       html: '<div class="usr-qr-wrap">' +
         '<img class="usr-qr-img" src="' + imgUrl + '" alt="QR" width="220" height="220">' +
-        '<div class="usr-qr-id">' + dato + '</div>' +
-        '<button class="usr-qr-copy" onclick="navigator.clipboard.writeText(\'' + dato.replace(/'/g,"\\'") + '\').then(function(){this.innerHTML=\'<i class=\\\'ti ti-check\\\'></i> \xA1Copiado!\';}.bind(this))">' +
-          '<i class="ti ti-copy" aria-hidden="true"></i> Copiar ID' +
+        '<div class="usr-qr-id">' + url + '</div>' +
+        '<button class="usr-qr-copy" onclick="navigator.clipboard.writeText(\'' + url.replace(/'/g,"\\'") + '\').then(function(){this.innerHTML=\'<i class=\\\'ti ti-check\\\'></i> \xA1Copiado!\';}.bind(this))">' +
+          '<i class="ti ti-copy" aria-hidden="true"></i> Copiar link' +
         '</button>' +
       '</div>',
       readonly: true
@@ -3314,6 +3331,121 @@ renderBitacora();
   });
 
   document.querySelector('[data-seccion="fotos-sucursal"]')?.addEventListener('click', fotoCargar);
+})();
+
+
+// ============================================================
+//  COTIZACIONES — leads del formulario público (solo admin/coordinador)
+//  Render vía createElement/textContent (no innerHTML) — nada de lo que
+//  escribió el visitante en el formulario público se interpreta como HTML.
+// ============================================================
+(function () {
+  var cotLista = [];
+
+  var ICONO_SERVICIO = {
+    'Renta de equipos':   'ti-device-desktop',
+    'Internet':            'ti-wifi',
+    'Impresiones':         'ti-printer',
+    'Tienda en sucursal':  'ti-shopping-bag',
+    'Otro':                'ti-dots',
+  };
+
+  function cotFmtFecha(f) {
+    return new Date(f).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function cotIcoTexto(clase, texto) {
+    var p = document.createElement('p');
+    p.className = 'promo-card-desc';
+    var ico = document.createElement('i');
+    ico.className = 'ti ' + clase;
+    p.append(ico, document.createTextNode(' ' + texto));
+    return p;
+  }
+
+  async function cotAtender(id, marcarAtendida) {
+    var res = await fetch('/api/cotizaciones/' + id, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ estado: marcarAtendida ? 'atendida' : 'pendiente' }),
+    });
+    if (!res.ok) { var e = await res.json(); alert(e.error || 'Error al actualizar la solicitud.'); return; }
+    await cotCargar();
+  }
+
+  function cotRender() {
+    var cont = document.getElementById('cot-grid');
+    if (!cont) return;
+    cont.replaceChildren();
+
+    if (!cotLista.length) {
+      var vacio = document.createElement('div');
+      vacio.className = 'usr-empty';
+      vacio.textContent = 'Aún no hay solicitudes de cotización.';
+      cont.appendChild(vacio);
+      return;
+    }
+
+    cotLista.forEach(function (c) {
+      var atendida = c.estado === 'atendida';
+      var ico = ICONO_SERVICIO[c.servicio] || 'ti-dots';
+
+      var card = document.createElement('div');
+      card.className = 'promo-card';
+      var body = document.createElement('div');
+      body.className = 'promo-card-body';
+
+      var hdr = document.createElement('div');
+      hdr.className = 'promo-card-hdr';
+      var titulo = document.createElement('p');
+      titulo.className = 'promo-card-titulo';
+      titulo.textContent = c.nombre;
+      var badge = document.createElement('span');
+      badge.className = 'promo-badge ' + (atendida ? 'promo-badge-vigente' : 'promo-badge-proxima');
+      badge.textContent = atendida ? 'Atendida' : 'Pendiente';
+      hdr.append(titulo, badge);
+      body.appendChild(hdr);
+
+      body.appendChild(cotIcoTexto(ico, c.servicio + (c.sucursal ? ' · ' + c.sucursal : '')));
+      body.appendChild(cotIcoTexto('ti-mail', c.contacto));
+
+      if (c.mensaje) {
+        var msj = document.createElement('p');
+        msj.className = 'promo-card-desc';
+        msj.textContent = c.mensaje;
+        body.appendChild(msj);
+      }
+
+      body.appendChild(cotIcoTexto('ti-calendar', cotFmtFecha(c.createdAt)));
+
+      var acciones = document.createElement('div');
+      acciones.className = 'promo-card-acciones';
+      var btn = document.createElement('button');
+      btn.className = 'btn-o btn-sm';
+      var btnIco = document.createElement('i');
+      btnIco.className = 'ti ' + (atendida ? 'ti-rotate' : 'ti-check');
+      btn.append(btnIco, document.createTextNode(' ' + (atendida ? 'Marcar pendiente' : 'Marcar atendida')));
+      btn.addEventListener('click', function () { cotAtender(c._id, !atendida); });
+      acciones.appendChild(btn);
+      body.appendChild(acciones);
+
+      card.appendChild(body);
+      cont.appendChild(card);
+    });
+  }
+
+  async function cotCargar() {
+    var cont = document.getElementById('cot-grid');
+    try {
+      var res  = await fetch('/api/cotizaciones');
+      cotLista = await res.json();
+      cotRender();
+    } catch (e) {
+      if (cont) { cont.replaceChildren(); var err = document.createElement('div'); err.className = 'usr-empty'; err.textContent = 'Error al cargar las cotizaciones.'; cont.appendChild(err); }
+    }
+  }
+
+  document.querySelector('[data-seccion="cotizaciones"]')?.addEventListener('click', cotCargar);
 })();
 
 

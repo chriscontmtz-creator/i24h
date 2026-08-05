@@ -17,8 +17,8 @@
         <a href="#root">Inicio</a>
         <a href="#sec-servicios">Servicios</a>
         <a href="#sec-productos">Productos</a>
-        <a href="#sec-beneficios">Sucursales</a>
-        <a href="#sec-servicios">Cotizaciones</a>
+        <a href="#sec-sucursales">Sucursales</a>
+        <a href="#sec-cotizaciones">Cotizaciones</a>
         <span class="badge-24"><i class="ti ti-moon" aria-hidden="true"></i> Abierto 24/7</span>
 
         <!-- Botón modo oscuro -->
@@ -167,6 +167,76 @@
           <p class="prod-title">Novedades</p>
           <p class="prod-desc">Artículos prácticos, accesorios y consumibles tecnológicos.</p>
         </div>
+      </div>
+    </div>
+
+    <!-- SUCURSALES -->
+    <div class="sec alt" id="sec-sucursales">
+      <p class="sec-lbl">Conoce nuestras sucursales</p>
+      {{#if hayFotosSucursales}}
+        {{#each fotosSucursales}}
+        <div class="foto-suc-bloque">
+          <p class="foto-suc-titulo">{{sucursal}}</p>
+          <div class="foto-suc-grid">
+            {{#each urls}}
+            <img class="foto-suc-img" src="{{this}}" alt="Foto de la sucursal {{../sucursal}}" loading="lazy">
+            {{/each}}
+          </div>
+        </div>
+        {{/each}}
+      {{else}}
+        <p class="sec-vacio-msg">Muy pronto compartiremos fotos de cada sucursal aquí.</p>
+      {{/if}}
+    </div>
+
+    <!-- COTIZACIONES -->
+    <div class="sec" id="sec-cotizaciones">
+      <p class="sec-lbl">Solicita tu cotización</p>
+      <div class="comment-form">
+        <p class="form-title">Cuéntanos qué necesitas</p>
+        <p class="form-subtitle">Te contactamos con el detalle de precios y disponibilidad. Sin compromiso.</p>
+
+        <div class="cotizacion-grid">
+          <div class="form-group">
+            <span class="lbl">Nombre *</span>
+            <input class="inp" type="text" id="cot-nombre" maxlength="120" placeholder="Tu nombre">
+          </div>
+          <div class="form-group">
+            <span class="lbl">Correo o teléfono *</span>
+            <input class="inp" type="text" id="cot-contacto" maxlength="120" placeholder="tu@correo.com o 81 1234 5678">
+          </div>
+          <div class="form-group">
+            <span class="lbl">¿Qué servicio te interesa? *</span>
+            <select class="inp" id="cot-servicio">
+              <option value="">Selecciona una opción</option>
+              {{#each serviciosCotizacion}}
+              <option value="{{this}}">{{this}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="form-group">
+            <span class="lbl">Sucursal de preferencia (opcional)</span>
+            <select class="inp" id="cot-sucursal">
+              <option value="">Cualquiera / no estoy seguro</option>
+              {{#each sucursalesCotizacion}}
+              <option value="{{this}}">{{this}}</option>
+              {{/each}}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <span class="lbl">Cuéntanos más (opcional)</span>
+          <textarea class="inp" id="cot-mensaje" rows="3" maxlength="1000" placeholder="Detalles de lo que necesitas..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <span class="privacy-note">
+            <i class="ti ti-shield-check" aria-hidden="true"></i> Solo usamos tus datos para contactarte
+          </span>
+          <button class="btn-p" id="cot-submit-btn" type="button">Enviar solicitud ↗</button>
+        </div>
+        <p id="cot-msg" class="error-msg" style="display:none;"></p>
       </div>
     </div>
 

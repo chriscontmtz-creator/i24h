@@ -27,6 +27,7 @@ import materialRoutes       from './src/routes/material.js';
 import resumenRoutes         from './src/routes/resumen.js';
 import horariosRoutes   from './src/routes/horarios.js';
 import asistenciaRoutes from './src/routes/asistencia.js';
+import sociosRoutes     from './src/routes/socios.js';
 import reportesRoutes   from './src/routes/reportes.js';
 import dashboardRoutes  from './src/routes/dashboard.js';
 import revisionesRoutes from './src/routes/revisiones.js';
@@ -35,6 +36,7 @@ import ticketsRoutes    from './src/routes/tickets.js';
 import inventarioRoutes from './src/routes/inventario.js';
 import promocionesRoutes from './src/routes/promociones.js';
 import fotosRoutes       from './src/routes/fotos.js';
+import cotizacionesRoutes from './src/routes/cotizaciones.js';
 import { iniciarCronCortes } from './src/utils/cronCortes.js';
 
 // En ES Modules, __dirname no existe — se obtiene así:
@@ -162,6 +164,7 @@ app.use('/api', materialRoutes);           // venta sin material y sin tickets (
 app.use('/api', resumenRoutes);            // resumen
 app.use('/horarios',   horariosRoutes);  // horarios (módulo propio)
 app.use('/asistencia', asistenciaRoutes); // checador QR + horas trabajadas
+app.use('/socios',     sociosRoutes);     // QR de puntos del cliente — ver/sumar puntos al escanear
 app.use('/api',        reportesRoutes);  // reportes de departamento
 app.use('/dashboard',  dashboardRoutes); // dashboard analítico
 app.use('/revisiones', revisionesRoutes); // módulo de revisiones/contadores
@@ -170,6 +173,7 @@ app.use('/api',        ticketsRoutes);   // tickets del sync (CyberPlanet)
 app.use('/api',        inventarioRoutes); // inventario — descarga de Excel
 app.use('/api',        promocionesRoutes); // promociones del panel de cliente
 app.use('/api',        fotosRoutes);       // fotos de sucursal para el panel de cliente
+app.use('/api',        cotizacionesRoutes); // cotizaciones — formulario público del home
 
 // =============================================================
 //  ARRANCAR

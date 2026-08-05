@@ -1,0 +1,71 @@
+/* ============================================================
+   SOCIOS — landing al escanear el QR de puntos de un cliente
+   (ver /socios/escanear/:qrId, src/routes/socios.js)
+   ============================================================ */
+
+.soc-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  text-align: left;
+}
+
+.soc-card .as-marcar-icon,
+.soc-card .as-marcar-msg,
+.soc-card .as-marcar-sub {
+  text-align: center;
+}
+
+.soc-puntos-actual {
+  text-align: center;
+  margin: 20px 0;
+  padding: 16px;
+  background: var(--fondo-alt);
+  border-radius: var(--radio);
+}
+
+.soc-puntos-num {
+  display: block;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--acento);
+  line-height: 1;
+}
+
+.soc-puntos-lbl {
+  font-size: .8rem;
+  color: var(--texto-suave);
+}
+
+.soc-historial {
+  margin-bottom: 20px;
+}
+
+.soc-historial-titulo {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+  margin: 0 0 8px;
+}
+
+.soc-historial-fila {
+  display: flex;
+  justify-content: space-between;
+  font-size: .85rem;
+  color: var(--texto);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.soc-historial-fila:last-child { border-bottom: none; }
+
+.soc-form { margin-top: 8px; }
+.soc-form .lbl { margin-top: 12px; }
+.soc-form .inp { margin-top: 4px; }
+
+.soc-btn-guardar {
+  width: 100%;
+  margin-top: 16px;
+  justify-content: center;
+}

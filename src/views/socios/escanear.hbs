@@ -1,0 +1,97 @@
+<div class="as-marcar">
+  <div class="as-marcar-card soc-card" id="soc-card" {{#if cliente}}data-cliente-id="{{cliente.id}}"{{/if}}>
+
+    {{#if error}}
+      <i class="ti ti-alert-triangle as-marcar-icon as-marcar-icon--error"></i>
+      <div class="as-marcar-msg">{{error}}</div>
+    {{/if}}
+
+    {{#if cliente}}
+      <i class="ti ti-user-circle as-marcar-icon"></i>
+      <div class="as-marcar-msg">{{cliente.nombre}}</div>
+      <div class="as-marcar-sub">{{cliente.correo}}</div>
+
+      <div class="soc-puntos-actual">
+        <span class="soc-puntos-num" id="soc-puntos-num">{{cliente.puntos}}</span>
+        <span class="soc-puntos-lbl">puntos</span>
+      </div>
+
+      {{#if hayHistorial}}
+      <div class="soc-historial">
+        <p class="soc-historial-titulo">Última actividad</p>
+        {{#each historial}}
+        <div class="soc-historial-fila">
+          <span>{{concepto}}</span>
+          <span>${{monto}}</span>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      <div class="soc-form">
+        <label class="lbl">Sumar o restar puntos</label>
+        <input class="inp" type="number" id="soc-ajuste" placeholder="Ej. 50 (o -20 para restar)">
+        <label class="lbl">Motivo *</label>
+        <input class="inp" type="text" id="soc-motivo" placeholder="Ej. Compra en caja $150" maxlength="200">
+        <button class="btn-p soc-btn-guardar" id="soc-btn-guardar" type="button">Aplicar</button>
+        <p id="soc-msg" class="error-msg" style="display:none;"></p>
+      </div>
+    {{/if}}
+
+  </div>
+</div>
+
+{{#if cliente}}
+<script>
+  (function () {
+    var card       = document.getElementById('soc-card');
+    var btn        = document.getElementById('soc-btn-guardar');
+    var msgEl      = document.getElementById('soc-msg');
+    var puntosEl   = document.getElementById('soc-puntos-num');
+    var clienteId  = card.dataset.clienteId;
+
+    function mostrarMsg(texto, tipo) {
+      msgEl.textContent   = texto;
+      msgEl.className     = 'error-msg ' + tipo;
+      msgEl.style.display = 'block';
+    }
+
+    btn.addEventListener('click', async function () {
+      var ajusteRaw = document.getElementById('soc-ajuste').value.trim();
+      var motivo    = document.getElementById('soc-motivo').value.trim();
+      var ajuste    = Number(ajusteRaw);
+
+      if (!ajusteRaw || Number.isNaN(ajuste) || ajuste === 0) {
+        mostrarMsg('Escribe cuántos puntos sumar (o un número negativo para restar).', 'error');
+        return;
+      }
+      if (!motivo) { mostrarMsg('Escribe un motivo.', 'error'); return; }
+
+      btn.disabled = true;
+      try {
+        var res  = await fetch('/api/clientes/' + clienteId + '/puntos', {
+          method:  'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ ajuste: ajuste, motivo: motivo }),
+        });
+        var data = await res.json();
+
+        if (!res.ok) {
+          mostrarMsg(data.error || 'Error al actualizar puntos.', 'error');
+          btn.disabled = false;
+          return;
+        }
+
+        puntosEl.textContent = data.puntos;
+        document.getElementById('soc-ajuste').value = '';
+        document.getElementById('soc-motivo').value = '';
+        mostrarMsg('¡Listo! Puntos actualizados.', 'success');
+        btn.disabled = false;
+      } catch (err) {
+        mostrarMsg('Error de conexión. Intenta de nuevo.', 'error');
+        btn.disabled = false;
+      }
+    });
+  })();
+</script>
+{{/if}}

@@ -571,3 +571,65 @@ window.filtrarCatalogo = filtrarCatalogo;
     if (guardado) { try { aplicarSesion(JSON.parse(guardado)); } catch { localStorage.removeItem('sesion'); } }
   }
 })();
+
+
+// =============================================================
+//  COTIZACIONES — formulario público (sin sesión)
+//  A diferencia de crearTarjetaComentario() de arriba, aquí NUNCA se usa
+//  innerHTML con nada que venga del servidor — solo textContent con
+//  mensajes propios, fijos, definidos en este archivo. Nada de lo que el
+//  usuario escribió se vuelve a insertar en el DOM.
+// =============================================================
+(function () {
+  const btn   = document.getElementById('cot-submit-btn');
+  const msgEl = document.getElementById('cot-msg');
+  if (!btn || !msgEl) return;
+
+  function cotMostrarMensaje(texto, tipo) {
+    msgEl.textContent   = texto;               // textContent, nunca innerHTML
+    msgEl.className     = 'error-msg ' + tipo;
+    msgEl.style.display = 'block';
+    setTimeout(() => { msgEl.style.display = 'none'; }, 4500);
+  }
+
+  async function cotEnviar() {
+    const nombre   = document.getElementById('cot-nombre').value.trim();
+    const contacto = document.getElementById('cot-contacto').value.trim();
+    const servicio = document.getElementById('cot-servicio').value;
+    const sucursal = document.getElementById('cot-sucursal').value;
+    const mensaje  = document.getElementById('cot-mensaje').value.trim();
+
+    if (!nombre)   { cotMostrarMensaje('Escribe tu nombre.', 'error'); return; }
+    if (!contacto) { cotMostrarMensaje('Escribe un correo o teléfono de contacto.', 'error'); return; }
+    if (!servicio) { cotMostrarMensaje('Selecciona qué servicio te interesa.', 'error'); return; }
+
+    btn.disabled = true;
+    try {
+      const respuesta = await fetch('/api/cotizaciones', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ nombre, contacto, servicio, sucursal: sucursal || undefined, mensaje }),
+      });
+
+      if (!respuesta.ok) {
+        // Mensaje fijo propio — no se usa lo que devolvió el servidor
+        // como HTML en ningún momento, aunque sea texto plano confiable.
+        cotMostrarMensaje('No pudimos enviar tu solicitud. Revisa los datos e intenta de nuevo.', 'error');
+        return;
+      }
+
+      cotMostrarMensaje('¡Listo! Recibimos tu solicitud, te contactaremos pronto.', 'success');
+      document.getElementById('cot-nombre').value   = '';
+      document.getElementById('cot-contacto').value = '';
+      document.getElementById('cot-servicio').value = '';
+      document.getElementById('cot-sucursal').value = '';
+      document.getElementById('cot-mensaje').value  = '';
+    } catch {
+      cotMostrarMensaje('No se pudo conectar al servidor. Intenta de nuevo.', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  btn.addEventListener('click', cotEnviar);
+})();

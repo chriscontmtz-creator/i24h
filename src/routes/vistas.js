@@ -4,7 +4,8 @@ import Usuario    from '../models/Usuario.js';
 import Producto   from '../models/Producto.js';
 import Categoria  from '../models/Categoria.js';
 import Promocion  from '../models/Promocion.js';
-import FotoSucursal from '../models/FotoSucursal.js';
+import FotoSucursal, { SUCURSALES } from '../models/FotoSucursal.js';
+import { SERVICIOS_COTIZACION } from '../models/Cotizacion.js';
 import { requireEmpleado, sesionActual } from '../middlewares/auth.js';
 import { RECOMPENSAS, SUCURSALES_CLIENTE } from '../config/constants.js';
 import { sucursalesDeUsuario } from '../utils/sucursales.js';
@@ -93,8 +94,19 @@ async function fotosPorSucursal() {
 }
 
 // GET / — página principal
-router.get('/', sesionActual, (req, res) => {
+router.get('/', sesionActual, async (req, res) => {
   const u = req.session.usuario || null;
+
+  // Falla suave: si Mongo tiene un hipo, el home sigue cargando sin fotos
+  // en vez de romperse — a diferencia de /cliente, aquí no hay a dónde
+  // redirigir sin causar un loop (GET / no puede redirigir a GET /).
+  let fotosSucursales = [];
+  try {
+    fotosSucursales = await fotosPorSucursal();
+  } catch (err) {
+    console.error('Error al cargar fotos de sucursal en GET /:', err);
+  }
+
   res.render('index', {
     titulo:          'Internet 24 Horas',
     scriptPrincipal: 'JAVA.js',
@@ -106,6 +118,10 @@ router.get('/', sesionActual, (req, res) => {
     esLider:         ['admin', 'coordinador', 'lider'].includes(u?.cargo),
     esEncargado:     ['admin', 'coordinador', 'lider', 'encargado'].includes(u?.cargo),
     esEmpleado:      !!u && u.cargo !== 'cliente',
+    fotosSucursales,
+    hayFotosSucursales:  fotosSucursales.length > 0,
+    serviciosCotizacion: SERVICIOS_COTIZACION,
+    sucursalesCotizacion: SUCURSALES,
   });
 });
 
@@ -157,7 +173,14 @@ router.get('/cliente', sesionActual, async (req, res) => {
 
     if (!usuario.qrId) await usuario.save();
 
-    const qrDataUrl = await QRCode.toDataURL(`i24h:${usuario.qrId}`, {
+    // Antes codificaba el texto literal "i24h:<qrId>", que no es una URL —
+    // al escanearlo con la cámara del teléfono no pasaba nada porque no
+    // hay ningún link que abrir. Ahora apunta a /socios/escanear/:qrId
+    // (mismo patrón que el QR de asistencia, asistencia.js:217-219), que sí
+    // es una página real donde el staff ve los puntos del cliente y puede
+    // sumarle puntos en el momento.
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const qrDataUrl = await QRCode.toDataURL(`${baseUrl}/socios/escanear/${usuario.qrId}`, {
       width:  250,
       margin: 2,
       color: { dark: '#1e0a0a', light: '#ffffff' },

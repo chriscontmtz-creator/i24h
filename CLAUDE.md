@@ -46,6 +46,8 @@ app.use('/api',         ticketsRoutes);      // tickets del sync (CyberPlanet)
 app.use('/api',         inventarioRoutes);   // inventario — descarga Excel
 app.use('/api',         promocionesRoutes);  // promociones panel de cliente
 app.use('/api',         fotosRoutes);        // fotos de sucursal
+app.use('/socios',      sociosRoutes);       // QR de puntos del cliente — ver/sumar puntos al escanear
+app.use('/api',         cotizacionesRoutes); // cotizaciones — formulario público del home
 ```
 
 **Vistas que comparten `panel.hbs`** (panel admin, todas las secciones abajo salvo Horarios/Asistencia/Dashboard/Revisiones que tienen vista propia): navegación por `data-seccion` + `irSeccion()`, sin recargar página — casi todo el JS del panel vive **inline en `<script>` dentro de `panel.hbs`**, no en archivos externos.
@@ -58,9 +60,9 @@ app.use('/api',         fotosRoutes);        // fotos de sucursal
 
 | Elemento UI (archivo:línea) | Endpoint | Handler de ruta | Modelo(s) | Notas |
 |---|---|---|---|---|
-| Navegación directa `/` | `GET /` | `vistas.js:81` | ninguno | Renderiza `index.hbs`; middleware `sesionActual` |
+| Navegación directa `/`; nav `<a href="#sec-sucursales">Sucursales</a>` y `<a href="#sec-cotizaciones">Cotizaciones</a>` — `index.hbs:20-21` | `GET /` | `vistas.js:97` | `FotoSucursal` | Renderiza `index.hbs`; middleware `sesionActual`. **Corregido 2026-08-05** — "Sucursales"/"Cotizaciones" apuntaban por copy-paste a `#sec-beneficios`/`#sec-servicios` (nada relacionado). Ahora `GET /` también llama `fotosPorSucursal()` (mismo helper que ya usaba `GET /cliente`, `vistas.js:81-93`) para poblar `#sec-sucursales` — SSR, sin login, con fallback a `[]` si Mongo falla (el home no puede redirigir a sí mismo como sí hace `/cliente` en error). `#sec-cotizaciones` es el formulario nuevo, ver sección 21 |
 | `<a href="/panel">Ir al panel ↗</a>` — `index.hbs:96,71-74` | `GET /panel` | `vistas.js:105` | `Usuario` (si `cargo==='colaborador'`, filtra sucursales) | `sesionActual` + `requireEmpleado` — bloquea clientes |
-| Redirección tras login/registro (`JAVA.js:270,318`) + `<a href="/cliente">Ver mis puntos ↗</a>` — `index.hbs:106` | `GET /cliente` | `vistas.js:130` | `Usuario`, `Producto`, `Categoria`, `Promocion`, `FotoSucursal` | Genera QR de puntos, catálogo, promos vigentes, fotos de sucursal (SSR). **Corregido 2026-08-05** — el login nunca redirigía aquí (solo el registro lo hacía; un cliente que iniciaba sesión se quedaba varado en `/` sin ningún destino), y el botón "Ver mis puntos" apuntaba a `#puntos`, un ancla que no existe en `index.hbs` — ambos quedaron apuntando a `/cliente`. Ver sección 2 (Auth) |
+| Redirección tras login/registro (`JAVA.js:270,318`) + `<a href="/cliente">Ver mis puntos ↗</a>` — `index.hbs:106` | `GET /cliente` | `vistas.js:165` | `Usuario`, `Producto`, `Categoria`, `Promocion`, `FotoSucursal` | Genera QR de puntos, catálogo, promos vigentes, fotos de sucursal (SSR). **Corregido 2026-08-05** (redirect) — el login nunca redirigía aquí (solo el registro lo hacía; un cliente que iniciaba sesión se quedaba varado en `/` sin ningún destino), y el botón "Ver mis puntos" apuntaba a `#puntos`, un ancla que no existe en `index.hbs` — ambos quedaron apuntando a `/cliente`. Ver sección 2 (Auth). **Corregido 2026-08-05** (QR) — el QR de puntos codificaba el texto literal `i24h:<qrId>`, que no es una URL y no llevaba a ningún lado al escanearlo; ahora codifica `/socios/escanear/:qrId` (sección 22) |
 
 ```mermaid
 flowchart LR
@@ -128,8 +130,9 @@ flowchart LR
 | Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Modelo | Notas |
 |---|---|---|---|---|---|
 | Nav `data-seccion="usuarios"` — carga automática | `usrCargarTodo() panel.hbs:2218` | `GET /api/clientes` | `clientes.js:9` | `Usuario` (`cargo:'cliente'`) | `requireAuth` |
-| Menú fila "Ajustar puntos" — `panel.hbs:2497` | `usrAjustarPuntos() panel.hbs:2816` | `PATCH /api/clientes/:id/puntos` | `clientes.js:19` | `Usuario` | `requireAdmin` |
+| Menú fila "Ajustar puntos" — `panel.hbs:2497` | `usrAjustarPuntos() panel.hbs:2816` | `PATCH /api/clientes/:id/puntos` | `clientes.js:19` | `Usuario` | `requireAdmin`. **Reusado 2026-08-05** por la vista `GET /socios/escanear/:qrId` (sección 22) — el "Aplicar" del form de puntos al escanear el QR de un cliente llama este mismo endpoint, no hay lógica duplicada |
 | Menú fila "Ver canjes" — `panel.hbs:2496` | `usrVerCanjes() panel.hbs:2854` | `GET /api/clientes/:id/canjes` | `clientes.js:33` | `Usuario` | Solo `requireAuth` — cualquier empleado ve canjes de cualquier cliente |
+| Menú fila "Ver QR" — `panel.hbs:2614` | `usrVerQR() panel.hbs:3001` | *(sin API — genera imagen client-side)* | — | — | **Corregido 2026-08-05** — antes codificaba el `qrId`/`_id` crudo (no una URL); al escanearlo con la cámara no pasaba nada. Ahora codifica `/socios/escanear/:qrId` (sección 22), la misma página que usa el QR de `/cliente` |
 | `.btn-canjear` → modal → `#btn-confirmar-canje` — `cliente.hbs:145,297` | `JAVA.js:421-468` | `POST /api/canjear` | `clientes.js:42` | `Usuario` | `requireAuth`; recompensas validadas contra `RECOMPENSAS` en `src/config/constants.js` (no Mongo) |
 
 ```mermaid
@@ -149,14 +152,14 @@ No usa Mongo — persiste en `codigos.json` vía `src/utils/data.js`.
 
 Consumo final del código: `POST /api/registro` (`auth.js`) valida el código que el cliente ingresa al registrarse.
 
-## 7. Comentarios (`src/routes/comentarios.js`) — ⚠️ XSS confirmado, ver sección de seguridad
+## 7. Comentarios (`src/routes/comentarios.js`) — ✅ XSS corregido, ver sección de seguridad
 
 No usa Mongo — persiste en `comentarios.json`.
 
 | Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Notas |
 |---|---|---|---|---|
 | `#comments-list` — `index.hbs:217`, carga automática | `cargarComentarios() JAVA.js:128` | `GET /api/comentarios` | `comentarios.js:7` | **Sin autenticación** |
-| `#comment-input` + `.star-btn` + `#submit-comment-btn` — `index.hbs:227-245` | `JAVA.js:150-172` | `POST /api/comentarios` | `comentarios.js:13` | **Sin autenticación** — cualquier visitante anónimo publica. XSS, ver abajo |
+| `#comment-input` + `.star-btn` + `#submit-comment-btn` — `index.hbs:227-245` | `JAVA.js:150-172` | `POST /api/comentarios` | `comentarios.js:13` | **Sin autenticación** — cualquier visitante anónimo publica. Sink de XSS ya corregido con `escHtml()`, ver sección de seguridad |
 | `#emp-comment` + `#star-row-emp` + `#btn-calificar-emp` — `cliente.hbs:257-265` | `JAVA.js:471-493` | `POST /api/comentarios` | `comentarios.js:13` | Mismo endpoint, reutilizado para "calificar empleado"; este flujo concreto no repite el XSS porque no reinyecta la respuesta en el DOM |
 
 ## 8. Promociones (`src/routes/promociones.js`)
@@ -337,6 +340,33 @@ Middleware: `sesionActual` + `requireEmpleado` en las 4 rutas. Depende de `Bitac
 | Botones "Descargar" por categoría — `panel.hbs:983,988,993,998` | `descargarInventario(categoria) panel.hbs:3997` | `GET /api/inventario/descargar?sucursal=&categoria=&fecha=` | `inventario.js:194` | `Producto` | `sesionActual`+`requireEmpleado`; mapeo hardcodeado Excel↔DB (`inventario.js:49-188`); descarga vía `<a href>`, sin manejo de error JS |
 | Cards "Resumen por categoría" + tabla "Vista previa de stock" + botón `#inv-filter-btn` "Filtrar" (categoría/estado/búsqueda) — `panel.hbs:906-975` | `invCargarPreview() panel.hbs:4061`, disparado al entrar a la sección (`irSeccion`/nav, `panel.hbs:1695,1709`) y en cada cambio de sucursal/filtro | `GET /api/inventario/preview?sucursal=&categoria=&estado=&q=` | `inventario.js:290` | `Producto` | **Nuevo 2026-08-04** — antes era HTML 100% hardcodeado (23/129/813/56 artículos y 5 filas fijas, sin backend). Reutiliza el mismo catálogo curado `MAPEO` que la descarga de Excel (no el catálogo completo del POS, que mezcla categorías de servicio como Scanner/Actas/Copias que no son stock físico) — por eso los conteos reales (27/11/59/14) no coinciden con los del mockup original. `estado` = `bajo` si `cantidad <= minimo` de `Producto`, si no `disponible`; sucursales sin sync conectado devuelven todo en 0 (mismo criterio que Ventas, ver `src/utils/sucursales.js`) |
 
+## 21. Cotizaciones (`src/routes/cotizaciones.js`)
+
+| Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Modelo | Notas |
+|---|---|---|---|---|---|
+| `#cot-submit-btn` — `index.hbs` (sección `#sec-cotizaciones`) | `cotEnviar() JAVA.js` | `POST /api/cotizaciones` | `cotizaciones.js` | `Cotizacion` | **Sin autenticación** — cualquier visitante del home envía una solicitud (nombre, contacto, servicio, sucursal opcional, mensaje opcional); validado server-side (obligatorios, `enum` de servicio/sucursal, límites de longitud) antes de tocar Mongo. Mensajes de respuesta en el frontend son siempre texto estático propio vía `textContent` — nunca se reinyecta lo que el usuario escribió ni la respuesta del servidor como HTML, a diferencia del viejo XSS de Comentarios (sección 7, ya corregido con `escHtml()` en `JAVA.js:11-15,130`) |
+| Nav `data-seccion="cotizaciones"` (solo admin/coordinador) — `panel.hbs:92-94` | `cotCargar() panel.hbs:3433` | `GET /api/cotizaciones` | `cotizaciones.js` | `Cotizacion` | `requireAuth` + `requireAdmin`; render de tarjetas vía `createElement`/`textContent` (no `innerHTML`), mismo criterio de "nunca reinyectar datos externos como HTML" que el formulario público |
+| Botón "Marcar atendida"/"Marcar pendiente" en tarjeta — `panel.hbs:3419-3424` | `cotAtender() panel.hbs:3362` | `PATCH /api/cotizaciones/:id` | `cotizaciones.js` | `Cotizacion` | `requireAuth` + `requireAdmin`; guarda `atendidaPor` (nombre o correo de quien la marcó, `null` si vuelve a pendiente) |
+
+**Nuevo 2026-08-05** — junto con la fila de `GET /` (sección 1), resuelve el pendiente de QA "nav links rotos" registrado más abajo para el caso específico del home: "Sucursales"/"Cotizaciones" apuntaban por copy-paste a secciones equivocadas; ahora tienen contenido real propio.
+
+## 22. Socios (`src/routes/socios.js`)
+
+Único módulo montado fuera de `/api` con vista propia sin sidebar (`app.use('/socios', sociosRoutes)`, `servidor.js`) — mismo patrón que Asistencia (`/asistencia`): se llega por escaneo de QR, no por navegación del panel.
+
+| Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Modelo | Notas |
+|---|---|---|---|---|---|
+| QR de "Tu código QR socio" en `/cliente` (`vistas.js:176-183`) + botón "Ver QR" del panel (sección 5, `panel.hbs:3001`) | — (se escanea con la cámara nativa, o se abre directo si ya se copió el link) | `GET /socios/escanear/:qrId` | `socios.js` | `Usuario` | **Nuevo 2026-08-05** — arregla el QR de puntos, que hasta ahora no llevaba a ningún lado (codificaba texto plano, sin ningún endpoint que lo leyera). No usa `requireAuth`/`requireAdmin` (esos devuelven JSON) — chequea la sesión a mano y renderiza una vista con el error, mismo criterio que `GET /asistencia/confirmar` (asistencia.js:236-260); solo `admin`/`coordinador` pueden ver el panel de un cliente, cualquier otro cargo (o sin sesión) ve un mensaje pidiendo iniciar sesión. Busca por `qrId`, con fallback a `_id` para cuentas viejas que nunca visitaron `/cliente` (nunca se les generó `qrId`) — mismo fallback `qrId \|\| id` que ya usaba `usrVerQR()`. GET sin efectos secundarios a propósito: solo muestra nombre/correo/puntos/últimos 5 movimientos de `historial`; la escritura real pasa por el botón "Aplicar" |
+| Botón "Aplicar" del form de puntos — `socios/escanear.hbs` | inline `<script>` de la vista | `PATCH /api/clientes/:id/puntos` | `clientes.js:19` | `Usuario` | Reusa tal cual el endpoint que ya usaba "Ajustar puntos" en Usuarios (sección 5) — sin lógica nueva de puntos, solo una UI distinta pensada para usarse en caja al escanear al cliente |
+
+```mermaid
+flowchart LR
+  A["QR en /cliente o 'Ver QR' del panel"] -->|escaneo| B["GET /socios/escanear/:qrId"]
+  B -->|sin sesión admin| C["Vista con mensaje de error"]
+  B -->|admin/coordinador| D["Vista con datos del cliente"]
+  D -->|botón Aplicar| E["PATCH /api/clientes/:id/puntos"] --> F[("Usuario.puntos")]
+```
+
 ---
 
 ## Enlaces de navegación desde `panel.hbs`
@@ -354,14 +384,12 @@ Sin `/asistencia` en `panel.hbs` — esperado, se accede vía QR desde `/asisten
 
 ## Pendientes de seguridad / calidad conocidos
 
-### 🔴 XSS confirmado — comentarios de home pública (crítico, sin autenticación)
+### ✅ XSS — comentarios de home pública, ARREGLADO (fecha exacta no registrada, confirmado corregido 2026-08-05)
 
-- **Sink:** `public/JAVA.js:109-125`, función `crearTarjetaComentario(c)`. Línea 113 arma un template string y lo asigna directamente como HTML del elemento (no como texto plano); línea 121 interpola `c.texto` sin ninguna función de escape.
-- **Se dispara:** al cargar `/` para cualquier visitante (`JAVA.js:128-137`, `cargarComentarios`) y justo después de publicar (`JAVA.js:164`).
-- **Fuente sin sanitizar:** `POST /api/comentarios` (`src/routes/comentarios.js:13-28`) no requiere sesión y solo hace `.trim()`; `GET /api/comentarios` (línea 7-10) tampoco requiere sesión.
-- **Patrón correcto ya existe en el repo** (contraste): `panel.hbs` define `escHtml()` (línea 1512) y lo usa consistentemente en códigos/promociones — simplemente no se aplicó en `JAVA.js`.
-- **Payload de prueba:** `POST /api/comentarios` anónimo con `texto = "<img src=x onerror=alert(1)>"`, confirmar ejecución al recargar `/`.
-- **Impacto:** XSS almacenado, cero autenticación requerida ni para escribir ni para disparar — expone a cualquier visitante anónimo del home. Corresponde al hallazgo "XSS pública en home comments" de la memoria de QA 2026-08-03.
+- **Sink original:** `public/JAVA.js`, función `crearTarjetaComentario(c)` — armaba un template string asignado como HTML del elemento e interpolaba `c.texto` sin escapar.
+- **Estado actual (verificado leyendo el código, 2026-08-05):** `JAVA.js:11-15` ahora define `escHtml()` (mismo patrón que ya usaba `panel.hbs:1612`), y `crearTarjetaComentario()` (`JAVA.js:118-133`) la aplica: `` `<p class="comment-text">"${escHtml(c.texto)}"</p>` ``. El resto del template (`estrellas`, `tiempoRelativo(c.fecha)`) son valores derivados, no texto libre del usuario — no hay otro punto de interpolación sin escapar.
+- **Fuente:** `POST /api/comentarios` sigue sin requerir sesión (a propósito, es el flujo público de reseñas) — la mitigación es correcta en el sink, no en la fuente, que es el patrón esperado para contenido público.
+- Este archivo (`CLAUDE.md`) decía "XSS confirmado" desde el barrido original del 2026-08-03; quedó desactualizado respecto al código en algún punto entre esa fecha y el 2026-08-05 sin que nadie actualizara el mapa — ejemplo real de por qué esta sección puede desincronizarse si no se toca junto con el código.
 
 ### ✅ Horarios — `requireAdmin` faltante, ARREGLADO 2026-08-03
 
@@ -385,7 +413,7 @@ Sin `/asistencia` en `panel.hbs` — esperado, se accede vía QR desde `/asisten
 
 ### Pendientes de QA registrados en memoria (no verificados en este barrido — cubren archivos/secciones fuera del alcance de rutas API)
 
-Ver memoria `i24h_qa_pendientes_2026-08-03.md` para el detalle original: nav links rotos (en secciones no cubiertas aquí), botón "Soy empleado" sin destino, firma de dev visible en footer, reseñas inapropiadas ya publicadas por limpiar antes de demo.
+Ver memoria `i24h_qa_pendientes_2026-08-03.md` para el detalle original: nav links rotos (**el caso de `index.hbs` — "Sucursales"/"Cotizaciones" — ya se corrigió 2026-08-05, ver secciones 1 y 21; revisar si queda algo en otras secciones no cubiertas por este barrido**), botón "Soy empleado" sin destino, firma de dev visible en footer, reseñas inapropiadas ya publicadas por limpiar antes de demo.
 
 ---
 
