@@ -312,8 +312,14 @@ document.getElementById('login-btn')?.addEventListener('click', async () => {
 
     // Guarda la sesión — el nav se actualiza al recargar vía /api/sesion
     localStorage.setItem('sesion', JSON.stringify(datos));
-    // Recarga para que el servidor renderice la vista con la sesión activa
-    window.location.reload();
+    // Clientes van directo a su panel (mismo destino que el registro, ver
+    // arriba); empleados se quedan en home y usan el botón "Ir al panel".
+    if (datos.cargo === 'cliente') {
+      window.location.href = '/cliente';
+    } else {
+      // Recarga para que el servidor renderice la vista con la sesión activa
+      window.location.reload();
+    }
   } catch (err) {
     console.error('Error en login:', err);
     alert('No se pudo conectar al servidor.');

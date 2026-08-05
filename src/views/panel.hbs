@@ -2560,7 +2560,7 @@ renderBitacora();
             '<i class="ti ti-dots-vertical" aria-hidden="true"></i></button>' +
           '<div class="usr-menu-dd" id="usr-menu-e' + e._id + '">' +
             '<div class="usr-mitem" onclick="usrEditarCargo(\'' + e._id + '\',\'' + nom + '\',\'' + e.cargo + '\')"><i class="ti ti-briefcase" aria-hidden="true"></i> Editar cargo</div>' +
-            '<div class="usr-mitem" onclick="usrCambiarSucursales(\'' + e._id + '\',\'' + nom + '\',' + JSON.stringify(e.sucursales||[]) + ')"><i class="ti ti-building-store" aria-hidden="true"></i> Cambiar sucursales</div>' +
+            '<div class="usr-mitem" onclick="usrCambiarSucursales(\'' + e._id + '\',\'' + nom + '\',' + sucAct + ')"><i class="ti ti-building-store" aria-hidden="true"></i> Cambiar sucursales</div>' +
             '<div class="usr-mitem" onclick="usrEditarTurno(\'' + e._id + '\',\'' + nom + '\',\'' + (e.turno||'') + '\')"><i class="ti ti-clock" aria-hidden="true"></i> Editar turno</div>' +
             '<div class="usr-mitem" onclick="usrCambiarPassword(\'' + e._id + '\',\'' + nom + '\')"><i class="ti ti-lock" aria-hidden="true"></i> Cambiar contrase\xF1a</div>' +
             '<div class="usr-mitem danger" onclick="usrCerrarMenu();usrEliminarUsuario(\'' + e._id + '\',\'' + nom + '\')"><i class="ti ti-trash" aria-hidden="true"></i> Eliminar cuenta</div>' +
@@ -3561,6 +3561,15 @@ renderBitacora();
     'Ordóñez': 'ordonez',
   };
 
+  // Inverso: id/slug del filtro (`#vnt-suc-filter`) → nombre completo con
+  // acentos. El select usa slugs (compatibles con el mock viejo de
+  // /api/ventas), pero /api/ventas/extraordinarias es Mongo real y espera
+  // el nombre completo (mismo formato que sucursalPermitida/sucursalConectada).
+  var SUC_ID_TO_NAME = {};
+  Object.keys(SUC_NAME_TO_ID).forEach(function (nombre) {
+    SUC_ID_TO_NAME[SUC_NAME_TO_ID[nombre]] = nombre;
+  });
+
   var vntPeriodo  = '7';
   var vntSucursal = 'todas';
   var vntTopCat   = 'todas';
@@ -3926,7 +3935,8 @@ renderBitacora();
     if (elTotal) elTotal.textContent = '…';
 
     try {
-      var r    = await fetch('/api/ventas/extraordinarias?sucursal=' + vntSucursal + '&periodo=' + vntPeriodo);
+      var sucExtra = vntSucursal === 'todas' ? 'todas' : (SUC_ID_TO_NAME[vntSucursal] || vntSucursal);
+      var r    = await fetch('/api/ventas/extraordinarias?sucursal=' + encodeURIComponent(sucExtra) + '&periodo=' + vntPeriodo);
       var data = await r.json();
       if (!r.ok) {
         vexEstadoError(data.error || 'No se pudo cargar ventas extraordinarias.');
