@@ -327,8 +327,9 @@ router.get('/material/tickets-dia', requireAuth, async (req, res) => {
 
 // ── GET /api/material/corte-turno?sucursal=&fecha= ─────────────────────
 // Corte de caja por turno: ingreso (CorteCaja), SDP (sobre de producto),
-// SDA (sobre de actas / pago a gobierno), TI24H (venta bruta de tickets) y
-// tickets generados, para la pestaña "Corte por turno" del dashboard.
+// SDA (sobre de actas / pago a gobierno), TI24H (descuentos aplicados por
+// error de impresión, AjusteTicket.montoDescontado) y tickets generados,
+// para la pestaña "Corte por turno" del dashboard.
 router.get('/material/corte-turno', requireAuth, async (req, res) => {
   try {
     const { sucursal, fecha } = req.query;
@@ -342,12 +343,25 @@ router.get('/material/corte-turno', requireAuth, async (req, res) => {
     const matchTickets = { ...filtroSucursal(sucursal), fecha: rango, anulado: false };
     const matchCortes  = { ...filtroSucursal(sucursal), fecha: rango };
 
-    const [tickets, cortes, nombresMaterial, nombresActaEstado] = await Promise.all([
+    const [tickets, cortes, ajustes, nombresMaterial, nombresActaEstado] = await Promise.all([
       Ticket.find(matchTickets).lean(),
       CorteCaja.find(matchCortes).lean(),
+      AjusteTicket.find({ ...filtroSucursal(sucursal), fecha: rango }).lean(),
       nombresProductosExcluidos(sucursal),
       nombresProductosActaEstado(sucursal),
     ]);
+
+    // Los ajustes pueden referenciar tickets ya anulados o fuera del filtro
+    // de `matchTickets`, así que se busca su turno por separado (por nticket).
+    const numerosAjuste = ajustes.map(a => a.nticket);
+    const ticketsAjustados = numerosAjuste.length
+      ? await Ticket.find({ ...filtroSucursal(sucursal), nticket: { $in: numerosAjuste } })
+          .select('nticket lineas')
+          .lean()
+      : [];
+    const turnoPorNticket = new Map(
+      ticketsAjustados.map(t => [t.nticket, turnoDesdeHora(t.lineas?.[0]?.hora)])
+    );
 
     const vacio = () => ({ ingreso: 0, sdp: 0, sdaMonto: 0, sdaCantidad: 0, ti24h: 0, ticketsSet: new Set() });
     const turnos = { T1: vacio(), T2: vacio(), T3: vacio() };
@@ -357,6 +371,11 @@ router.get('/material/corte-turno', requireAuth, async (req, res) => {
       if (turno && turnos[turno]) turnos[turno].ingreso += (c.ingreso || 0);
     }
 
+    for (const a of ajustes) {
+      const turno = turnoPorNticket.get(a.nticket);
+      if (turno && turnos[turno]) turnos[turno].ti24h += (a.montoDescontado || 0);
+    }
+
     for (const t of tickets) {
       for (const l of (t.lineas || [])) {
         if (![1, 2, 5, 6].includes(l.tipo)) continue;
@@ -364,7 +383,6 @@ router.get('/material/corte-turno', requireAuth, async (req, res) => {
         if (!turno || !turnos[turno]) continue;
 
         const nombre = (l.detalle || '').trim().toUpperCase();
-        turnos[turno].ti24h += (l.importe || 0);
         turnos[turno].ticketsSet.add(t.nticket);
         if (nombresMaterial.has(nombre))   turnos[turno].sdp += (l.importe || 0);
         if (nombresActaEstado.has(nombre)) {
