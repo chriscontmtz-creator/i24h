@@ -12,15 +12,20 @@ const SUCURSALES_STAFF = ['Simon Bolivar', 'Centro', 'Sureste'];
 
 // ── Empleados (cuentas auth) ─────────────────────────────────────────────
 
-// GET /api/empleados — admin/coordinador ven a todos; un líder solo ve a
-// sus colaboradores (los que comparten sucursal con él); cualquier otro
-// cargo no tiene vista de cuentas ajenas.
+// GET /api/empleados — admin ve a todos; coordinador y líder ven solo su
+// equipo (cuentas que comparten sucursal con ellos, sin incluir otros
+// admins/coordinadores); cualquier otro cargo no tiene vista de cuentas
+// ajenas. Antes coordinador estaba agrupado con admin y veía la lista
+// completa sin filtrar — corregido 2026-08-05.
 router.get('/empleados', requireAuth, async (req, res) => {
   const sesion = req.session.usuario;
   try {
     let filtro;
-    if (['admin', 'coordinador'].includes(sesion.cargo)) {
+    if (sesion.cargo === 'admin') {
       filtro = { cargo: { $ne: 'cliente' } };
+    } else if (sesion.cargo === 'coordinador') {
+      const sucursales = await sucursalesDeUsuario(sesion);
+      filtro = { cargo: { $in: ['lider', 'encargado', 'colaborador'] }, sucursales: { $in: sucursales } };
     } else if (sesion.cargo === 'lider') {
       const sucursales = await sucursalesDeUsuario(sesion);
       filtro = { cargo: 'colaborador', sucursales: { $in: sucursales } };

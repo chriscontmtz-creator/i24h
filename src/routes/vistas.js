@@ -152,7 +152,14 @@ router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
     scriptExtra:     'js/modal-material.js',
     usuario:         u,
     esAdmin:         ['admin', 'coordinador'].includes(u.cargo),
+    // Admin "puro" — a diferencia de esAdmin (admin+coordinador, que sigue
+    // gateando Tickets I24H/Promociones/Fotos/Cotizaciones/Configuración sin
+    // cambios), esto distingue quién ve TODOS los usuarios sin filtrar.
+    esAdminPuro:     u.cargo === 'admin',
     esLider:         u.cargo === 'lider',
+    // Quién ve la sección de equipo (como "Usuarios" completo o como "Mi
+    // equipo" filtrado) — admin ve todos, coordinador y líder ven su equipo.
+    esGestorEquipo:  ['admin', 'coordinador', 'lider'].includes(u.cargo),
     esSupervisorAsistencia: ['admin', 'coordinador', 'lider', 'encargado'].includes(u.cargo),
     esSupervisorBitacoras: ['admin', 'coordinador', 'lider'].includes(u.cargo),
     esColaborador,

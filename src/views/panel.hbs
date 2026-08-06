@@ -64,9 +64,15 @@
       <!-- EQUIPO -->
       <div class="panel-nav-grupo">
         <span class="panel-nav-label">Equipo</span>
-        <a href="/empleados.html" class="panel-nav-item" style="text-decoration:none">
-          <i class="ti ti-users"></i><span>Empleados</span>
-        </a>
+        {{#if esGestorEquipo}}
+        <!-- Antes había un link muerto a /empleados.html (página estática
+             vieja, sin backend). Se reemplazó por la sección real "Usuarios",
+             ya usada en Sistema — admin ve todos, coordinador y líder ven
+             solo su equipo (filtro server-side en GET /api/empleados). -->
+        <button class="panel-nav-item" data-seccion="usuarios" data-titulo="{{#if esAdminPuro}}Usuarios{{else}}Mi equipo{{/if}}">
+          <i class="ti ti-user-cog"></i><span>{{#if esAdminPuro}}Usuarios{{else}}Mi equipo{{/if}}</span>
+        </button>
+        {{/if}}
         <a href="/horarios" class="panel-nav-item" style="text-decoration:none">
           <i class="ti ti-calendar-time"></i><span>Horarios</span>
         </a>
@@ -80,9 +86,6 @@
         <button class="panel-nav-action" onclick="window.abrirModalMaterial()">
           <i class="ti ti-pencil-dollar"></i><span>Tickets I24H</span>
         </button>
-        <button class="panel-nav-item" data-seccion="usuarios" data-titulo="Usuarios">
-          <i class="ti ti-user-cog"></i><span>Usuarios</span>
-        </button>
         <button class="panel-nav-item" data-seccion="promociones" data-titulo="Promociones">
           <i class="ti ti-speakerphone"></i><span>Promociones</span>
         </button>
@@ -94,15 +97,6 @@
         </button>
         <button class="panel-nav-item" data-seccion="configuracion" data-titulo="Configuración">
           <i class="ti ti-settings"></i><span>Configuración</span>
-        </button>
-      </div>
-      {{else if esLider}}
-      <!-- Líder: solo ve las cuentas de sus colaboradores, misma sección
-           "Usuarios" pero recortada — nada de Tickets/Promociones/Fotos/Config -->
-      <div class="panel-nav-grupo">
-        <span class="panel-nav-label">Equipo</span>
-        <button class="panel-nav-item" data-seccion="usuarios" data-titulo="Mi equipo">
-          <i class="ti ti-user-cog"></i><span>Mi equipo</span>
         </button>
       </div>
       {{/if}}
@@ -1245,22 +1239,6 @@
             </div><!-- /rpt-feed -->
           </div><!-- /rpt-right -->
         </div><!-- /rpt-wrap -->
-      </div>
-
-      <div class="panel-seccion oculta" id="sec-empleados">
-        <div style="max-width:460px;margin:80px auto;text-align:center">
-          <div style="width:68px;height:68px;background:var(--fondo-alt);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:2.2rem;color:var(--acento)">
-            <i class="ti ti-users"></i>
-          </div>
-          <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:8px;color:var(--texto)">Panel de Empleados</h2>
-          <p style="color:var(--texto-suave);font-size:.88rem;margin-bottom:22px;line-height:1.6">
-            Auditorías diarias, ranking, puntos, bonos y gestión de turnos.<br>
-            Se abre en su propia página.
-          </p>
-          <a href="/empleados.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:var(--acento);color:#fff;font-size:.9rem;font-weight:600;text-decoration:none;transition:background .2s" onmouseover="this.style.background='var(--acento-oscuro)'" onmouseout="this.style.background='var(--acento)'">
-            <i class="ti ti-external-link"></i> Abrir panel de empleados
-          </a>
-        </div>
       </div>
 
       <div class="panel-seccion oculta" id="sec-horarios">
