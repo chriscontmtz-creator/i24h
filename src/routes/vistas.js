@@ -219,6 +219,19 @@ router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
     sucursalScope = sucursalesUsuario.length + ' sucursales';
   }
 
+  // Cabecera de la vista Sucursales (BUG-03). El contador y las sumas deben
+  // reflejar SOLO las sucursales a mando del usuario, no las 9. Numerador = de
+  // sus sucursales visibles, cuántas tienen sync en línea; denominador = cuántas
+  // ve en total. Admin/coordinador con las 9 asignadas ven "X / 9".
+  const sucursalesEnLinea = sucursalesUsuario.filter(s => SUCURSALES_CONECTADAS.includes(s)).length;
+  const totalSucursales   = sucursalesUsuario.length;
+  const veTodasSucursales = u.cargo === 'admin' || sucursalesUsuario.length >= TODAS_SUCURSALES.length;
+  let recaudacionScope;
+  if (veTodasSucursales)                 recaudacionScope = 'Suma de todas las sucursales';
+  else if (sucursalesUsuario.length === 0) recaudacionScope = 'Sin sucursal asignada';
+  else if (sucursalesUsuario.length === 1) recaudacionScope = sucursalesUsuario[0];
+  else                                     recaudacionScope = 'Suma de tus sucursales';
+
   res.render('panel', {
     titulo:          'Panel i24h',
     scriptPrincipal: 'panel.js',
@@ -242,12 +255,13 @@ router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
     sucursalesUsuarioVenta,
     sucursalScope,
     sucursalesVisibles,
-    // "En línea" en la tarjeta de Sucursales = sucursales con el sync de
-    // CyberPlanet reportando datos en vivo (no "abiertas", que para una cadena
-    // 24/7 son las 9). Antes la métrica decía "0 / 9" hardcodeado, que
-    // contradecía los 9 badges "Abierta". Ahora refleja el conteo real.
-    sucursalesEnLinea: SUCURSALES_CONECTADAS.length,
-    totalSucursales:   TODAS_SUCURSALES.length,
+    // "En línea" en la tarjeta de Sucursales = sucursales del usuario con el
+    // sync de CyberPlanet reportando datos en vivo (no "abiertas", que para una
+    // cadena 24/7 son todas). Numerador y denominador acotados a las sucursales
+    // visibles del usuario (BUG-03).
+    sucursalesEnLinea,
+    totalSucursales,
+    recaudacionScope,
   });
 });
 
