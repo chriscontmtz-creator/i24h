@@ -8,9 +8,15 @@ export const RECOMPENSAS = [
   { id: 'kit-papeleria', nombre: 'Kit de papelería gratis',       puntos: 500, icono: 'ti-notebook'       },
 ];
 
-// Sucursales físicas con coordenadas para Google Maps
-export const SUCURSALES_CLIENTE = [
-  { nombre: 'Sucursal Mitras',         dir: 'Av. Venustiano Carranza 1232, Mitras Centro',      lat: 25.6790, lng: -100.3735 },
-  { nombre: 'Sucursal Santa Catarina', dir: 'Blvd. Díaz Ordaz 450, Santa Catarina',              lat: 25.6743, lng: -100.4593 },
-  { nombre: 'Sucursal Cumbres',        dir: 'Av. Paseo de los Leones 2901, Cumbres 4to Sector', lat: 25.7291, lng: -100.3891 },
-];
+// Sucursales que ve el cliente en "Sucursales más cercanas". Derivadas de la
+// fuente única TODAS_SUCURSALES (las 9 reales de la cadena) — antes había 3
+// sucursales inventadas (Mitras/Santa Catarina/Cumbres) que no existen. No se
+// codifican calles ni coordenadas porque el repo no tiene las direcciones
+// reales verificadas; el enlace abre una búsqueda de Google Maps por nombre
+// (ver vistas.js), en vez de apuntar a coordenadas falsas.
+import { TODAS_SUCURSALES } from '../utils/sucursales.js';
+
+export const SUCURSALES_CLIENTE = TODAS_SUCURSALES.map(nombre => ({
+  nombre,
+  dir: 'Internet 24 Horas · Nuevo León',
+}));

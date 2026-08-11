@@ -42,9 +42,22 @@ function escHtml(str) {
     if (!menu.contains(e.target) && e.target !== btn) cerrarMenu();
   });
 
-  // Cierra al hacer clic en un link del menú
-  menu.querySelectorAll('a').forEach(function (a) {
-    a.addEventListener('click', cerrarMenu);
+  // Cierra el menú y hace scroll suave a la sección (compensando el nav sticky).
+  // El salto nativo del ancla dejaba el título de la sección oculto detrás de la
+  // barra fija; este handler reutiliza el mismo mecanismo scrollIntoView del
+  // botón "Iniciar sesión" y ajusta el offset del alto del nav.
+  menu.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var id = a.getAttribute('href').slice(1);
+      var destino = document.getElementById(id);
+      if (!destino) return;          // deja el comportamiento por defecto si no existe
+      e.preventDefault();
+      cerrarMenu();
+      var nav = document.querySelector('.nav');
+      var offset = nav ? nav.getBoundingClientRect().height : 0;
+      var y = destino.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    });
   });
 })();
 
@@ -155,8 +168,11 @@ function mostrarMensaje(texto, tipo) {
   setTimeout(() => { mensajeEstado.style.display = 'none'; }, 3500);
 }
 
-// Publica un comentario nuevo al presionar el botón
-botonPublicar.addEventListener('click', async () => {
+// Publica un comentario nuevo al presionar el botón.
+// Optional chaining: en /cliente no existe el formulario de comentarios
+// (botonPublicar es null); sin el `?.` esto lanzaba y mataba todo el script
+// de aquí en adelante — incluido el dropdown de cuenta, el logout y los canjes.
+botonPublicar?.addEventListener('click', async () => {
   const texto = campoComentario.value.trim();
   if (!texto)                { mostrarMensaje('Escribe un comentario antes de publicar.', 'error'); return; }
   if (!estrellasSeleccionadas) { mostrarMensaje('Selecciona una calificación con estrellas.', 'error'); return; }

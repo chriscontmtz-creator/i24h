@@ -177,11 +177,18 @@
         {{#each fotosSucursales}}
         <div class="foto-suc-bloque">
           <p class="foto-suc-titulo">{{sucursal}}</p>
+          {{#if urls.length}}
           <div class="foto-suc-grid">
             {{#each urls}}
             <img class="foto-suc-img" src="{{this}}" alt="Foto de la sucursal {{../sucursal}}" loading="lazy">
             {{/each}}
           </div>
+          {{else}}
+          <div class="foto-suc-placeholder">
+            <i class="ti ti-building-store" aria-hidden="true"></i>
+            <span>Foto próximamente</span>
+          </div>
+          {{/if}}
         </div>
         {{/each}}
       {{else}}

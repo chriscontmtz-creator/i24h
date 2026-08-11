@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import fs         from 'fs';
+import path       from 'path';
 import QRCode     from 'qrcode';
 import Usuario    from '../models/Usuario.js';
 import Producto   from '../models/Producto.js';
@@ -8,7 +10,7 @@ import FotoSucursal, { SUCURSALES } from '../models/FotoSucursal.js';
 import { SERVICIOS_COTIZACION } from '../models/Cotizacion.js';
 import { requireEmpleado, sesionActual } from '../middlewares/auth.js';
 import { RECOMPENSAS, SUCURSALES_CLIENTE } from '../config/constants.js';
-import { sucursalesDeUsuario } from '../utils/sucursales.js';
+import { sucursalesDeUsuario, TODAS_SUCURSALES, SUCURSALES_CONECTADAS } from '../utils/sucursales.js';
 
 const router = Router();
 
@@ -33,6 +35,48 @@ const SUCURSAL_CATALOGO = 'SimonBolivar';
 // Arma el catálogo de precios para el panel de cliente a partir de los
 // productos/categorías reales del sync — solo nombre y precio, agrupado
 // por categoría; nunca se expone stock, mínimo, código ni _id de Mongo.
+
+// ── Limpieza de artefactos de importación (BUG-09) ──────────────────────────
+// Los nombres de producto vienen del sync de CyberPlanet y traen basura del
+// import (mayúsculas sin acentos, sufijos numéricos pegados a nombres de
+// estado, etc.: "AGUASCALIENES1", "NUEVOLEON2", "SAN LUI POTOSI1"). Esto NO
+// corrige la base de datos —el sync la reescribiría en el próximo corte— sino
+// que normaliza el texto al momento de mostrar el catálogo al cliente.
+const ESTADOS_MX = [
+  'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche',
+  'Chiapas', 'Chihuahua', 'Ciudad de México', 'Coahuila', 'Colima', 'Durango',
+  'Guanajuato', 'Guerrero', 'Hidalgo', 'Jalisco', 'México', 'Michoacán',
+  'Morelos', 'Nayarit', 'Nuevo León', 'Oaxaca', 'Puebla', 'Querétaro',
+  'Quintana Roo', 'San Luis Potosí', 'Sinaloa', 'Sonora', 'Tabasco',
+  'Tamaulipas', 'Tlaxcala', 'Veracruz', 'Yucatán', 'Zacatecas',
+];
+const claveEstado = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
+const ESTADO_POR_CLAVE = new Map(ESTADOS_MX.map(e => [claveEstado(e), e]));
+
+// Typos que no se resuelven por coincidencia directa (falta una letra o hay
+// error de dedo) — corrección explícita, clave en mayúsculas.
+const FIX_NOMBRE_PRODUCTO = new Map([
+  ['AGUASCALIENES1',  'Aguascalientes'],
+  ['SAN LUI POTOSI1', 'San Luis Potosí'],
+]);
+
+function normalizarNombreProducto(nombre) {
+  const original = (nombre || '').trim();
+  const fijo = FIX_NOMBRE_PRODUCTO.get(original.toUpperCase());
+  if (fijo) return fijo;
+  // Nombre de estado con sufijo numérico pegado por el import (NUEVOLEON2,
+  // JALISCO1...) — si al quitar los dígitos finales coincide con un estado
+  // real, devuelve el nombre canónico con acentos y espacios. Solo se aplica
+  // a nombres que resultan ser un estado; el resto de productos (que sí pueden
+  // terminar legítimamente en número) queda intacto.
+  const sinSufijo = original.replace(/\d+$/, '');
+  if (sinSufijo !== original) {
+    const estado = ESTADO_POR_CLAVE.get(claveEstado(sinSufijo));
+    if (estado) return estado;
+  }
+  return original;
+}
+
 async function armarCatalogo() {
   const [productos, categorias] = await Promise.all([
     Producto.find({ sucursal: SUCURSAL_CATALOGO, precio: { $gt: 0 } })
@@ -47,7 +91,7 @@ async function armarCatalogo() {
   for (const p of productos) {
     const categoria = nombrePorCodigo.get(p.codCategoria) || 'Otros';
     if (!grupos.has(categoria)) grupos.set(categoria, []);
-    grupos.get(categoria).push({ nombre: p.nombre, precio: p.precio });
+    grupos.get(categoria).push({ nombre: normalizarNombreProducto(p.nombre), precio: p.precio });
   }
 
   return [...grupos.entries()]
@@ -77,20 +121,29 @@ async function promocionesVigentes() {
   }));
 }
 
-// Fotos de sucursal agrupadas — solo se listan sucursales que ya tengan
-// al menos una foto subida por un admin (nada de placeholders vacíos).
+// Carpeta física donde el módulo Fotos (fotos.js) guarda las imágenes subidas.
+const DIR_FOTOS_SUCURSAL = path.join(process.cwd(), 'public', 'imagenes', 'sucursales');
+
+// Fotos de sucursal agrupadas. Devuelve SIEMPRE las 9 sucursales reales (con o
+// sin foto) para que "Conoce nuestras sucursales" muestre el directorio
+// completo, no solo la única que tenía registro. Ignora registros cuyo archivo
+// ya no existe en disco (la carpeta puede quedar vacía tras un redeploy en
+// Render, que no persiste el filesystem) — así no se pinta un <img> roto; esas
+// sucursales caen al placeholder "Foto próximamente" del template.
 async function fotosPorSucursal() {
   const fotos = await FotoSucursal.find().select('sucursal archivo -_id').sort({ createdAt: -1 }).lean();
 
-  const grupos = new Map();
+  const porSucursal = new Map();
   for (const f of fotos) {
-    if (!grupos.has(f.sucursal)) grupos.set(f.sucursal, []);
-    grupos.get(f.sucursal).push('/imagenes/sucursales/' + f.archivo);
+    if (!fs.existsSync(path.join(DIR_FOTOS_SUCURSAL, f.archivo))) continue;
+    if (!porSucursal.has(f.sucursal)) porSucursal.set(f.sucursal, []);
+    porSucursal.get(f.sucursal).push('/imagenes/sucursales/' + f.archivo);
   }
 
-  return [...grupos.entries()]
-    .sort(([a], [b]) => a.localeCompare(b, 'es'))
-    .map(([sucursal, urls]) => ({ sucursal, urls }));
+  return SUCURSALES.map(sucursal => ({
+    sucursal,
+    urls: porSucursal.get(sucursal) || [],
+  }));
 }
 
 // GET / — página principal
@@ -144,6 +197,20 @@ router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
     slug: SLUG_VENTA[nombre] || nombre,
   }));
 
+  // Etiqueta de alcance para el sidebar (BUG-10). Antes decía "Todas" fijo para
+  // cualquier rol; ahora refleja el scope real: admin (y quien vea las 9) ve
+  // "Todas", un rol de una sola sucursal ve su nombre, varios ven el conteo.
+  let sucursalScope;
+  if (u.cargo === 'admin' || sucursalesUsuario.length >= TODAS_SUCURSALES.length) {
+    sucursalScope = 'Todas';
+  } else if (sucursalesUsuario.length === 0) {
+    sucursalScope = 'Sin sucursal';
+  } else if (sucursalesUsuario.length === 1) {
+    sucursalScope = sucursalesUsuario[0];
+  } else {
+    sucursalScope = sucursalesUsuario.length + ' sucursales';
+  }
+
   res.render('panel', {
     titulo:          'Panel i24h',
     scriptPrincipal: 'panel.js',
@@ -165,6 +232,13 @@ router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
     esColaborador,
     sucursalesUsuario,
     sucursalesUsuarioVenta,
+    sucursalScope,
+    // "En línea" en la tarjeta de Sucursales = sucursales con el sync de
+    // CyberPlanet reportando datos en vivo (no "abiertas", que para una cadena
+    // 24/7 son las 9). Antes la métrica decía "0 / 9" hardcodeado, que
+    // contradecía los 9 badges "Abierta". Ahora refleja el conteo real.
+    sucursalesEnLinea: SUCURSALES_CONECTADAS.length,
+    totalSucursales:   TODAS_SUCURSALES.length,
   });
 });
 
@@ -197,7 +271,10 @@ router.get('/cliente', sesionActual, async (req, res) => {
     const historial   = [...(usuario.historial || [])].reverse().slice(0, 10);
     const sucursales  = SUCURSALES_CLIENTE.map(s => ({
       ...s,
-      mapsUrl: `https://maps.google.com/?q=${s.lat},${s.lng}`,
+      // Búsqueda por nombre en Maps — no hay coordenadas reales verificadas
+      // de cada sucursal, así que apuntamos a una búsqueda en vez de a un
+      // par lat/lng inventado (ver constants.js).
+      mapsUrl: `https://www.google.com/maps/search/${encodeURIComponent('Internet 24 Horas ' + s.nombre + ' Nuevo León')}`,
     }));
     const catalogo    = await armarCatalogo();
     const promociones = await promocionesVigentes();

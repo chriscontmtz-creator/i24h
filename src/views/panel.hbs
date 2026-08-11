@@ -10,7 +10,7 @@
     <!-- Logo -->
     <div class="panel-sidebar-logo">
       <span class="panel-logo-text">i24h</span>
-      <span class="panel-logo-suc">Sucursal: Todas</span>
+      <span class="panel-logo-suc">Sucursal: {{sucursalScope}}</span>
     </div>
 
     <!-- Menú de navegación -->
@@ -120,7 +120,7 @@
       <div class="panel-sidebar-avatar">{{usuario.nombre.[0]}}</div>
       <div class="panel-sidebar-info">
         <p class="panel-sidebar-nombre">{{usuario.nombre}}</p>
-        <p class="panel-sidebar-cargo">{{usuario.cargo}} · Todas</p>
+        <p class="panel-sidebar-cargo">{{usuario.cargo}} · {{sucursalScope}}</p>
       </div>
       <i class="ti ti-pencil" style="font-size:13px;color:var(--texto-suave);flex-shrink:0;margin-left:auto"></i>
     </div>
@@ -270,8 +270,8 @@
         <div class="panel-metrics">
           <div class="panel-metric-card">
             <span class="panel-metric-label">Sucursales activas</span>
-            <span class="panel-metric-valor">0 / 9</span>
-            <span class="panel-metric-sub">En línea ahora</span>
+            <span class="panel-metric-valor">{{sucursalesEnLinea}} / {{totalSucursales}}</span>
+            <span class="panel-metric-sub">Con sync en línea</span>
           </div>
           <div class="panel-metric-card">
             <span class="panel-metric-label">Recaudación zona hoy</span>
@@ -1704,6 +1704,29 @@ function escJs(str) {
   const secciones = document.querySelectorAll('.panel-seccion');
   const titulo    = document.getElementById('panel-titulo');
 
+  // Disparo central de carga de datos de una sección (BUG-08). Antes cada
+  // sección se cargaba por un camino distinto: unas eager al cargar la página
+  // (usuarios, promos, fotos, dashboard), Ventas con un listener aparte sobre
+  // su botón del nav, y Bitácoras/Inventario dentro del handler del sidebar —
+  // pero irSeccion() (tarjetas del dashboard) solo cubría bitacoras/inventario.
+  // Según la sección y el punto de entrada, el primer clic mostraba la sección
+  // pero no cargaba su contenido (el segundo sí). Centralizar el disparo aquí
+  // hace que TODA activación —clic en el sidebar, tarjeta del dashboard o
+  // ?s=— cargue los datos a la primera. Idempotente por sección.
+  function dispararCargaSeccion(id) {
+    try {
+      if (id === 'bitacoras') {
+        var selSuc = document.getElementById('bit-sucursal');
+        if (sucursalActiva && selSuc) selSuc.value = sucursalActiva;
+        bitCargarHistorial(sucursalActiva || (selSuc ? selSuc.value : ''));
+      } else if (id === 'inventario' && window.invCargarPreview) {
+        window.invCargarPreview();
+      } else if (id === 'ventas' && window.vntCargar) {
+        window.vntCargar();
+      }
+    } catch (e) { console.error('Carga de sección ' + id + ':', e); }
+  }
+
   function activarSeccion(id, nombre) {
     if (!id) return;   // botones sin data-seccion (ej: abrir modal) no deben ocultar secciones
     items.forEach(function (i) { i.classList.remove('active'); });
@@ -1715,6 +1738,8 @@ function escJs(str) {
     if (target) target.classList.remove('oculta');
 
     titulo.textContent = nombre || (item ? item.dataset.titulo : id);
+
+    dispararCargaSeccion(id);
   }
 
   // Función global — la usan los botones onclick en las tarjetas de sucursales
@@ -1722,28 +1747,12 @@ function escJs(str) {
     sucursalActiva = sucursal || null;
     var nombre = document.querySelector('[data-seccion="' + id + '"]')?.dataset.titulo || id;
     activarSeccion(id, nombre);
-    if (id === 'bitacoras') {
-      if (sucursalActiva) {
-        var selSuc = document.getElementById('bit-sucursal');
-        if (selSuc) selSuc.value = sucursalActiva;
-      }
-      bitCargarHistorial(sucursalActiva || '');
-    }
-    if (id === 'inventario' && window.invCargarPreview) window.invCargarPreview();
   };
 
   items.forEach(function (item) {
     item.addEventListener('click', function () {
       sucursalActiva = null;
       activarSeccion(item.dataset.seccion, item.dataset.titulo);
-      // Entrar a Bitácoras directo desde el nav (sin pasar por una tarjeta de
-      // sucursal) antes no cargaba el historial guardado — solo se refrescaba
-      // al cerrar una bitácora. Ahora se carga siempre al entrar a la sección.
-      if (item.dataset.seccion === 'bitacoras') {
-        var selSucNav = document.getElementById('bit-sucursal');
-        bitCargarHistorial(selSucNav ? selSucNav.value : '');
-      }
-      if (item.dataset.seccion === 'inventario' && window.invCargarPreview) window.invCargarPreview();
     });
   });
 
@@ -3717,11 +3726,10 @@ renderBitacora();
   var vntExpBtn = document.getElementById('vnt-export-btn');
   if (vntExpBtn) vntExpBtn.addEventListener('click', vntExportar);
 
-  // Activar carga cuando se entra a la sección Ventas
-  var vntNavBtn = document.querySelector('[data-seccion="ventas"]');
-  if (vntNavBtn) vntNavBtn.addEventListener('click', function () {
-    if (!vntCargado) vntCargar();
-  });
+  // La carga al entrar a la sección Ventas ahora la dispara activarSeccion()
+  // (dispararCargaSeccion) — ver BUG-08 en el handler del sidebar. Se expone
+  // vntCargar en window para ese disparo central.
+  window.vntCargar = function () { vntCargar(); };
 
   // ── carga principal ────────────────────────────────────────────────────────
 
@@ -3747,7 +3755,13 @@ renderBitacora();
     var el = function (id) { return document.getElementById(id); };
 
     if (el('vnt-k-total'))       el('vnt-k-total').textContent   = fmt(d.totalGeneral);
-    if (el('vnt-k-activas'))     el('vnt-k-activas').textContent  = d.desglose.length + ' / 9';
+    // "Sucursales activas" = las que realmente registran ventas en el período,
+    // no las que existen. Antes contaba d.desglose.length (siempre 9), dando
+    // "9/9" aunque 8 estuvieran en $0. Ahora filtra por total > 0.
+    if (el('vnt-k-activas')) {
+      var conVentas = d.desglose.filter(function (s) { return (s.total || 0) > 0; }).length;
+      el('vnt-k-activas').textContent = conVentas + ' / ' + d.desglose.length;
+    }
     if (el('vnt-k-top-suc') && d.topSucursal)  el('vnt-k-top-suc').textContent  = d.topSucursal.nombre;
     if (el('vnt-k-top-suc-val') && d.topSucursal) {
       el('vnt-k-top-suc-val').textContent = fmt(d.topSucursal.total);

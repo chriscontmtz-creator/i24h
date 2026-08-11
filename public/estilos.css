@@ -667,6 +667,22 @@ body.dark .badge-24 {
   background: var(--fondo-alt);
 }
 
+/* Placeholder para sucursales que aún no tienen foto subida */
+.foto-suc-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 90px;
+  padding: 0 16px;
+  border-radius: var(--radio);
+  border: 1px dashed var(--borde);
+  background: var(--fondo-alt);
+  color: var(--texto-suave);
+  font-size: .85rem;
+}
+
+.foto-suc-placeholder i { font-size: 1.4rem; }
+
 
 /* =============================================================
    FORMULARIO DE COTIZACIÓN (home pública)

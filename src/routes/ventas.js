@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middlewares/auth.js';
 import { leer } from '../utils/data.js';
-import { sucursalConectada, sucursalPermitida, TODAS_SUCURSALES } from '../utils/sucursales.js';
+import { sucursalConectada, sucursalPermitida, sucursalesDeUsuario, TODAS_SUCURSALES } from '../utils/sucursales.js';
 import Ticket     from '../models/Ticket.js';
 import CorteCaja  from '../models/CorteCaja.js';
 
@@ -55,12 +55,20 @@ function getProductos(){ return leer('productos.json'); }
 function getAlertas()  { return leer('alertas.json');  }
 
 // GET /api/ventas?sucursal=&periodo=
-router.get('/ventas', requireAuth, (req, res) => {
+router.get('/ventas', requireAuth, async (req, res) => {
   const { sucursal = 'todas', periodo = '7' } = req.query;
   const mult = VNT_MULT[periodo] || 7;
 
+  // Scoping por usuario (BUG-03): admin ve las 9; cualquier otro cargo solo
+  // las sucursales que tiene asignadas — mismo criterio que Dashboard y
+  // /ventas/extraordinarias. Antes este endpoint mock devolvía las 9 a
+  // cualquier empleado logueado (lider/encargado incluidos), contradiciendo
+  // la regla de sucursales.js. Se filtra por nombre display (coincide con
+  // Usuario.sucursales y con el campo `nombre` de ventas.json).
+  const permitidas = await sucursalesDeUsuario(req.session.usuario);
+
   const data       = getVentas();
-  const sucursales = data.sucursales || [];
+  const sucursales = (data.sucursales || []).filter(s => permitidas.includes(s.nombre));
   const filtradas  = sucursal === 'todas'
     ? sucursales
     : sucursales.filter(s => s.id === sucursal);
@@ -99,11 +107,13 @@ router.get('/ventas', requireAuth, (req, res) => {
 });
 
 // GET /api/ventas/top-productos?categoria=&periodo=
-router.get('/ventas/top-productos', requireAuth, (req, res) => {
+router.get('/ventas/top-productos', requireAuth, async (req, res) => {
   const { categoria = 'todas', periodo = '7' } = req.query;
   const mult = VNT_MULT[periodo] || 7;
 
-  const lista = getProductos().filter(p => sucursalConectada(p.sucursal));
+  // Scoping por usuario (BUG-03) — solo sucursales asignadas (admin = las 9).
+  const permitidas = await sucursalesDeUsuario(req.session.usuario);
+  const lista = getProductos().filter(p => sucursalConectada(p.sucursal) && permitidas.includes(p.sucursal));
   const filtrados = categoria === 'todas' ? lista : lista.filter(p => p.categoria === categoria);
 
   const resultado = filtrados.slice(0, 10).map(p => ({
@@ -118,8 +128,10 @@ router.get('/ventas/top-productos', requireAuth, (req, res) => {
 });
 
 // GET /api/ventas/alertas
-router.get('/ventas/alertas', requireAuth, (req, res) => {
-  res.json(getAlertas().filter(a => sucursalConectada(a.sucursal)));
+router.get('/ventas/alertas', requireAuth, async (req, res) => {
+  // Scoping por usuario (BUG-03) — solo sucursales asignadas (admin = las 9).
+  const permitidas = await sucursalesDeUsuario(req.session.usuario);
+  res.json(getAlertas().filter(a => sucursalConectada(a.sucursal) && permitidas.includes(a.sucursal)));
 });
 
 // GET /api/ventas/extraordinarias?sucursal=&periodo=
