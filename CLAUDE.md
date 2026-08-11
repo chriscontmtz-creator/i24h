@@ -278,7 +278,7 @@ No usa Mongo — `datos/reportes.json`.
 
 | Elemento UI (archivo:línea) | Handler JS | Endpoint | Handler de ruta | Notas |
 |---|---|---|---|---|
-| Solo dentro de `dashCargar()`, sin botón propio | `dashCargar() panel.hbs:3889` | `GET /api/reportes` | `reportes.js:8` | Alimenta solo el widget "Reportes recientes" del Dashboard; los filtros de la sección Reportes (`panel.hbs:1051-1102`) trabajan client-side sobre tarjetas ya en el DOM, no vuelven a llamar este GET |
+| Solo dentro de `dashCargar()`, sin botón propio | `dashCargar() panel.hbs:3889` | `GET /api/reportes` | `reportes.js:9` | Alimenta solo el widget "Reportes recientes" del Dashboard; los filtros de la sección Reportes (`panel.hbs:1051-1102`) trabajan client-side sobre tarjetas ya en el DOM, no vuelven a llamar este GET. **Scoping por sucursal agregado 2026-08-10 (BUG-03)** — handler ahora `async`; si el cargo no es admin, filtra por `sucursalesDeUsuario(usuario)` (antes devolvía reportes de todas las sucursales a cualquier empleado, p.ej. un líder veía Simón Bolívar + Ruiz Cortines) |
 | "Crear reporte" — `panel.hbs:996` | `rptCrearReporte() panel.hbs:3317` | `POST /api/reportes` | `reportes.js:20` | Inserción optimista en el feed |
 | `.rpt-status-toggle` por tarjeta — `panel.hbs:1051,1068,1085,1102,3356` | `rptToggleStatus() panel.hbs:3295` | `PATCH /api/reportes/:id/status` | `reportes.js:44` | Solo persiste si la tarjeta tiene `data-rpt-id` (viene del POST) — las hardcodeadas en el `.hbs` cambian solo visualmente |
 
@@ -431,6 +431,10 @@ Todos verificados con `node --check` + compilación Handlebars con contexto simu
 - **BUG-08 — primer clic del sidebar se perdía** (`panel.hbs` IIFE del nav): las secciones se cargaban por caminos divergentes (unas eager, Ventas con listener propio sobre su botón, Bitácoras/Inventario en el handler del sidebar, e `irSeccion` solo cubría 2). Se centralizó el disparo de datos en `dispararCargaSeccion(id)` dentro de `activarSeccion` (cubre bitacoras/inventario/ventas, protegido con try/catch); se quitó el listener aparte de Ventas y se expuso `window.vntCargar`. Toda activación (sidebar, tarjeta del dashboard, `?s=`) carga a la primera.
 - **BUG-09 — typos en catálogo de precios** (`vistas.js` `armarCatalogo`): nombres de producto del sync con basura de import ("AGUASCALIENES1", "NUEVOLEON2", "SAN LUI POTOSI1"). Se agregó `normalizarNombreProducto()` (mapa de typos explícitos + coincidencia genérica de estado+sufijo numérico contra `ESTADOS_MX`) aplicado SOLO al render del catálogo — no toca Mongo (el sync lo reescribiría). Productos con número legítimo (p.ej. "NOVEDADES AMARILLO 60") quedan intactos.
 - **BUG-10 — "Sucursal: Todas" fija** (`vistas.js` `/panel`, `panel.hbs:13,123`): se agregó `sucursalScope` (admin/9 → "Todas", 1 sucursal → su nombre, varias → conteo, 0 → "Sin sucursal") y ambas etiquetas del sidebar lo usan.
+
+**BUG-03 — cierre final del scoping por sucursal** (verificación en vivo 9/10; faltaban dos lugares que aún mostraban las 9): mismo criterio que Ventas (`sucursalesDeUsuario`: admin las 9, cualquier otro cargo solo las asignadas).
+  - **Vista `/panel → Sucursales`** (`vistas.js` `/panel`, `panel.hbs` sec-sucursales): las 9 tarjetas son HTML estático; se pasa `sucursalesVisibles` (mapa nombre→boolean) y cada tarjeta se envuelve en `{{#if sucursalesVisibles.[Nombre]}}`. Verificado por compilación Handlebars: admin → 9 tarjetas, líder con 1 sucursal → 1, líder con 0 → 0.
+  - **Widget "Reportes recientes"** (`src/routes/reportes.js` `GET /api/reportes`): antes devolvía todos los reportes a cualquier empleado. Ahora, si el cargo no es admin, filtra `lista` por `sucursalesDeUsuario(usuario)` (handler ahora `async`). Verificado con `datos/reportes.json` (reportes de Simón Bolívar + Ruiz Cortines): admin ve ambos, líder de Ruiz Cortines solo el suyo, líder de Insurgentes ninguno.
 
 ---
 

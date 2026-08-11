@@ -1,14 +1,25 @@
 import { Router } from 'express';
 import { leer, guardar } from '../utils/data.js';
 import { requireAuth }  from '../middlewares/auth.js';
-import { sucursalPermitida } from '../utils/sucursales.js';
+import { sucursalPermitida, sucursalesDeUsuario } from '../utils/sucursales.js';
 
 const router = Router();
 
 // GET /api/reportes — devuelve todos los reportes (más recientes primero)
-router.get('/reportes', requireAuth, (req, res) => {
+router.get('/reportes', requireAuth, async (req, res) => {
   const { sucursal, dept, status } = req.query;
   let lista = leer('reportes.json');
+
+  // Scoping por sucursal (BUG-03): admin ve reportes de las 9; cualquier otro
+  // cargo (coordinador, líder, encargado, colaborador) solo los de sus
+  // sucursales asignadas — mismo criterio que Ventas/Dashboard. Alimenta el
+  // widget "Reportes recientes" del dashboard, que antes mostraba reportes de
+  // otras sucursales al líder.
+  const u = req.session.usuario;
+  if (u?.cargo !== 'admin') {
+    const permitidas = await sucursalesDeUsuario(u);
+    lista = lista.filter(r => permitidas.includes(r.sucursal));
+  }
 
   if (sucursal && sucursal !== 'all') lista = lista.filter(r => r.sucursal === sucursal);
   if (dept     && dept     !== 'all') lista = lista.filter(r => r.dept === dept);

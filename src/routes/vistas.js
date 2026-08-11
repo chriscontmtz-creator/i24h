@@ -197,6 +197,14 @@ router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
     slug: SLUG_VENTA[nombre] || nombre,
   }));
 
+  // Scoping por sucursal de la vista "Sucursales" (BUG-03). Las 9 tarjetas del
+  // grid son HTML estático; este mapa nombre→boolean permite que la plantilla
+  // muestre solo las sucursales que el usuario tiene a su mando. Mismo criterio
+  // que Ventas: admin ve las 9 (sucursalesDeUsuario devuelve TODAS), cualquier
+  // otro cargo solo las asignadas.
+  const sucursalesVisibles = {};
+  for (const s of TODAS_SUCURSALES) sucursalesVisibles[s] = sucursalesUsuario.includes(s);
+
   // Etiqueta de alcance para el sidebar (BUG-10). Antes decía "Todas" fijo para
   // cualquier rol; ahora refleja el scope real: admin (y quien vea las 9) ve
   // "Todas", un rol de una sola sucursal ve su nombre, varios ven el conteo.
@@ -233,6 +241,7 @@ router.get('/panel', sesionActual, requireEmpleado, async (req, res) => {
     sucursalesUsuario,
     sucursalesUsuarioVenta,
     sucursalScope,
+    sucursalesVisibles,
     // "En línea" en la tarjeta de Sucursales = sucursales con el sync de
     // CyberPlanet reportando datos en vivo (no "abiertas", que para una cadena
     // 24/7 son las 9). Antes la métrica decía "0 / 9" hardcodeado, que
