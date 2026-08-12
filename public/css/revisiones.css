@@ -802,6 +802,24 @@ body.dark .bit-badge--t3, html.dark .bit-badge--t3 { background: #2e1065; color:
 .rc-dif-ok   { background: var(--r-exito-bg);  color: var(--r-exito);  }
 .rc-dif-warn { background: var(--r-alerta-bg); color: var(--r-alerta); }
 .rc-dif-mal  { background: var(--r-peligro-bg);color: var(--r-peligro);}
+/* Sin lectura de contador: no es fuga ni sobre-cobro, es ausencia de dato → gris neutro */
+.rc-dif-sinlectura { background: color-mix(in srgb, var(--r-info) 12%, transparent); color: var(--r-info); font-size: 14px; }
+
+/* Leyenda explicativa del cruce contador ↔ impreso */
+.rc-leyenda {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 14px;
+  margin: 0 0 12px;
+  background: color-mix(in srgb, var(--r-info) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--r-info) 20%, transparent);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--r-texto-sec, inherit);
+}
+.rc-leyenda i { color: var(--r-info); margin-top: 2px; }
 
 /* Dark mode */
 @media (prefers-color-scheme: dark) {

@@ -399,34 +399,43 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
         const tc   = turnoDesdeOperador(c.operador1) || turnoDesdeOperador(c.operador2) || turnoDesdeHora(c.horaApertura);
         const merma = c.merma || 0;
 
-        // Diferencia por categoría — INE, Tabloides y Doble carta no tienen
-        // contraparte de contador comparable, así que quedan solo informativas
-        // (mismo patrón esFaltante/esSobrante/difFmt que bitacorasVista arriba).
+        // ── Conciliación de contador (Fase 1, regla confirmada por Chris) ──
+        // El contador físico de la impresora suma TODO lo que gastó hojas, así
+        // que la base de comparación = suma de páginas de TODAS las categorías
+        // que consumen contador: copias B/N + copias color + copias INE +
+        // impresión B/N + impresión color. El INE se cobra en línea propia pero
+        // imprime físicamente en la copiadora B/N; ANTES se excluía del lado
+        // cobrado aunque sí incrementaba el contador → negativo falso crónico.
+        // Ahora se incluye. El escáner NO gasta hojas → queda fuera del total y
+        // se concilia aparte en su propia fila.
+        // Signo nuevo: diferencia = contador − impreso. Positivo = el contador
+        // marcó más hojas de las registradas como impresas (posible consumo/
+        // fuga no cobrado); ~0 = cuadra. La merma (hojas gastadas legítimas no
+        // cobradas: corte/errores) resta del lado impreso porque también
+        // explica parte del excedente del contador.
         function filaDif(cobradas, contador) {
-          const dif = cobradas - contador;
+          const dif = contador - cobradas;
           return {
             cobradas, contador, diferencia: dif,
-            difFmt:     (dif > 0 ? '+' : '') + dif,
-            esFaltante: dif < 0,
-            esSobrante: dif > 0,
+            difFmt:  (dif > 0 ? '+' : '') + dif,
+            esFuga:  dif > 0,   // contador marcó de más → posible fuga
+            esSobre: dif < 0,   // se registró más impreso que el contador
           };
         }
-        const fCopBYN   = filaDif(t.copias_byn_cant,   cnt.copBYN     || 0);
+        // Copias B/N: se le suma INE porque físicamente imprime en la B/N.
+        const fCopBYN   = filaDif(t.copias_byn_cant + t.copias_ine_cant, cnt.copBYN     || 0);
         const fCopColor = filaDif(t.copias_color_cant, cnt.copColor   || 0);
         const fImpreBYN = filaDif(t.impre_byn_cant,    cnt.impreBYN   || 0);
         const fImpreColor = filaDif(t.impre_color_cant,cnt.impreColor|| 0);
         const fEscaner  = filaDif(t.scanner_cant,      cnt.escanerTotal || 0);
 
-        // Total: suma de las 5 categorías comparables + merma. INE/Tabloides/
-        // Doble carta quedan fuera por no tener contador equivalente.
-        const totalCobradas = t.copias_byn_cant + t.copias_color_cant
-                             + t.impre_byn_cant  + t.impre_color_cant
-                             + t.scanner_cant;
+        // Base de comparación: TODAS las categorías que gastan hojas (INE
+        // incluido). Escáner fuera (no consume hojas). Tabloide/Doble carta
+        // siguen informativos (no hay línea de cobro equivalente).
+        const totalImpreso  = t.copias_byn_cant + t.copias_color_cant + t.copias_ine_cant
+                             + t.impre_byn_cant  + t.impre_color_cant;
         const totalContador = (cnt.copBYN || 0) + (cnt.copColor || 0)
-                             + (cnt.impreBYN || 0) + (cnt.impreColor || 0)
-                             + (cnt.escanerTotal || 0);
-        const diferencia    = (totalCobradas + merma) - totalContador;
-        const difSign       = diferencia > 0 ? '+' : '';
+                             + (cnt.impreBYN || 0) + (cnt.impreColor || 0);
 
         const brecha = brechaPorNcaja[clave];
         const brechaLarga = !!brecha && (brecha.sinCortePrevio || brecha.horasMax > UMBRAL_BRECHA_HORAS);
@@ -436,6 +445,23 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
             ? 'Sin corte previo registrado para esta impresora — el contador puede incluir uso de antes del rango visible, no solo este turno.'
             : `Este contador acumula ~${(brecha.horasMax / 24).toFixed(1)} días de uso sin corte previo — la diferencia puede no reflejar solo este turno.`;
         }
+
+        // "Sin lectura de contador" (el sync no corrió) ≠ "contador = 0 real".
+        // Se distingue por la EXISTENCIA del registro ContadorImpresora de esa
+        // caja (contPorNcaja[clave]), no por el valor. Sin lectura confiable NO
+        // se calcula descuadre ni se marca fuga: solo se muestra lo impreso.
+        const sinContador    = !contPorNcaja[clave];
+        const cruceConfiable = !sinContador && !brechaLarga;
+        const diferencia = cruceConfiable
+          ? (totalContador - (totalImpreso + merma))
+          : null;
+        const difSign  = (diferencia != null && diferencia > 0) ? '+' : '';
+        const difMagOk = diferencia != null && Math.abs(diferencia) <= 5;
+        const difFuga  = diferencia != null && diferencia > 5;   // contador de más
+        const difSobre = diferencia != null && diferencia < -5;  // impreso de más
+        let estadoCruce = 'sin_contador';
+        if (cruceConfiable)      estadoCruce = difMagOk ? 'cuadra' : (difFuga ? 'fuga' : 'sobre_registro');
+        else if (brechaLarga)    estadoCruce = 'contador_no_confiable';
 
         return {
           idStr:       c._id.toString(),
@@ -478,27 +504,31 @@ router.get('/', sesionActual, requireEmpleado, async (req, res) => {
           escanerCnt:   cnt.escanerTotal || 0,
           tabloideCnt:  cnt.tabloide   || 0,
           dobCartaCnt:  cnt.dobleCarta || 0,
-          // Diferencia por categoría
-          copBYNdifFmt:    fCopBYN.difFmt,    copBYNfaltante:    fCopBYN.esFaltante,
-          copColorDifFmt:  fCopColor.difFmt,  copColorFaltante:  fCopColor.esFaltante,
-          impreBYNdifFmt:  fImpreBYN.difFmt,  impreBYNfaltante:  fImpreBYN.esFaltante,
-          impreColorDifFmt:fImpreColor.difFmt,impreColorFaltante:fImpreColor.esFaltante,
+          // Diferencia por categoría (contador − cobrado; + = contador de más).
+          // Solo se muestra cuando el cruce es confiable.
+          copBYNdifFmt:    cruceConfiable ? fCopBYN.difFmt     : '—', copBYNfaltante:    cruceConfiable && fCopBYN.esFuga,
+          copColorDifFmt:  cruceConfiable ? fCopColor.difFmt   : '—', copColorFaltante:  cruceConfiable && fCopColor.esFuga,
+          impreBYNdifFmt:  cruceConfiable ? fImpreBYN.difFmt   : '—', impreBYNfaltante:  cruceConfiable && fImpreBYN.esFuga,
+          impreColorDifFmt:cruceConfiable ? fImpreColor.difFmt : '—', impreColorFaltante:cruceConfiable && fImpreColor.esFuga,
           // Totales cruce
-          totalCobradas,
+          totalCobradas: totalImpreso,   // nombre legado que usa la vista/JS = total impreso (incluye INE)
+          totalImpreso,
           totalContador,
           merma,
+          cruceConfiable,
+          estadoCruce,
           diferencia,
-          difFmt:      difSign + diferencia,
-          difOk:       diferencia >= 0,
-          difMal:      diferencia < -5,
-          difWarn:     diferencia < 0 && diferencia >= -5,
-          // Scanner cruce
+          difFmt:      diferencia != null ? (difSign + diferencia) : '—',
+          difOk:       difMagOk,   // verde  = cuadra (~0)
+          difMal:      difFuga,    // rojo   = contador marcó de más (posible fuga)
+          difWarn:     difSobre,   // ámbar  = se registró más impreso que el contador
+          // Scanner cruce (contador − cobrado; + = escaneó de más)
           difScanner:     fEscaner.diferencia,
-          difScannerFmt:  fEscaner.difFmt,
-          difScannerOk:   fEscaner.diferencia >= 0,
-          difScannerMal:  fEscaner.diferencia < -2,
+          difScannerFmt:  cruceConfiable ? fEscaner.difFmt : '—',
+          difScannerOk:   cruceConfiable && Math.abs(fEscaner.diferencia) <= 2,
+          difScannerMal:  cruceConfiable && fEscaner.diferencia > 2,
           // Estado sin contador / brecha
-          sinContador: !contPorNcaja[clave],
+          sinContador,
           brechaLarga,
           brechaTexto,
         };

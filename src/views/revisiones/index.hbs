@@ -228,9 +228,15 @@
     </div>
 
     {{#if hayResumenCaja}}
+      <p class="rc-leyenda">
+        <i class="ti ti-info-circle"></i>
+        Diferencia = <strong>contador − impreso</strong> (impreso = copias B/N + color + INE + impresiones B/N + color).
+        Un <strong>+</strong> = el contador marcó más hojas de las cobradas (posible consumo no cobrado); ~0 = cuadra.
+        Las cajas sin lectura de contador se marcan <strong>“sin lectura”</strong> y no calculan diferencia.
+      </p>
       <div class="rc-cards">
         {{#each resumenCaja}}
-          <div class="rc-card" id="rc-card-{{idStr}}" data-cobradas="{{totalCobradas}}" data-contador="{{totalContador}}">
+          <div class="rc-card" id="rc-card-{{idStr}}" data-cobradas="{{totalCobradas}}" data-contador="{{totalContador}}" data-merma="{{merma}}" data-confiable="{{cruceConfiable}}">
 
             <!-- CABECERA -->
             <div class="rc-card-hdr">
@@ -275,8 +281,8 @@
                     <tr>
                       <td>INE</td>
                       <td class="rc-num">{{copINEcob}}</td>
-                      <td class="rc-num rc-cnt rc-cnt-sub">—</td>
-                      <td class="rc-num rc-cnt-sub">—</td>
+                      <td class="rc-num rc-cnt rc-cnt-sub" title="El INE imprime en la copiadora B/N">↑ B/N</td>
+                      <td class="rc-num rc-cnt-sub" title="Se suma al lado impreso de copias B/N">→ en B/N</td>
                     </tr>
                     <tr>
                       <td>Color</td>
@@ -335,21 +341,25 @@
               <span class="rc-scanner-label"><i class="ti ti-scan"></i> Escáner</span>
               <span>Cobrados: <strong>{{scannerCob}}</strong></span>
               <span>Contador: <strong>{{escanerCnt}}</strong></span>
-              <span class="rc-dif-badge {{#if difScannerOk}}rc-dif-ok{{else if difScannerMal}}rc-dif-mal{{else}}rc-dif-warn{{/if}}">
-                Dif: {{difScannerFmt}}
-              </span>
+              {{#if cruceConfiable}}
+                <span class="rc-dif-badge {{#if difScannerOk}}rc-dif-ok{{else if difScannerMal}}rc-dif-mal{{else}}rc-dif-warn{{/if}}">
+                  Dif: {{difScannerFmt}}
+                </span>
+              {{else}}
+                <span class="rc-dif-badge">Dif: —</span>
+              {{/if}}
             </div>
 
             <!-- TOTALES Y MERMA -->
             <div class="rc-totales">
               <div class="rc-totales-grid">
                 <div class="rc-tot-item">
-                  <span class="rc-tot-label">Total cobradas</span>
-                  <span class="rc-tot-val">{{totalCobradas}}</span>
+                  <span class="rc-tot-label">Total impreso</span>
+                  <span class="rc-tot-val">{{totalImpreso}}</span>
                 </div>
                 <div class="rc-tot-item">
                   <span class="rc-tot-label">Total contador</span>
-                  <span class="rc-tot-val">{{totalContador}}</span>
+                  <span class="rc-tot-val">{{#if cruceConfiable}}{{totalContador}}{{else}}—{{/if}}</span>
                 </div>
                 <div class="rc-tot-item rc-tot-merma">
                   <label class="rc-tot-label" for="merma-{{idStr}}">Merma</label>
@@ -365,10 +375,17 @@
                 </div>
                 <div class="rc-tot-item rc-tot-dif">
                   <span class="rc-tot-label">Diferencia</span>
-                  <span class="rc-dif-badge rc-dif-grande {{#if difOk}}rc-dif-ok{{else if difMal}}rc-dif-mal{{else}}rc-dif-warn{{/if}}"
-                        id="rc-dif-{{idStr}}">
-                    {{difFmt}}
-                  </span>
+                  {{#if cruceConfiable}}
+                    <span class="rc-dif-badge rc-dif-grande {{#if difOk}}rc-dif-ok{{else if difMal}}rc-dif-mal{{else}}rc-dif-warn{{/if}}"
+                          id="rc-dif-{{idStr}}">
+                      {{difFmt}}
+                    </span>
+                  {{else}}
+                    <span class="rc-dif-badge rc-dif-grande rc-dif-sinlectura" id="rc-dif-{{idStr}}"
+                          title="No hay lectura de contador confiable para esta caja">
+                      Sin lectura
+                    </span>
+                  {{/if}}
                 </div>
               </div>
               <div class="rc-merma-nota-wrap">
@@ -445,20 +462,22 @@
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (!d.ok) return;
-        // Recalcular diferencia en cliente
+        // Recalcular diferencia en cliente SOLO si el cruce es confiable.
+        // Sin lectura de contador no se calcula descuadre (misma regla que el
+        // backend): la merma se guarda igual, pero no se pinta un número falso.
         var card = document.getElementById('rc-card-' + id);
         if (!card) return;
-        var cobEl  = card.querySelector('.rc-tot-cobradas');
-        var cntEl  = card.querySelector('.rc-tot-contador');
+        if (card.dataset.confiable !== 'true') return;
         var difEl  = document.getElementById('rc-dif-' + id);
         if (!difEl) return;
-        var cob = parseInt(card.dataset.cobradas) || 0;
+        var cob = parseInt(card.dataset.cobradas) || 0;   // total impreso (inc. INE)
         var cnt = parseInt(card.dataset.contador) || 0;
-        var dif = (cob + merma) - cnt;
+        // Signo nuevo: contador − (impreso + merma). + = contador de más (fuga).
+        var dif = cnt - (cob + merma);
         var sign = dif > 0 ? '+' : '';
         difEl.textContent = sign + dif;
         difEl.className = 'rc-dif-badge rc-dif-grande ' +
-          (dif >= 0 ? 'rc-dif-ok' : (dif < -5 ? 'rc-dif-mal' : 'rc-dif-warn'));
+          (Math.abs(dif) <= 5 ? 'rc-dif-ok' : (dif > 5 ? 'rc-dif-mal' : 'rc-dif-warn'));
       })
       .catch(function() {});
     }
